@@ -2,12 +2,45 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\**" />
+    <Content Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="package.json" />
+    <Content Remove="wwwroot\tsx\PQDigest.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="PQDigest.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="package.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Gemstone.Web">
+      <HintPath>Dependencies\Gemstone.Web.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
   </ItemGroup>
 
 </Project>

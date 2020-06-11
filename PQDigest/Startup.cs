@@ -27,9 +27,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Gemstone.Web;
+using System.Reflection;
+using Microsoft.Extensions.FileProviders;
 
 namespace PQDigest
 {
@@ -65,6 +69,7 @@ namespace PQDigest
             }
 
             app.UseStaticFiles();
+            app.UseStaticFiles(WebExtensions.StaticFileEmbeddedResources());
 
             app.UseRouting();
 

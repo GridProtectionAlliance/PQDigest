@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQDigest", "PQDigest.csproj", "{2EF35D93-3B7A-4068-98D4-8646A651DF30}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PQDigest", "PQDigest.csproj", "{2EF35D93-3B7A-4068-98D4-8646A651DF30}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{617DD7AA-A848-4AF1-A77B-B7117D4F4031}"
 	ProjectSection(SolutionItems) = preProject
-		PQDigest.sql = PQDigest.sql
+		Data\PQDigest.sql = Data\PQDigest.sql
 	EndProjectSection
 EndProject
 Global

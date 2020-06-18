@@ -23,7 +23,7 @@
 import React from 'react';
 
 const EventSearch = (props: {}) => {
-    return <div>Event Search</div>
+    return <div>Event Search page placeholder ... Under developement.</div>
 }
 
 export default EventSearch;

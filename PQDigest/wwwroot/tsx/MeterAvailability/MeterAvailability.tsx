@@ -24,7 +24,7 @@
 import React from 'react';
 
 const MeterAvailability = (props: {}) => {
-    return <div>Meter Availability</div>
+    return <div>Meter Availability page placeholder ... Under developement.</div>
 }
 
 export default MeterAvailability;

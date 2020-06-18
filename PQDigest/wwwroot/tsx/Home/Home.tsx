@@ -22,9 +22,18 @@
 //******************************************************************************************************
 
 import React from 'react';
+import EventCountsByMonth from '../Home/EventCountsByMonth';
 
 const Home = (props: {}) => {
-    return  <div>Home</div>
+    return (
+        <div className="row" style={{height: "100%"}}>
+            <div className="col">Home page placeholder ... Under developement.</div>
+            <div className="col">
+                <EventCountsByMonth Width={window.innerWidth / 2 - 15} Height={(window.innerHeight - 127)/2} />
+                <EventCountsByMonth Width={window.innerWidth / 2 - 15} Height={(window.innerHeight - 127)/2} />
+            </div>
+        </div>
+    )
 }
 
 export default Home;

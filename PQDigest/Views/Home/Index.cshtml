@@ -50,7 +50,9 @@
 </head>
 <body>
     <div id="window"></div>
-
+    <script>
+        var homePath = '@Html.Raw(Url.Content("~/"))';
+    </script>
     <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     @if (DetectIE(Context.Request.Headers["UserAgent"].ToString())) {
         <script src="@Url.Content("~/@Gemstone/Scripts/default.polyfill.min.js")"></script>

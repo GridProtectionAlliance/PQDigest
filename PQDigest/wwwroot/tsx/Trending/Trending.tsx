@@ -24,7 +24,7 @@
 import React from 'react';
 
 const Trending = (props: {}) => {
-    return <div>Trending</div>
+    return <div>Trending page placeholder ... Under developement.</div>
 }
 
 export default Trending;

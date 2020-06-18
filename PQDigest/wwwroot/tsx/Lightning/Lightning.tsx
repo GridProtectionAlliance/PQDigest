@@ -24,7 +24,7 @@
 import React from 'react';
 
 const Lightning = (props: {}) => {
-    return <div>Lightning</div>
+    return <div>Lightning page placeholder ... Under developement.</div>
 }
 
 export default Lightning;

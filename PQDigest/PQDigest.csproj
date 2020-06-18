@@ -14,8 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="package.json" />
+    <Content Remove="wwwroot\tsx\EventSearch\EventSearch.tsx" />
+    <Content Remove="wwwroot\tsx\global.d.ts" />
+    <Content Remove="wwwroot\tsx\Home\Home.tsx" />
+    <Content Remove="wwwroot\tsx\Lightning\Lightning.tsx" />
+    <Content Remove="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
     <Content Remove="wwwroot\tsx\PQDigest.tsx" />
+    <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Gemstone.Web" Version="1.0.39" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.5" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
@@ -34,13 +42,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Gemstone.Web">
-      <HintPath>Dependencies\Gemstone.Web.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearch.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\global.d.ts" />
+    <TypeScriptCompile Include="wwwroot\tsx\Home\Home.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\Lightning\Lightning.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
   </ItemGroup>
 
 </Project>

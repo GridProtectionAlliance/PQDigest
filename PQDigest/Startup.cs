@@ -34,23 +34,44 @@ using Microsoft.Extensions.Hosting;
 using Gemstone.Web;
 using System.Reflection;
 using Microsoft.Extensions.FileProviders;
+using System.Net;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace PQDigest
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            Env = env;
         }
 
+        public IWebHostEnvironment Env { get; set; }
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRazorPages();
-            //services.AddAuthentication("NTLM");
+            IMvcBuilder builder = services.AddControllersWithViews();
+
+            //IMvcBuilder builder = services.AddRazorPages();
+#if DEBUG
+            if (Env.IsDevelopment())
+            {
+                builder.AddRazorRuntimeCompilation();
+            }
+
+#endif
+            //services.AddAuthentication(options =>
+            //{
+            //    var policy  = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            //    var ops = new AuthorizationOptions() { DefaultPolicy= policy };
+            //    // options.AddScheme
+            //    options.Filters.Add(new AuthorizeFilter(policy));
+            //    // options.AddRole
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -78,13 +99,24 @@ namespace PQDigest
                 return next.Invoke();
             });
 
-            //app.UseAuthentication();
-            app.UseAuthorization();
+            app.UseAuthentication();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
+                //endpoints.MapRazorPages();
+
+                endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{newaction?}/{id?}",
+                defaults: new {
+                    controller = "Home",
+                    action = "Index"
+                } );
+
+                endpoints.MapControllers();
             });
+
         }
     }
 }

@@ -9,6 +9,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@gpa-gemstone/react-table": "^1.0.1",
     "@types/node": "^13.7.1",
     "@types/webpack": "^4.41.6",
     "css-loader": "^3.2.0",
@@ -39,5 +40,4 @@
     "prop-types": "15.6.1",
     "query-string": "5.1.1"
   }
-
 }

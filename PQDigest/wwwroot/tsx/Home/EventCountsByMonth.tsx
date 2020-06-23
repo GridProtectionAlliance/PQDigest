@@ -24,16 +24,16 @@
 import React from 'react';
 import { scaleOrdinal, scaleLinear, select, axisBottom, max, line } from 'd3';
 interface iData {
-    month: string,
-    sag: number, 
-    swell: number, 
-    transient: number,
-    interruption: number,
-    fault: number,
-    total: number
+    Month: string,
+    Sag: number, 
+    Swell: number, 
+    Transient: number,
+    Interruption: number,
+    Fault: number,
+    Total: number
 }
 const EventCountsByMonth = (props: { Width: number, Height: number }) => {
-    let margin = { top: 20, right: 30, bottom: 50, left: 30 };
+    let margin = { top: 15, right: 20, bottom: 40, left: 30 };
     let svgWidth = props.Width - margin.left - margin.right;
     let svgHeight = props.Height - margin.top - margin.bottom;
 
@@ -70,14 +70,14 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
 
         //let series = data[Object.keys(data)[0]];
         //let x = scaleOrdinal().rangeRound([margin.left, svgWidth + margin.left]).domain(data.map(x => x.month));
-        let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0, max(data.map(x => x.total))]);
+        let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0, max(data.map(x => x.Total))]);
 
         let yticks = [];
         for (let i = 0; i < y.domain()[1]; i = i + 5) {
             yticks.push(
                 <g key={i} className="tick" opacity="1" transform={`translate(${margin.left},${y(i)})`}>
-                    <line stroke="gray" x2="-6"></line>
-                    <text fill="gray" x="-30" dy="0.32em">{i}</text>
+                    <path d={`M -7 0 H ${svgWidth}`} strokeWidth={0.25}></path>
+                    <text x="-15" dy="0.32em" textAnchor='middle'>{i}</text>
                 </g>);
 
         }
@@ -86,7 +86,7 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let ticks = data.map((x, index) => {
             return (
                 <g key={index} className="tick" opacity="1" transform={`translate(${margin.left + svgWidth * (index + 1) / 12},${svgHeight})`}>
-                    <line y2="6" stroke="gray" strokeWidth={2}></line>
+                    <line y2="6"></line>
                 </g>
             )
         });
@@ -95,24 +95,24 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let labels = data.map((x, index) => {
             return (
                 <g key={index} className="tick" opacity="1" transform={`translate(${margin.left + (svgWidth * ((index + 0.25)) / 12)},${svgHeight})`}>
-                    <text y2="6" fill="gray" dy="1em">{x.month}</text>
+                    <text y2="6" dy="1em">{x.Month}</text>
                 </g>
             )
         });
 
         setAxisPaths(labels);
 
-        let linefunc = line<iData>().x(d => margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(d.month) + 0.5)) / 12)).y(d => y(d.total));
+        let linefunc = line<iData>().x(d => margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(d.Month) + 0.5)) / 12)).y(d => y(d.Total));
         setTotalPath(linefunc(data));
 
         let boxes = data.map((x, index) => {
             return (
                 <g key={index} onClick={() => { }}>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(x.month) + 0.35)) / 12)} y={y(x.sag)} width={20} height={svgHeight - y(x.sag)} fill={getColor('sag')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(x.month) + 0.35)) / 12)} y={y(x.sag) - (svgHeight - y(x.swell))} width={20} height={svgHeight - y(x.swell)} fill={getColor('swell')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(x.month) + 0.35)) / 12)} y={y(x.sag) - (svgHeight - y(x.swell)) - (svgHeight - y(x.transient))} width={20} height={svgHeight - y(x.transient)} fill={getColor('Transient')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(x.month) + 0.35)) / 12)} y={y(x.sag) - (svgHeight - y(x.swell)) - (svgHeight - y(x.transient)) - (svgHeight - y(x.fault))} width={20} height={svgHeight - y(x.fault)} fill={getColor('Fault')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.month).indexOf(x.month) + 0.35)) / 12)} y={y(x.sag) - (svgHeight - y(x.swell)) - (svgHeight - y(x.transient)) - (svgHeight - y(x.fault)) - (svgHeight - y(x.interruption))} width={20} height={svgHeight - y(x.interruption)} fill={getColor('Interruption')}/>
+                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag)} width={20} height={svgHeight - y(x.Sag)} fill={getColor('sag')}/>
+                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell))} width={20} height={svgHeight - y(x.Swell)} fill={getColor('swell')}/>
+                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient))} width={20} height={svgHeight - y(x.Transient)} fill={getColor('Transient')}/>
+                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault))} width={20} height={svgHeight - y(x.Fault)} fill={getColor('Fault')}/>
+                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault)) - (svgHeight - y(x.Interruption))} width={20} height={svgHeight - y(x.Interruption)} fill={getColor('Interruption')}/>
                 </g>
             )
         });
@@ -132,38 +132,41 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
     }
 
     return (
-        <div style={{ height: props.Height, width: props.Width, textAlign: 'center' /*, margin: '0x', padding: '0px'*/ }} hidden={hidden}>
-            <svg width={props.Width} height={props.Height}>
-                {/* Chart header */}
-                <text y={15} x={props.Width / 2 - 125} stroke="gray">Historical Event Counts by Month</text>
+        <div style={{ height: props.Height, width: props.Width, textAlign: 'center' }} hidden={hidden}>
+            <svg width={props.Width} height={props.Height} style={{fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize:'small'}}>
 
                 {/* Chart borders */}
-                <line x1={margin.left} x2={svgWidth + margin.right} y1={svgHeight} y2={svgHeight} stroke="gray" strokeWidth={2} />
-                <line x1={margin.left} x2={svgWidth + margin.right} y1={margin.top} y2={margin.top} stroke="gray" strokeWidth={2} />
-                <line x1={margin.left} x2={margin.left} y1={margin.top} y2={svgHeight} stroke="gray" strokeWidth={2} />
-                <line x1={svgWidth + margin.right} x2={svgWidth + margin.right} y1={margin.top} y2={svgHeight} stroke="gray" strokeWidth={2} />
+                <path d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`}/>
+
+                {/* XAxis ticks*/}
+                <g className="tick" opacity="1" transform={`translate(${margin.left},${svgHeight})`}>
+                    <line y2="6"></line>
+                </g>
+                {axisTicks}
+
+                {/* YAxis ticks and Labels*/}
+                {yaxisTicks}
+
+                {/* XAxis Labels*/}
+                <g>{axisPaths}</g>
 
                 {/* Chart Legend */}
                 <rect x={margin.left + 10} y={svgHeight + 25} width={15} height={15} fill={getColor('sag')} />
-                <text y={svgHeight + 38} x={margin.left + 30} stroke="gray">Sag</text>
+                <text y={svgHeight + 38} x={margin.left + 30} >Sag</text>
                 <rect x={margin.left + 70} y={svgHeight + 25} width={15} height={15} fill={getColor('swell')} />
-                <text y={svgHeight + 38} x={margin.left + 90} stroke="gray">Swell</text>
+                <text y={svgHeight + 38} x={margin.left + 90} >Swell</text>
                 <rect x={margin.left + 140} y={svgHeight + 25} width={15} height={15} fill={getColor('transient')} />
-                <text y={svgHeight + 38} x={margin.left + 160} stroke="gray">Transient</text>
+                <text y={svgHeight + 38} x={margin.left + 160} >Transient</text>
                 <rect x={margin.left + 240} y={svgHeight + 25} width={15} height={15} fill={getColor('fault')} />
-                <text y={svgHeight + 38} x={margin.left + 260} stroke="gray">Fault</text>
+                <text y={svgHeight + 38} x={margin.left + 260} >Fault</text>
                 <rect x={margin.left + 320} y={svgHeight + 25} width={15} height={15} fill={getColor('interruption')} />
-                <text y={svgHeight + 38} x={margin.left + 340} stroke="gray">Interruption</text>
+                <text y={svgHeight + 38} x={margin.left + 340} >Interruption</text>
 
+                {/* Stacked Bars */}
                 {paths}
-                <path fill='none' strokeLinejoin='round' strokeWidth='3' stroke='darkblue' d={totalPath} />
 
-                <g className="tick" opacity="1" transform={`translate(${margin.left},${svgHeight})`}>
-                    <line y2="6" stroke="gray" strokeWidth={2}></line>
-                </g>
-                {axisTicks}
-                {yaxisTicks}
-                <g>{axisPaths}</g>
+                {/* Line Above Stacked Bars */}
+                <path fill='none' strokeLinejoin='round' strokeWidth='3' stroke='darkblue' d={totalPath} />
             </svg>
 
         </div>

@@ -37,6 +37,8 @@ using Microsoft.Extensions.FileProviders;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using PQDigest.Models;
+using Newtonsoft.Json.Serialization;
 
 namespace PQDigest
 {
@@ -54,7 +56,13 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            IMvcBuilder builder = services.AddControllersWithViews();
+            IMvcBuilder builder = services.AddControllersWithViews()
+            .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                }
+            );
 
             //IMvcBuilder builder = services.AddRazorPages();
 #if DEBUG

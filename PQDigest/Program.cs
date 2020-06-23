@@ -28,8 +28,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PQDigest.Models;
 using Serilog;
 
 namespace PQDigest
@@ -68,6 +70,12 @@ namespace PQDigest
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                }).UseSerilog();
+                })
+                .ConfigureServices((hostContext, services) =>
+                {
+                    // load settings from config file
+                    services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
+                })
+                .UseSerilog();
     }
 }

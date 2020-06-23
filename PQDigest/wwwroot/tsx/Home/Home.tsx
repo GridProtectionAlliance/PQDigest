@@ -23,14 +23,42 @@
 
 import React from 'react';
 import EventCountsByMonth from '../Home/EventCountsByMonth';
+import EventCountTable from '../Home/EventCountTable';
+import MagDurChart from '../Home/MagDurChart';
 
 const Home = (props: {}) => {
     return (
-        <div className="row" style={{height: "100%"}}>
-            <div className="col">Home page placeholder ... Under developement.</div>
-            <div className="col">
-                <EventCountsByMonth Width={window.innerWidth / 2 - 15} Height={(window.innerHeight - 127)/2} />
-                <EventCountsByMonth Width={window.innerWidth / 2 - 15} Height={(window.innerHeight - 127)/2} />
+        <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
+            <div className="col" style={{padding: '0px 2px 0px 0px'}}>Home page placeholder ... Under developement.
+            <div className="card">
+                <div className="card-header">
+                    Magnitude Duration - Last 30 Days
+                </div>
+                <div className="card-body" style={{ padding: 0 }}>
+                    <MagDurChart Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 50} />
+                </div>
+            </div>
+
+            </div>
+            <div className="col" style={{ padding: '0px 0px 0px 3px' }}>
+                <div className="card">
+                    <div className="card-header">
+                        Historical Event Counts 
+                  </div>
+                    <div className="card-body" style={{ padding: 0 }}>
+                        <EventCountsByMonth Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 53}  />
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-header">
+                        Meter Activity - Last 30 Days
+                  </div>
+                    <div className="card-body" style={{padding: 0}}>
+                        <EventCountTable Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 52} />
+                    </div>
+                </div>
+
             </div>
         </div>
     )

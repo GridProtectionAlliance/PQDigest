@@ -93,7 +93,7 @@ const EventCountTable = (props: { Width: number, Height: number}) => {
         }}
         onClick={(data) => { }}
         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: props.Height - 68, width: '100%' }}
+        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: props.Height - 60, width: '100%' }}
         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
         selected={(item) => false}
     />

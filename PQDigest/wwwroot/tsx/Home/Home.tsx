@@ -29,13 +29,22 @@ import MagDurChart from '../Home/MagDurChart';
 const Home = (props: {}) => {
     return (
         <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
-            <div className="col" style={{padding: '0px 2px 0px 0px'}}>Home page placeholder ... Under developement.
+            <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="card">
+                    <div className="card-header">
+                        Welcome User
+                    </div>
+                    <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
+                        Home page placeholder ... Under developement.
+                    </div>
+                </div>
+
             <div className="card">
                 <div className="card-header">
                     Magnitude Duration - Last 30 Days
                 </div>
                 <div className="card-body" style={{ padding: 0 }}>
-                    <MagDurChart Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 50} />
+                    <MagDurChart Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
                 </div>
             </div>
 
@@ -54,8 +63,8 @@ const Home = (props: {}) => {
                     <div className="card-header">
                         Meter Activity - Last 30 Days
                   </div>
-                    <div className="card-body" style={{padding: 0}}>
-                        <EventCountTable Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 52} />
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 127) / 2 - 70, overflowY: 'hidden'}}>
+                        <EventCountTable Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
                     </div>
                 </div>
 

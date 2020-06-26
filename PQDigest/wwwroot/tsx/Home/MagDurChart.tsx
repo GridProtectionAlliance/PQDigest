@@ -48,6 +48,7 @@ interface MagDurCurve {
 }
 
 const MagDurChart = (props: { Width: number, Height: number }) => {
+
     const margin = { top: 15, right: 20, bottom: 60, left: 40 };
     const svgWidth = props.Width - margin.left - margin.right;
     const svgHeight = props.Height - margin.top - margin.bottom;
@@ -55,18 +56,22 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
     const [domains, setDomains] = React.useState<{ X: { Lower: number, Upper: number }, Y: { Lower: number, Upper: number } }>({ X: { Lower: 0.00001, Upper: 1000000 }, Y: { Lower: 0, Upper: 2.5 } });
     const [xAxisTicks, setXAxisTicks] = React.useState<Array<JSX.Element>>([]);
     const [yAxisTicks, setYAxisTicks] = React.useState<Array<JSX.Element>>([]);
+    const [magDurCurveData, setMagDurCurveData] = React.useState<iData[]>([]);
     const [magDurCurves, setMagDurCurves] = React.useState<MagDurCurve[]>([]);
+    const [magDurData, setMagDurData] = React.useState<Point[]>([]);
     const [magDurCircles, setMagDurCircles] = React.useState<JSX.Element[]>([]);
-    const [transform, setTransform] = React.useState<{X: number, Y: number, K: number}>({X: 0, Y: 0, K: 1});
+
     React.useEffect(() => {
 
         let handle1 = GetMagDurCurves();
         handle1.done((data: iData[]) => {
+            setMagDurCurveData(data);
             BuildMagDurCurve(data);
         });
 
         let handle2 = GetMagDurPoints();
         handle2.done((data: Point[]) => {
+            setMagDurData(data);
             BuildMadDurCircles(data);
 
         }); 
@@ -79,8 +84,10 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
     }, []);
 
     React.useEffect(() => {
-            BuildYAxis();
-            BuildXAxis();
+        BuildYAxis();
+        BuildXAxis();
+        BuildMadDurCircles(magDurData);
+        BuildMagDurCurve(magDurCurveData);
     }, [domains])
 
     function GetMagDurCurves(): JQuery.jqXHR<iData[]> {
@@ -119,12 +126,18 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
 
         let i = parseFloat(Math.pow(10, Math.floor(Math.log(domains.X.Lower) / Math.log(10))).toPrecision(1));
         let ticks = []
+        let logDomain = x.domain().map(l => Math.log(l) / Math.log(10));
+        let ldDiff = logDomain[1] - logDomain[0];
         for (; i <= domains.X.Upper; i = i * 10) {
             ticks.push(
-                <g key={i} className="tick" opacity="1" transform={`translate(${x(i)},${svgHeight})`} style={{}}>
+                <g key={i} className="tick" transform={`translate(${x(i)},${svgHeight})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
                     <path d={`M 0,6 V -${svgHeight - margin.top}`} strokeWidth={0.25}></path>
                     <text y="20" textAnchor='middle'>{xAxisText(i)}</text>
-
+                    {(ldDiff < 5 ?
+                        <g>
+                            {([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(num => <path key={num} d={`M ${/*Math.log(num * i) / Math.log(10) - Math.log(i) / Math.log(10)*/x(num*i) - x(i)},6 V -${svgHeight - margin.top}`} strokeWidth={0.25}/>)}
+                        </g>
+                        : null)}
                 </g>
             );
 
@@ -134,11 +147,11 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
 
     function BuildYAxis() {
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
-
+        let step = (y.domain()[1] - y.domain()[0] <= 1.5? 0.1 : 0.5);
         let yticks = [];
-        for (let i = domains.Y.Lower; i <= domains.Y.Upper; i = 0.5 + i) {
+        for (let i = Math.floor(domains.Y.Lower); i <= domains.Y.Upper; i = step + i) {
             yticks.push(
-                <g key={i} className="tick" opacity="1" transform={`translate(${margin.left},${y(i)})`}>
+                <g key={i} className="tick" transform={`translate(${margin.left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1}}>
                     <path d={`M -6,0 H ${svgWidth}`} strokeWidth={0.25}></path>
                     <text x="-15" dy="0.32em" textAnchor='middle'>{i.toFixed(1)}</text>
                 </g>);
@@ -165,35 +178,47 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
     }
 
     function handleZoom(evt) {
-        console.log('handleZoom', zoomTransform(evt.currentTarget));
+        let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
+        let x = scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([domains.X.Lower, domains.X.Upper]);
 
-        //let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
-        //let x = scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([domains.X.Lower, domains.X.Upper]);
+        // use event.nativeEvent.offsetX and Y
+        let zoomLocationY = evt.nativeEvent.offsetY;
+        let zoomLocationX = evt.nativeEvent.offsetX;
 
         // event.deltaY positive is wheel down or out and negative is wheel up or in
-        //if (evt.deltaY < 0) {
-        //    //setYDomain([y.domain()[0] + 0.1, y.domain()[1] - 0.1]);
-        //    setDomains({ X: { Lower: domains.X.Lower + 0.1, Upper: domains.X.Upper - 0.1 }, Y: { Lower: 0, Upper: 2.5 } });
-        //}
-        //else {
-        //    //setYDomain([y.domain()[0] - 0.1, y.domain()[1] + 0.1]);
-        //    setDomains({ X: { Lower: domains.X.Lower - 0.1, Upper: domains.X.Upper + 0.1 }, Y: { Lower: 0, Upper: 2.5 } });
-        //}
-        ////console.log(evt.deltaX, evt.deltaY, evt.deltaZ, evt.deltaMode)
+        if (evt.deltaY < 0) {
+            let domainXLength = (x.range()[1] - x.range()[0]) * 0.75;
+            let domainYLength = (y.range()[1] - y.range()[0]) * 0.75;
+            //console.log('handleZoom', { X: { Lower: x.invert(zoomLocationX - domainXLength / 2), Upper: x.invert(zoomLocationX + domainXLength / 2) }, Y: { Lower: zoomLocationY - domainYLength / 2, Upper: zoomLocationY + domainYLength / 2 } });
+
+            setDomains({
+                X: { Lower: x.invert(zoomLocationX - domainXLength / 2), Upper: x.invert(zoomLocationX + domainXLength / 2) },
+                Y: { Lower: y.invert(zoomLocationY - domainYLength / 2), Upper: y.invert(zoomLocationY + domainYLength / 2) }
+            });
+        }
+        else {
+            let domainXLength = (x.range()[1] - x.range()[0]) * 1.25;
+            let domainYLength = (y.range()[1] - y.range()[0]) * 1.25;
+            //console.log('handleZoom', { X: { Lower: x.invert(zoomLocationX - domainXLength / 2), Upper: x.invert(zoomLocationX + domainXLength / 2) }, Y: { Lower: zoomLocationY - domainYLength / 2, Upper: zoomLocationY + domainYLength / 2 } });
+
+            setDomains({
+                X: { Lower: x.invert(zoomLocationX - domainXLength / 2), Upper: x.invert(zoomLocationX + domainXLength / 2) },
+                Y: { Lower: y.invert(zoomLocationY - domainYLength / 2), Upper: y.invert(zoomLocationY + domainYLength / 2) }
+            });
+        }
     }
 
     function handleDrag(evt) {
         evt.preventDefault();
+
+        if (evt.nativeEvent.offsetX < margin.left || evt.nativeEvent.offsetX > svgWidth + margin.left) return;
+        if (evt.nativeEvent.offsetY < margin.top || evt.nativeEvent.offsetY > svgHeight + margin.top) return;
+
         evt.persist();
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
         let x = scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([domains.X.Lower, domains.X.Upper]);
 
-        evt.target.onmousemove = (e) => {
-            let t = _.clone(transform);
-            t.X -= evt.clientX - e.clientX;
-            t.Y -= evt.clientY - e.clientY;
-
-            setTransform(t)
+        $('#magDurChart').on('mousemove', (e) => {
             setDomains({
                 X: {
                     Lower: x.invert(x(domains.X.Lower) + evt.clientX - e.clientX),
@@ -204,25 +229,28 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
                     Upper: y.invert(y(domains.Y.Upper) + evt.clientY - e.clientY)
                 }
             });
-        };
+        });
     }
 
     function stopDrag(evt) {
-        evt.target.onmousemove = null;
+        evt.preventDefault();
+        $('#magDurChart').off('mousemove');
     }
 
     function resetZoom(evt) {
         setDomains({ X: { Lower: 0.00001, Upper: 1000000 }, Y: { Lower: 0, Upper: 2.5 } });
-        setTransform({ X: 0, Y: 0, K: 1 })
+    }
 
+    function hideReset():boolean {
+        return domains.X.Lower == 0.00001 && domains.X.Upper == 1000000 && domains.Y.Lower == 0 && domains.Y.Upper == 2.5
     }
     return (
         <div style={{ height: props.Height, width: props.Width }}>
-            <button style={{ position: 'absolute', top: 10, left: svgWidth }} onClick={resetZoom} hidden={transform.X == 0 && transform.Y == 0 && transform.K ==1 }>Reset</button>
-            <svg width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize: 'small' }} onWheel={handleZoom} onMouseDown={handleDrag} onMouseUp={stopDrag}>
+            <button style={{ position: 'absolute', top: 10, left: svgWidth }} onClick={resetZoom} hidden={hideReset()}>Reset</button>
+            <svg id="magDurChart" width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize: 'small' }} onWheel={handleZoom} onMouseDown={handleDrag} onMouseUp={stopDrag}>
 
                 {/* Draw chart data first */}
-                <g transform={`translate(${transform.X},${transform.Y}) scale(${transform.K})`}>
+                <g>
                     {magDurCurves.map((mdc, index) => (mdc.Visible ? <path key={index} d={mdc.Path} stroke={mdc.Color} /> : null))}
                     {magDurCircles}
                 </g>

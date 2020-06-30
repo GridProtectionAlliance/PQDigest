@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  global.d.ts - Gbtc
+//  EventSearchMagDur.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,40 +16,15 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/15/2020 - Billy Ernest
+//  06/29/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-declare global {
-    var homePath: string;
-    var controllerViewPath: string;
+import React from 'react';
 
-    interface String {
-        countOccurrences: (chars: string) => number
-    }
-
-    namespace moment {
-        function utc(timestamp: string): any;
-    }
-    function moment(inp?: any, format?: any, strict?: boolean): any;
-    function moment(inp?: any, format?: any, language?: string, strict?: boolean): any;
-
+const EventSearchMagDur = (props: {}) => {
+    return <div>Event Search page placeholder ... Under developement.</div>
 }
 
-export namespace PQDigest {
-    interface Setting {
-        ID: number,
-        Name: string,
-        Value: string,
-        DefaultValue: string
-    }
-
-}
-
-export namespace OpenXDA {
-    type EventTypeName = 'Sag' | 'Swell' | 'Transient' | 'Fault' | 'Interruption'
-    interface EventType { ID: number, Name: EventTypeName, Description: string, Selected?: boolean }
-    interface Meter { ID: number, AssetKey: string, Alias: string, Make: string, Model: string, Name: string, ShortName: string, TimeZone: string, LocationID: number, Description: string, Selected?: boolean }
-    interface EventSearch { ID: number, StartTime: string, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number}
-}
+export default EventSearchMagDur;

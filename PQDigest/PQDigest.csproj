@@ -16,6 +16,9 @@
   <ItemGroup>
     <Content Remove="wwwroot\tsx\EventSearch\EventCountsByMonth.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\EventSearch.tsx" />
+    <Content Remove="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
+    <Content Remove="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
+    <Content Remove="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
     <Content Remove="wwwroot\tsx\global.d.ts" />
     <Content Remove="wwwroot\tsx\Home\EventCountTable.tsx" />
     <Content Remove="wwwroot\tsx\Home\Home.tsx" />
@@ -48,6 +51,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Home\MagDurChart.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

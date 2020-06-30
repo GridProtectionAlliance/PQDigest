@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  global.d.ts - Gbtc
+//  Setting.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,40 +16,28 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/15/2020 - Billy Ernest
+//  06/29/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-declare global {
-    var homePath: string;
-    var controllerViewPath: string;
+using Gemstone.Data.Model;
 
-    interface String {
-        countOccurrences: (chars: string) => number
+namespace PQDigest.Models
+{
+    public class Setting
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        [Searchable]
+        public string Name { get; set; }
+
+        [Searchable]
+        public string Value { get; set; }
+
+        [Searchable]
+        public string DefaultValue { get; set; }
+
     }
-
-    namespace moment {
-        function utc(timestamp: string): any;
-    }
-    function moment(inp?: any, format?: any, strict?: boolean): any;
-    function moment(inp?: any, format?: any, language?: string, strict?: boolean): any;
-
-}
-
-export namespace PQDigest {
-    interface Setting {
-        ID: number,
-        Name: string,
-        Value: string,
-        DefaultValue: string
-    }
-
-}
-
-export namespace OpenXDA {
-    type EventTypeName = 'Sag' | 'Swell' | 'Transient' | 'Fault' | 'Interruption'
-    interface EventType { ID: number, Name: EventTypeName, Description: string, Selected?: boolean }
-    interface Meter { ID: number, AssetKey: string, Alias: string, Make: string, Model: string, Name: string, ShortName: string, TimeZone: string, LocationID: number, Description: string, Selected?: boolean }
-    interface EventSearch { ID: number, StartTime: string, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number}
 }

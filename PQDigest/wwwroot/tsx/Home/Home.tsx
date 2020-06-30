@@ -25,17 +25,45 @@ import React from 'react';
 import EventCountsByMonth from '../Home/EventCountsByMonth';
 import EventCountTable from '../Home/EventCountTable';
 import MagDurChart from '../Home/MagDurChart';
+import { PQDigest } from '../global';
 
 const Home = (props: {}) => {
+    const [mailTo, setMailTo] = React.useState<string>('');
+    React.useEffect(() => {
+        let handle = GetMailto();
+        handle.done((data: PQDigest.Setting) => {
+            setMailTo(`mailto:${data.Value}`);
+        });
+        return function () {
+            if (handle.abort != undefined) handle.abort();
+        }
+    }, []);
+
+    function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/Setting/Email.Mailto`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
     return (
         <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
             <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
                 <div className="card">
                     <div className="card-header">
-                        Welcome User
+                        Welcome, User
                     </div>
                     <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
-                        Home page placeholder ... Under developement.
+                        <br />
+                        <p>So far this month there have been xx events recorded from your yy power quality meters.</p>
+                        <br />
+                        <p><a href="">List of last 100 events from all meters over last 365 days</a></p>
+                        <p><a href="">List of all meter activity over last 30 days</a></p>
+                        <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
                     </div>
                 </div>
 

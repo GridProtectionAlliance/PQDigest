@@ -29,6 +29,7 @@ import _ from 'lodash';
 import Table from '@gpa-gemstone/react-table';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
+import { ExportToCsv } from '../ExportCSV';
 
 const EventSearch = (props: {}) => {
     const history = createBrowserHistory();
@@ -207,7 +208,7 @@ const EventSearch = (props: {}) => {
             <div className="row" style={{ height: "calc(100% - 80px)", margin: '5px 5px 5px 5px ' }}>
                 <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
                     <div className="card">
-                        <div className="card-header">Events</div>
+                        <div className="card-header">Events<button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button></div>
                         <div className="card-body" style={{ height: (window.innerHeight) - 275, padding:0 }}>
                             <Table<OpenXDA.EventSearch>
                                 cols={[

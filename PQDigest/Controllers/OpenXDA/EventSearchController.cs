@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Gemstone.Data;
@@ -98,5 +100,64 @@ namespace PQDigest.Controllers
 					   , postData.StartDate, postData.EndDate, postData.Count));
             }
         }
-    }
+
+		[HttpPost("csv")]
+		public ActionResult PostCSV([FromBody] EventSearchPostData postData)
+		{
+			using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+			{
+				DataTable table = connection.RetrieveData(@"
+					DECLARE @StartDate Date = {0};
+					DECLARE @EndDate Date = {1};
+					DECLARE @top INT = {2};
+
+					With WorstSeverityCode as (
+					SELECT 
+						EventID,
+						MAX(DisturbanceSeverity.SeverityCode) as SeverityCode
+					FROM 
+						Disturbance INNER HASH JOIN
+						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
+					WHERE
+						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate)
+					GROUP BY
+						EventID
+					), WorstSeverityRecord as (
+					SELECT 
+						Disturbance.*, DisturbanceSeverity.SeverityCode, row_number() over (Partition By Disturbance.EventID Order By Disturbance.EventTypeID) as Ranking 
+					FROM 
+						Disturbance INNER HASH JOIN
+						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
+						WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
+					WHERE
+						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate)
+					)
+					SELECT
+						TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds
+					FROM
+						Event INNER HASH JOIN
+						Meter ON Meter.ID = Event.MeterID INNER HASH JOIN 
+						EventType ON Event.EventTypeID = EventType.ID LEFT HASH JOIN
+						WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1
+					WHERE
+						(CAST(Event.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Event.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND " +
+					 $" Event.EventTypeID IN (${(postData.Types.Length > 0 ? string.Join(",", postData.Types) : "0")}) AND " +
+					 $" Event.MeterID IN (${(postData.Meters.Length > 0 ? string.Join(",", postData.Meters) : "0")}) "
+					   , postData.StartDate, postData.EndDate, postData.Count);
+				MemoryStream memoryStream = new MemoryStream();
+				TextWriter writer = new StreamWriter(memoryStream);
+
+				writer.WriteLine(string.Join(",", table.Columns.Cast<DataColumn>().Select(x => x.ColumnName)));
+				foreach (DataRow row in table.Rows)
+                {
+					writer.WriteLine(string.Join(",", table.Columns.Cast<DataColumn>().Select(x => row[x.ColumnName].ToString())));
+				}
+
+				return Ok(new FileStreamResult(memoryStream, "text/csv") { FileDownloadName = "EventSearch.csv"});
+			}
+		}
+
+	}
 }

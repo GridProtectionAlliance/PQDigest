@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using PQDigest.Models;
 using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace PQDigest
 {
@@ -56,7 +57,9 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            IMvcBuilder builder = services.AddControllersWithViews()
+            IMvcBuilder builder = services.AddControllersWithViews( options => {
+                options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
+            })
             .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;

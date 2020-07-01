@@ -19,6 +19,7 @@
     <Content Remove="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
+    <Content Remove="wwwroot\tsx\ExportCSV.tsx" />
     <Content Remove="wwwroot\tsx\global.d.ts" />
     <Content Remove="wwwroot\tsx\Home\EventCountTable.tsx" />
     <Content Remove="wwwroot\tsx\Home\Home.tsx" />
@@ -38,9 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Data" Version="1.0.43" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.45" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.39" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.49" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.49" />
+    <PackageReference Include="Gemstone.Web" Version="1.0.49" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
@@ -54,6 +55,7 @@
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\ExportCSV.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Home\MagDurChart.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

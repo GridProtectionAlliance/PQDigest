@@ -22,9 +22,20 @@
 //******************************************************************************************************
 
 import React from 'react';
+import EventSearchOpenSEE from './OpenSEE/EventSearchOpenSEE';
+import EventSearchTrenDAP from './TrenDAP/EventSearchTrenDAP';
+import EventSearchPQI from './PQI/EventSearchPQI';
 
-const EventSearchPreview = (props: {}) => {
-    return <div>Event Search page placeholder ... Under developement.</div>
+const EventSearchPreview = (props: {EventID: number, Width: number, Height: number}) => {
+    return (<>
+        {props.EventID < 1 ? <span>No Event Selected ... </span> :
+            <>
+                <EventSearchOpenSEE EventID={props.EventID} Width={props.Width - 55} Height={props.Height / 3 - 1} />
+                <EventSearchTrenDAP EventID={props.EventID} Width={props.Width - 55} Height={props.Height / 3 - 1} />
+                <EventSearchPQI EventID={props.EventID} Width={props.Width - 55} Height={props.Height / 3 - 1} />
+            </>
+        }
+    </>);
 }
 
 export default EventSearchPreview;

@@ -61,8 +61,8 @@ const Home = (props: {}) => {
                         <br />
                         <p>So far this month there have been xx events recorded from your yy power quality meters.</p>
                         <br />
-                        <p><a href="">List of last 100 events from all meters over last 365 days</a></p>
-                        <p><a href="">List of all meter activity over last 30 days</a></p>
+                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(365, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100`}>List of last 100 events from all meters over last 365 days</a></p>
+                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=1000`}>List of all meter activity over last 30 days</a></p>
                         <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
                     </div>
                 </div>

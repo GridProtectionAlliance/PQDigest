@@ -30,6 +30,7 @@ import Table from '@gpa-gemstone/react-table';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
+import MagDurChart from '../MagDurChart';
 
 const EventSearch = (props: {}) => {
     const history = createBrowserHistory();
@@ -43,7 +44,8 @@ const EventSearch = (props: {}) => {
     const [events, setEvents] = React.useState<OpenXDA.EventSearch[]>([]);
     const [sortField, setSortField] = React.useState<keyof OpenXDA.EventSearch>('StartTime');
     const [ascending, setAscending] = React.useState<boolean>(true);
-    const [eventID, setEventID] = React.useState<number>(qs.eventID == undefined ? null : parseInt(qs.eventID as string));
+    const [eventID, setEventID] = React.useState<number>(qs.eventID == undefined ? 0 : parseInt(qs.eventID as string));
+    const [showEventList, setShowEventList] = React.useState<boolean>(true);
 
     React.useEffect(() => {
         let handle1 = GetTypes();
@@ -81,7 +83,7 @@ const EventSearch = (props: {}) => {
         
         if (meters.length == 0 || types.length == 0) return;
 
-        history.push({ pathname: homePath + 'EventSearch', search: `?startDate=${startDate}&endDate=${endDate}&returnLimit=${returnLimit}&types=${btoa(types.filter(x => x.Selected).map(x => x.ID).toString())}&meters=${btoa(meters.filter(x => x.Selected).map(x => x.ID).toString())}`})
+        history.push({ pathname: homePath + 'EventSearch', search: `?eventID=${eventID}&startDate=${startDate}&endDate=${endDate}&returnLimit=${returnLimit}&types=${btoa(types.filter(x => x.Selected).map(x => x.ID).toString())}&meters=${btoa(meters.filter(x => x.Selected).map(x => x.ID).toString())}`})
 
         let handle1 = GetEventSearch();
         handle1.done((data: OpenXDA.EventSearch[]) => {
@@ -94,7 +96,7 @@ const EventSearch = (props: {}) => {
         }
 
 
-    }, [types, startDate, endDate, meters, returnLimit]);
+    }, [types, startDate, endDate, meters, returnLimit, eventID]);
 
     function GetTypes(): JQuery.jqXHR<OpenXDA.EventType[]> {
         return $.ajax({
@@ -208,50 +210,59 @@ const EventSearch = (props: {}) => {
             <div className="row" style={{ height: "calc(100% - 80px)", margin: '5px 5px 5px 5px ' }}>
                 <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
                     <div className="card">
-                        <div className="card-header">Events<button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button></div>
-                        <div className="card-body" style={{ height: (window.innerHeight) - 275, padding:0 }}>
-                            <Table<OpenXDA.EventSearch>
-                                cols={[
-                                    { key: 'StartTime', label: 'Date', headerStyle: { width: '25%' }, rowStyle: { width: '25%' }, content: (item, key, style) => moment(item[key]).format('MM/DD/YYYY HH:mm:ss')},
-                                    //{ key: 'StartTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key, style) => moment(item[key]).format('HH:mm:ss') },
-                                    { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'EventType', label: 'Type', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                    { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style ) => (item[key] as number).toFixed(2)},
-                                    { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => (item[key] as number).toFixed(2) },
-                                    { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
+                        <div className="card-header">
+                            Events
+                            <select className="form-control" value={showEventList.toString()} onChange={evt => setShowEventList(evt.target.value == 'true')} style={{width: 115, position: 'absolute', top: 5, right: 115}}>
+                                <option value='true'>List</option>
+                                <option value='false'>Mag/Dur</option>
+                            </select>
+                            <button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button>
+                        </div>
+                        <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
+                            {showEventList ?
+                                <Table<OpenXDA.EventSearch>
+                                    cols={[
+                                        { key: 'StartTime', label: 'Date', headerStyle: { width: '25%' }, rowStyle: { width: '25%' }, content: (item, key, style) => moment(item[key]).format('MM/DD/YYYY HH:mm:ss') },
+                                        //{ key: 'StartTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key, style) => moment(item[key]).format('HH:mm:ss') },
+                                        { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                        { key: 'EventType', label: 'Type', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
+                                        { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => (item[key] as number).toFixed(2) },
+                                        { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => (item[key] as number).toFixed(2) },
+                                        { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
 
-                                ]}
-                                tableClass="table table-hover"
-                                data={events}
-                                sortField={sortField}
-                                ascending={ascending}
-                                onSort={(d) => {
-                                    if (d.col == sortField) {
-                                        let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
-                                        setEvents(ordered);
-                                        setAscending(!ascending);
-                                    }
-                                    else {
-                                        setAscending(ascending);
-                                        setSortField(d.col);
-                                        let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
-                                        setEvents(ordered);
-                                    }
-                                }}
-                                onClick={(data) => { setEventID(data.row.ID)}}
-                                theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 300, width: '100%' }}
-                                rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                selected={(item) => item.ID == eventID}
-                            />
+                                    ]}
+                                    tableClass="table table-hover"
+                                    data={events}
+                                    sortField={sortField}
+                                    ascending={ascending}
+                                    onSort={(d) => {
+                                        if (d.col == sortField) {
+                                            let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
+                                            setEvents(ordered);
+                                            setAscending(!ascending);
+                                        }
+                                        else {
+                                            setAscending(ascending);
+                                            setSortField(d.col);
+                                            let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
+                                            setEvents(ordered);
+                                        }
+                                    }}
+                                    onClick={(data) => { setEventID(data.row.ID) }}
+                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 300, width: '100%' }}
+                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                    selected={(item) => item.ID == eventID}
+                                /> :
+                                <MagDurChart Height={(window.innerHeight) - 275} Width={window.innerWidth / 2 - 20} Points={events.map(a => Object.create({ Magnitude: a.PerUnitMagnitude, Duration: a.DurationSeconds }))} />}
                         </div>
                     </div>
                 </div>
                 <div className="col" style={{ padding: '0px 0px 0px 3px' }}>
                     <div className="card">
-                        <div className="card-header">Event Preview</div>
-                        <div className="card-body" style={{ height: (window.innerHeight) - 275 }}>
-                            <EventSearchPreview  />
+                        {/*<div className="card-header">Event Preview</div>*/}
+                        <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>
+                            <EventSearchPreview EventID={eventID} Height={window.innerHeight - 226} Width={window.innerWidth / 2}/>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EventSearchMagDur.tsx - Gbtc
+//  EventSearchPQI.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,19 +16,19 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/29/2020 - Billy Ernest
+//  07/02/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 import React from 'react';
-import { Point } from '../MagDurChart';
-import MagDurChart from '../MagDurChart';
 
-const EventSearchMagDur = (props: {Points: Point[]}) => {
-    const [magDurData, setMagDurData] = React.useState<Point[]>([]);
-
-    return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points}/>
+export default function EventSearchPQI(props: { EventID: number, Width: number, Height: number }) {
+    return (
+        <div className="card">
+            <div className="card-header"><a href={homePath + 'PQI?eventid=' + props.EventID} target="_blank">View in PQI</a></div>
+            <div className="card-body" style={{ height: props.Height - 50 }}>
+            </div>
+        </div>
+    )
 }
-
-export default EventSearchMagDur;

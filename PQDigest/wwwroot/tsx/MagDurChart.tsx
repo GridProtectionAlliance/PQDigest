@@ -22,15 +22,15 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { scaleLog, scaleLinear, max, line, event, zoomTransform, zoom, select} from 'd3';
+import { scaleLog, scaleLinear, max, line, event, zoomTransform, zoom, select } from 'd3';
 import _ from 'lodash';
 
 interface iData {
     ID: number,
-    Name: string, 
+    Name: string,
     Visible: boolean,
     Color: string,
-    PerUnitMagnitude: number, 
+    PerUnitMagnitude: number,
     DurationSeconds: number,
     LoadOrder: number
 }
@@ -47,7 +47,7 @@ interface MagDurCurve {
     Path: string
 }
 
-const MagDurChart = (props: { Width: number, Height: number }) => {
+const MagDurChart = (props: { Width: number, Height: number, Points: Point[] }) => {
 
     const margin = { top: 15, right: 20, bottom: 60, left: 40 };
     const svgWidth = props.Width - margin.left - margin.right;
@@ -58,7 +58,6 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
     const [yAxisTicks, setYAxisTicks] = React.useState<Array<JSX.Element>>([]);
     const [magDurCurveData, setMagDurCurveData] = React.useState<iData[]>([]);
     const [magDurCurves, setMagDurCurves] = React.useState<MagDurCurve[]>([]);
-    const [magDurData, setMagDurData] = React.useState<Point[]>([]);
     const [magDurCircles, setMagDurCircles] = React.useState<JSX.Element[]>([]);
 
     React.useEffect(() => {
@@ -69,42 +68,24 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
             BuildMagDurCurve(data);
         });
 
-        let handle2 = GetMagDurPoints();
-        handle2.done((data: Point[]) => {
-            setMagDurData(data);
-            BuildMadDurCircles(data);
-
-        }); 
 
 
         return function () {
             if (handle1.abort != undefined) handle1.abort();
-            if (handle2.abort != undefined) handle2.abort();
         }
     }, []);
 
     React.useEffect(() => {
         BuildYAxis();
         BuildXAxis();
-        BuildMadDurCircles(magDurData);
+        BuildMadDurCircles(props.Points);
         BuildMagDurCurve(magDurCurveData);
-    }, [domains])
+    }, [domains, props.Points])
 
     function GetMagDurCurves(): JQuery.jqXHR<iData[]> {
         return $.ajax({
             type: "GET",
             url: `${homePath}api/MagDurCurves`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetMagDurPoints(): JQuery.jqXHR<Point[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/MagDurPoints`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -131,11 +112,11 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
         for (; i <= domains.X.Upper; i = i * 10) {
             ticks.push(
                 <g key={i} className="tick" transform={`translate(${x(i)},${svgHeight})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
-                    <path d={`M 0,6 V -${svgHeight - margin.top}`} strokeWidth={0.25}></path>
+                    <path d={`M 0,6 V -${svgHeight - margin.top}`}  strokeWidth={0.25}></path>
                     <text y="20" textAnchor='middle'>{xAxisText(i)}</text>
                     {(ldDiff < 5 ?
                         <g>
-                            {([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(num => <path key={num} d={`M ${/*Math.log(num * i) / Math.log(10) - Math.log(i) / Math.log(10)*/x(num*i) - x(i)},6 V -${svgHeight - margin.top}`} strokeWidth={0.25}/>)}
+                            {([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(num => <path key={num} d={`M ${/*Math.log(num * i) / Math.log(10) - Math.log(i) / Math.log(10)*/x(num * i) - x(i)},6 V -${svgHeight - margin.top}`} strokeWidth={0.25} />)}
                         </g>
                         : null)}
                 </g>
@@ -147,11 +128,11 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
 
     function BuildYAxis() {
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
-        let step = (y.domain()[1] - y.domain()[0] <= 1.5? 0.1 : 0.5);
+        let step = (y.domain()[1] - y.domain()[0] <= 1.5 ? 0.1 : 0.5);
         let yticks = [];
         for (let i = Math.floor(domains.Y.Lower); i <= domains.Y.Upper; i = step + i) {
             yticks.push(
-                <g key={i} className="tick" transform={`translate(${margin.left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1}}>
+                <g key={i} className="tick" transform={`translate(${margin.left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
                     <path d={`M -6,0 H ${svgWidth}`} strokeWidth={0.25}></path>
                     <text x="-15" dy="0.32em" textAnchor='middle'>{i.toFixed(1)}</text>
                 </g>);
@@ -241,12 +222,12 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
         setDomains({ X: { Lower: 0.00001, Upper: 1000000 }, Y: { Lower: 0, Upper: 2.5 } });
     }
 
-    function hideReset():boolean {
+    function hideReset(): boolean {
         return domains.X.Lower == 0.00001 && domains.X.Upper == 1000000 && domains.Y.Lower == 0 && domains.Y.Upper == 2.5
     }
     return (
-        <div style={{ height: props.Height, width: props.Width }}>
-            <button style={{ position: 'absolute', top: 10, left: svgWidth }} onClick={resetZoom} hidden={hideReset()}>Reset</button>
+        <div style={{ height: props.Height, width: props.Width, position: 'relative' }}>
+            <button style={{ position: 'absolute', top: 20, right: 25 }} className="btn" onClick={resetZoom} hidden={hideReset()}>Reset</button>
             <svg id="magDurChart" width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize: 'small' }} onWheel={handleZoom} onMouseDown={handleDrag} onMouseUp={stopDrag}>
 
                 {/* Draw chart data first */}
@@ -265,17 +246,21 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
                     magDurCurves.map((mdc, index) => <rect style={{ cursor: 'pointer', opacity: (mdc.Visible ? 1 : 0.25) }} key={index} x={margin.left + 10 + 20 * index} y={svgHeight + 40} width={15} height={15} fill={mdc.Color} onClick={(event) => {
                         mdc.Visible = !mdc.Visible;
                         let update = _.cloneDeep(magDurCurves);
-
                         setMagDurCurves(update);
+                        let mdcd = _.cloneDeep(magDurCurveData);
+                        mdcd.filter(x => x.Name == mdc.Name).forEach(x => x.Visible = mdc.Visible);
+                        setMagDurCurveData(mdcd);
+
+
                     }}><title>{mdc.Name}</title></rect>)
                 }
-                
+
                 {/* XAxis ticks*/}
                 {xAxisTicks}
-                <text x={svgWidth/2} y={svgHeight + margin.top + 20}>Duration (s)</text>
+                <text x={svgWidth / 2} y={svgHeight + margin.top + 20}>Duration (s)</text>
                 {/* YAxis ticks and Labels*/}
                 {yAxisTicks}
-                <text transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight/2 - margin.bottom}>Per Unit Voltage</text>
+                <text transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight / 2 - margin.bottom}>Per Unit Voltage</text>
                 {/* Chart borders */}
                 <path d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
 

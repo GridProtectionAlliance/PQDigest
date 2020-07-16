@@ -23,6 +23,7 @@
     <Content Remove="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3Chart.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3ChartAxis.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\PQI\EventSearchPQI.tsx" />
+    <Content Remove="wwwroot\tsx\EventSearch\PQI\PQIChart.tsx" />
     <Content Remove="wwwroot\tsx\EventSearch\TrenDAP\EventSearchTrenDAP.tsx" />
     <Content Remove="wwwroot\tsx\ExportCSV.tsx" />
     <Content Remove="wwwroot\tsx\global.d.ts" />
@@ -73,6 +74,9 @@
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3Chart.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3ChartAxis.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\PQI\EventSearchPQI.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\PQI\PQIChart.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\tsx\EventSearch\TrenDAP\EventSearchTrenDAP.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

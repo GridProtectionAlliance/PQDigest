@@ -28,7 +28,7 @@ import MagDurChart from '../MagDurChart';
 const EventSearchMagDur = (props: {Points: Point[]}) => {
     const [magDurData, setMagDurData] = React.useState<Point[]>([]);
 
-    return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points}/>
+    return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points} OnSelect={(evt, point) => { }}/>
 }
 
 export default EventSearchMagDur;

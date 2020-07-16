@@ -36,6 +36,7 @@ interface iData {
 }
 
 export interface Point {
+    EventID: number,
     Magnitude: number,
     Duration: number
 }
@@ -47,7 +48,7 @@ interface MagDurCurve {
     Path: string
 }
 
-const MagDurChart = (props: { Width: number, Height: number, Points: Point[] }) => {
+const MagDurChart = (props: { Width: number, Height: number, Points: Point[], OnSelect: (evt: any, point: Point) => void }) => {
 
     const margin = { top: 15, right: 20, bottom: 60, left: 40 };
     const svgWidth = props.Width - margin.left - margin.right;
@@ -154,7 +155,7 @@ const MagDurChart = (props: { Width: number, Height: number, Points: Point[] }) 
     function BuildMadDurCircles(data: Point[]) {
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([domains.Y.Lower, domains.Y.Upper]);
         let x = scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([domains.X.Lower, domains.X.Upper]);
-        let circles = data.filter(point => point.Magnitude >= domains.Y.Lower && point.Magnitude <= domains.Y.Upper && point.Duration >= domains.X.Lower && point.Duration <= domains.X.Upper).map((point, index) => <circle key={index} className="dot" r={3} cx={x(point.Duration)} cy={y(point.Magnitude)} fill='blue' />);
+        let circles = data.filter(point => point.Magnitude >= domains.Y.Lower && point.Magnitude <= domains.Y.Upper && point.Duration >= domains.X.Lower && point.Duration <= domains.X.Upper).map((point, index) => <circle key={index} className="dot" r={3} cx={x(point.Duration)} cy={y(point.Magnitude)} fill='blue' style={{ cursor: 'pointer' }} onClick={(evt) => props.OnSelect(evt, point)} />);
         setMagDurCircles(circles);
     }
 

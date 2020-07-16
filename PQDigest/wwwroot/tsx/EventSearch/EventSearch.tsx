@@ -254,7 +254,7 @@ const EventSearch = (props: {}) => {
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     selected={(item) => item.ID == eventID}
                                 /> :
-                                <MagDurChart Height={(window.innerHeight) - 275} Width={window.innerWidth / 2 - 20} Points={events.map(a => Object.create({ Magnitude: a.PerUnitMagnitude, Duration: a.DurationSeconds }))} />}
+                                <MagDurChart Height={(window.innerHeight) - 275} Width={window.innerWidth / 2 - 20} Points={events.map(a => Object.create({ EventID: a.ID, Magnitude: a.PerUnitMagnitude, Duration: a.DurationSeconds }))} OnSelect={(evt, point) => setEventID(point.EventID)}/>}
                         </div>
                     </div>
                 </div>

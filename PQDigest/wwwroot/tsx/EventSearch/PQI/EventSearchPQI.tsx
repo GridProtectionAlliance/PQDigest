@@ -22,12 +22,89 @@
 //******************************************************************************************************
 
 import React from 'react';
+import PQIChart, { Point } from './PQIChart';
+import { OpenXDA } from '../../global';
 
 export default function EventSearchPQI(props: { EventID: number, Width: number, Height: number }) {
+    const [components, setComponents] = React.useState<any[]>([]);
+    const [component, setComponent] = React.useState<any>(null);
+    const [points, setPoints] = React.useState<Point[]>([]);
+    const [curve, setCurve] = React.useState<Point[]>([]);
+    React.useEffect(() => {
+        let handle1 = GetComponents();
+        handle1.done((data: any[]) => {
+            setComponents(data);
+            setComponent(data[0]);
+        });
+
+        let handle2 = GetDisturbances();
+        handle2.done((data) => {
+            setPoints(data.map(d => Object.create({Duration: d.DurationSeconds, Magnitude: d.PerUnitMagnitude})));
+        });
+
+        return function () {
+            if (handle1.abort != undefined) handle1.abort();
+        }
+    }, [props.EventID])
+
+    React.useEffect(() => {
+        if (component == null) return;
+        let handle1 = GetComponentCurve();
+        handle1.done((data: any[]) => {
+            setCurve(data);
+        });
+
+
+        return function () {
+            if (handle1.abort != undefined) handle1.abort();
+        }
+    }, [component])
+
+    function GetComponents(): JQuery.jqXHR<any[]> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/PQI/Components/${props.EventID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+    function GetComponentCurve(): JQuery.jqXHR<any[]> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/PQI/Component/Curve/${component.CurveDB}/${component.TestCurveID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+    function GetDisturbances(): JQuery.jqXHR<OpenXDA.Disturbance[]> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/PQI/Distrubances/${props.EventID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+
     return (
         <div className="card">
-            <div className="card-header"><a href={homePath + 'PQI?eventid=' + props.EventID} target="_blank">View in PQI</a></div>
-            <div className="card-body" style={{ height: props.Height - 50 }}>
+            <div className="card-header">PQI - Ride-through Curves
+                <select className='form-control' style={{width: 200, position: 'absolute', right: 110, top: 4}}>
+                    {
+                        components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
+                    }
+                </select>
+            </div>
+            <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
+                <PQIChart Height={props.Height - 50} Width={props.Width} EventID={props.EventID} Points={points} Curve={curve}/>
             </div>
         </div>
     )

@@ -113,7 +113,7 @@ namespace PQDigest.Controllers
             using (AdoDataConnection xdaConnection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DataTable distrubances = xdaConnection.RetrieveData(@"
-                    select * from Disturbance where eventid = {0} AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
+                    select * from Disturbance where eventid = {0} AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND PerUnitMagnitude <= 1
                 ", eventID);
 
                 return Ok(distrubances);

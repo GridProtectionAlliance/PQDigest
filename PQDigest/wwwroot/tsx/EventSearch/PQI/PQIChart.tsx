@@ -49,11 +49,12 @@ interface MagDurCurve {
 
 const PQIChart = (props: { Width: number, Height: number, EventID: number, Points: Point[], Curve: Point[] }) => {
 
-    const margin = { top: 15, right: 30, bottom: 60, left: 40 };
+    const margin = { top: 15, right: 30, bottom: 40, left: 50 };
     const svgWidth = props.Width - margin.left - margin.right;
     const svgHeight = props.Height - margin.top - margin.bottom;
-    const x = scaleLinear().range([margin.left, svgWidth + margin.left]).domain([0, max(props.Curve.map(a => a.Duration))]);
-    const y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0,2]);
+    const xmax = (props.Curve.length > 0 ? max(props.Curve.map(a => a.Duration)):3)
+    const x = scaleLinear().range([margin.left, svgWidth + margin.left]).domain([0, xmax]);
+    const y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0,1.1]);
 
     React.useEffect(() => {
     }, []);
@@ -111,7 +112,7 @@ const PQIChart = (props: { Width: number, Height: number, EventID: number, Point
                 <text x={svgWidth/2} y={svgHeight + margin.top + 20}>Duration (s)</text>
                 {/* YAxis ticks and Labels*/}
                 {BuildYAxis()}
-                <text transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight/2 - margin.bottom}>Per Unit Voltage</text>
+                <text transform={`rotate(-90 0,0)`} y={margin.left - 35} x={-svgHeight/2 - margin.bottom}>Per Unit Voltage</text>
                 {/* Chart borders */}
                 <path d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
 

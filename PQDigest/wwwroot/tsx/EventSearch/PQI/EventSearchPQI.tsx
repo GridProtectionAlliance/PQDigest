@@ -97,7 +97,7 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     return (
         <div className="card">
             <div className="card-header">PQI - Ride-through Curves
-                <select className='form-control' style={{width: 200, position: 'absolute', right: 110, top: 4}}>
+                <select className='form-control' style={{width: 200, position: 'absolute', right: 6, top: 4}}>
                     {
                         components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
                     }

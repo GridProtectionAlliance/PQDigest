@@ -24,15 +24,11 @@
 import React from 'react';
 import { scaleLinear, line, extent } from 'd3';
 
-const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Width: number, Height: number }) => {
-    const svgWidth = props.Width;
-    const svgHeight = props.Height;
+const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number }) => {
 
     const [paths, setPaths] = React.useState<Array<JSX.Element>>([]);
-    const [hidden, setHidden] = React.useState<boolean>(true);
 
     React.useEffect(() => {
-        setHidden(true);
         setPaths([]);
         return GetData();
     }, [props.EventID]);
@@ -41,7 +37,7 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
         let handle = $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.EventID}` +
-                `&pixels=${svgWidth}` +
+                `&pixels=${props.Width}` +
                 `&type=${props.MeasurementType}` +
                 `&dataType=${props.DataType}`,
             contentType: "application/json; charset=utf-8",
@@ -58,10 +54,9 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
 
 
     function DrawChart(data) {
-        setHidden(Object.keys(data).length == 0);
 
-        let x = scaleLinear().rangeRound([0, svgWidth]);
-        let y = scaleLinear().rangeRound([svgHeight, 0]);
+        let x = scaleLinear().rangeRound([props.Margin.Left, props.Width - props.Margin.Right]);
+        let y = scaleLinear().rangeRound([props.Height - props.Margin.Top, props.Margin.Bottom]);
 
         let yextent = [0, 0];
         let xextent = [9007199254740991, -9007199254740990];
@@ -109,8 +104,11 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
 
 
     return (
-        <div style={{ height: svgHeight /*, margin: '0x', padding: '0px'*/ }} hidden={hidden}>
-            <svg width={svgWidth} height={svgHeight} style={{ border: '2px solid lightgray'/*, position: "absolute", left: 20*/ }}>
+        <div style={{ height: props.Height /*, margin: '0x', padding: '0px'*/ }}>
+            <svg width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px',  fontFamily: 'sans-serif', fontSize: 'small'}}>
+                {/* Chart borders */}
+                <path d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
+                <text transform={`rotate(-90 0,0)`} y={props.Margin.Left - 15} x={-(props.Height + 35) / 2}>{props.MeasurementType == "Voltage" ? "Voltage" : "Amps"}</text>
                 <g>
                     {paths}
                 </g>

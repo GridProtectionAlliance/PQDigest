@@ -31,19 +31,23 @@ const EventSearchPreview = (props: { EventID: number, Width: number, Height: num
     return (<>
         {props.EventID < 1 ? <span>No Event Selected ... </span> :
             <>
-                <select value={control} onChange={(evt) => setControl(evt.target.value as any)} className="form-control" style={{width: 100, position: 'absolute', zIndex: 100, right: 6, top: 5 }}>
-                    <option>Data</option>
-                    <option>PQI</option>
-                </select>
+                {/*
+                    <select value={control} onChange={(evt) => setControl(evt.target.value as any)} className="form-control" style={{ width: 100, position: 'absolute', zIndex: 100, right: 6, top: 5 }}>
+                        <option>Data</option>
+                        <option>PQI</option>
+                    </select>
+                */}
                 {(control == 'Data' ? 
                     <>
-                        <EventSearchOpenSEE EventID={props.EventID} Width={props.Width - 55} Height={props.Height / 2 - 1} />
-                        <EventSearchTrenDAP EventID={props.EventID} Width={props.Width - 55} Height={props.Height / 2 - 1} />
+                        <EventSearchOpenSEE EventID={props.EventID} Width={props.Width} Height={props.Height /3 - 1} />
+                        <EventSearchTrenDAP EventID={props.EventID} Width={props.Width} Height={props.Height / 3 - 1} />
+                        <EventSearchPQI EventID={props.EventID} Width={props.Width} Height={props.Height/3 - 1} />
+
                     </>
                     : null)}
                 {(control == 'PQI' ?
                     <>
-                        <EventSearchPQI EventID={props.EventID} Width={props.Width - 55} Height={props.Height} />
+                        <EventSearchPQI EventID={props.EventID} Width={props.Width} Height={props.Height} />
                     </>
                     : null)}
 

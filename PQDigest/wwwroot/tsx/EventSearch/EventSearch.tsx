@@ -208,7 +208,7 @@ const EventSearch = (props: {}) => {
                 </div>
             </div>
             <div className="row" style={{ height: "calc(100% - 80px)", margin: '5px 5px 5px 5px ' }}>
-                <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="col" style={{ padding: '0px 2px 0px 0px', width: window.innerWidth / 2}}>
                     <div className="card">
                         <div className="card-header">
                             Events
@@ -258,7 +258,7 @@ const EventSearch = (props: {}) => {
                         </div>
                     </div>
                 </div>
-                <div className="col" style={{ padding: '0px 0px 0px 3px' }}>
+                <div className="col" style={{ padding: '0px 0px 0px 3px', width: window.innerWidth/2 }}>
                     <div className="card">
                         {/*<div className="card-header">Event Preview</div>*/}
                         <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>

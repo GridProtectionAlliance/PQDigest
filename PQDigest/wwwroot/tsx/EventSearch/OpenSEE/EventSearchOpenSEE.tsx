@@ -25,17 +25,17 @@ import EventSearchPreviewD3Chart from './EventSearchPreviewD3Chart';
 import EventSearchPreviewD3ChartAxis from './EventSearchPreviewD3ChartAxis';
 
 export default function EventSearchOpenSEE(props: { EventID: number, Width: number, Height: number }) {
-    const margin = { top: 20, right: 0, bottom: 20, left: 0 };
-    const svgWidth = props.Width - margin.left - margin.right;
-    const svgHeight = props.Height - margin.top - margin.bottom - 65;
+    const margin = { Top: 0, Right: 20, Bottom: 0, Left: 35 };
+    //const svgWidth = props.Width - margin.left - margin.right;
+    //const svgHeight = props.Height - margin.top - margin.bottom - 65;
 
     return (
         <div className="card">
             <div className="card-header"><a href={ homePath + 'OpenSEE?eventid=' + props.EventID} target="_blank">View in OpenSEE</a></div>
-            <div className="card-body" style={{ height: props.Height - 50 }}>
-                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Time' Width={svgWidth} Height={svgHeight/2}/>
-                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Time' Width={svgWidth} Height={svgHeight/2}/>
-                <EventSearchPreviewD3ChartAxis EventID={props.EventID} Width={props.Width} Height={25} DataType='Time'/>
+            <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
+                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Time' Margin={margin} Height={props.Height / 3} Width={props.Width - 10}/>
+                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Time' Margin={margin} Width={props.Width - 10} Height={props.Height/3}/>
+                <EventSearchPreviewD3ChartAxis EventID={props.EventID} Margin={margin} Width={props.Width - 10} Height={40} DataType='Time'/>
             </div>
         </div>
     )

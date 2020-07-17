@@ -27,7 +27,7 @@ import { OpenXDA } from '../../global';
 
 export default function EventSearchPQI(props: { EventID: number, Width: number, Height: number }) {
     const [components, setComponents] = React.useState<any[]>([]);
-    const [component, setComponent] = React.useState<any>(null);
+    const [component, setComponent] = React.useState<any>({TestCurveID: 0});
     const [points, setPoints] = React.useState<Point[]>([]);
     const [curve, setCurve] = React.useState<Point[]>([]);
     React.useEffect(() => {
@@ -97,7 +97,7 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     return (
         <div className="card">
             <div className="card-header">PQI - Ride-through Curves
-                <select className='form-control' style={{width: 200, position: 'absolute', right: 6, top: 4}}>
+                <select value={component.TestCurveID} className='form-control' style={{ width: 200, position: 'absolute', right: 6, top: 4 }} onChange={(evt) => setComponent(components.find( x => x.TestCurveID ==evt.target.value))}>
                     {
                         components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
                     }

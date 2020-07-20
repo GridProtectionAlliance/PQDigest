@@ -51,6 +51,11 @@ module.exports = env => {
             //ace: 'ace',
             d3: 'd3',
             'react-router-dom': 'ReactRouterDOM',
+            'leaflet': 'L',
+            'esri-leaflet': {
+                root: ['L', 'esri']
+            }
+
         },
         optimization: {
             //splitChunks: {

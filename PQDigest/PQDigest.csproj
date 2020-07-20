@@ -30,9 +30,11 @@
     <Content Remove="wwwroot\tsx\Home\EventCountTable.tsx" />
     <Content Remove="wwwroot\tsx\Home\Home.tsx" />
     <Content Remove="wwwroot\tsx\Home\MagDurChart.tsx" />
+    <Content Remove="wwwroot\tsx\Lightning\ESRIMap.tsx" />
     <Content Remove="wwwroot\tsx\Lightning\Lightning.tsx" />
     <Content Remove="wwwroot\tsx\MagDurChart.tsx" />
     <Content Remove="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
+    <Content Remove="wwwroot\tsx\MultiSelect.tsx" />
     <Content Remove="wwwroot\tsx\PQDigest.tsx" />
     <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
   </ItemGroup>
@@ -89,9 +91,11 @@
     <TypeScriptCompile Include="wwwroot\tsx\global.d.ts" />
     <TypeScriptCompile Include="wwwroot\tsx\Home\EventCountTable.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Home\Home.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\Lightning\ESRIMap.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Lightning\Lightning.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\MagDurChart.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\MultiSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
   </ItemGroup>

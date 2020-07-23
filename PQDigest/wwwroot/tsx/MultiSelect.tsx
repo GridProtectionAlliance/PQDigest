@@ -51,7 +51,7 @@ const MultiSelect = (props: { Options: { Value: number, Text: string, Selected: 
     return (
         <div ref={multiSelect} style={{ position: 'relative', display: 'inline-block' }}>
             <button style={{ border: '1px solid #ced4da', padding: '.375rem .75rem', fontSize: '1rem', borderRadius: '.25rem' }} className="btn form-control dropdown-toggle" onClick={HandleShow}>{props.Options.filter(x => x.Selected).length != props.Options.length ? props.Options.filter(x => x.Selected).length : 'All '} Selected</button>
-            <div style={{ maxHeight: window.innerHeight * .75, overflowY: 'auto', padding: '10 5', display: show ? 'block' : 'none', position: 'absolute', backgroundColor: '#fff', boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)', zIndex: 1 }}>
+            <div style={{ maxHeight: window.innerHeight * .75, overflowY: 'auto', padding: '10 5', display: show ? 'block' : 'none', position: 'absolute', backgroundColor: '#fff', boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)', zIndex: 401 }}>
                 <table className='table' style={{ margin: 0 }}>
                     <tbody>
                         <tr onClick={(evt) => {

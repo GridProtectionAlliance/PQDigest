@@ -25,10 +25,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 
 namespace PQDigest.Controllers
 {
@@ -36,6 +40,9 @@ namespace PQDigest.Controllers
     [ApiController]
     public class EventCountsTableController : ControllerBase
     {
+        private readonly IConfiguration m_configuration;
+        private IMemoryCache m_memoryCache;
+
         public class TableData
         {
             public string Name { get; set; }
@@ -48,8 +55,15 @@ namespace PQDigest.Controllers
 
         }
 
+        public EventCountsTableController(IConfiguration configuration, IMemoryCache memoryCache)
+        {
+            m_configuration = configuration;
+            m_memoryCache = memoryCache;
+        }
+
         public ActionResult Get() {
 
+#if DEBUG
             List<TableData> returnobj = new List<TableData>() {
                new TableData(){ Name = "Meter 1", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
                new TableData(){ Name = "Meter 2", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
@@ -61,7 +75,57 @@ namespace PQDigest.Controllers
                new TableData(){ Name = "Meter 8", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
                new TableData(){ Name = "Meter 9", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
             };
+
+
             return Ok(returnobj);
+
+#else
+            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            {
+                DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
+                DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
+
+                DataTable table = connection.RetrieveData(@"
+                    DECLARE @startDate Date = {0}
+                    DECLARE @endDAte Date = {1}
+
+                    ;WITH EventCTE AS (
+	                    SELECT
+		                    COUNT(Event.ID) as Count,
+		                    EventType.Name as EventType,
+		                    Meter.Name as Meter
+	                    FROM
+		                    Meter CROSS JOIN
+		                    EventType LEFT JOIN
+		                    Event ON Event.MeterID =  Meter.ID AND  Event.EventTypeID = EventType.ID AND Event.StartTime BETWEEN @startDate AND @endDAte
+	                    WHERE
+		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') 
+	                    GROUP BY
+		                    Meter.Name, EventType.Name
+                    )
+                    SELECT
+	                    Meter as Name, 
+	                    COALESCE(Sag, 0) as Sag, 
+	                    COALESCE(Swell, 0) as Swell, 
+	                    COALESCE(Transient, 0) as Transient, 
+	                    COALESCE(Interruption, 0) as Interruption, 
+	                    COALESCE(Fault, 0) as Fault, 
+	                    (COALESCE(Sag, 0) + COALESCE(Swell, 0) + COALESCE(Transient, 0) + COALESCE(Interruption, 0) + COALESCE(Fault, 0)) as Total
+                    FROM
+	                    EventCTE
+                    PIVOT
+                    (
+	                    SUM(EventCTE.Count) FOR EventType
+	                    IN (Sag, Swell, Transient, Interruption, Fault)
+                    ) pvt
+                    ORDER BY Meter
+                ", start, end);
+
+                return Ok(table);
+            }
+
+#endif
+
         }
     }
 }

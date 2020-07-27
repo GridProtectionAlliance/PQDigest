@@ -23,10 +23,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 
 namespace PQDigest.Controllers
 {
@@ -34,7 +38,11 @@ namespace PQDigest.Controllers
     [ApiController]
     public class EventCountsByMonthController : ControllerBase
     {
-        public class Data { 
+        private readonly IConfiguration m_configuration;
+        private IMemoryCache m_memoryCache;
+
+        public class Data
+        {
             public string Month { get; set; }
             public int Sag { get; set; }
             public int Swell { get; set; }
@@ -44,7 +52,14 @@ namespace PQDigest.Controllers
             public int Total { get; set; }
 
         }
+
+        public EventCountsByMonthController(IConfiguration configuration, IMemoryCache memoryCache)
+        {
+            m_configuration = configuration;
+            m_memoryCache = memoryCache;
+        }
         public ActionResult Get() {
+#if DEBUG
             List<Data> returnobj = new List<Data>() {
                new Data(){ Month = "May", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
                new Data(){ Month = "Jun", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
@@ -60,6 +75,69 @@ namespace PQDigest.Controllers
                new Data(){ Month = "Apr", Sag = 9, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 21 }
             };
             return Ok(returnobj);
+#else
+            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            {
+                DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddSeconds(-1);
+                DateTime start = end.AddMonths(-12).AddSeconds(1);
+
+                DataTable table = connection.RetrieveData(@"
+                    DECLARE @startDate Date = {0}
+                    DECLARE @endDAte Date = {1}
+
+                    ;WITH EventCTE AS (
+	                    SELECT
+		                    COUNT(Event.ID) as Count,
+		                    EventType.Name as EventType,
+		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))) as Month,
+		                    Month(Event.StartTime) as MonthInt,
+		                    Year(Event.StartTime) as Year
+	                    FROM
+		                    Event JOIN
+		                    EventType ON Event.EventTypeID = EventType.ID	
+	                    WHERE
+		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') AND 
+		                    Event.StartTime BETWEEN @startDate AND @endDAte
+	                    GROUP BY
+		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
+                    )
+                    SELECT
+	                    Month, Sag, Swell, Transient, Interruption, Fault, (Sag + Swell + Transient + Interruption + Fault) as Total
+                    FROM
+	                    EventCTE
+                    PIVOT
+                    (
+	                    SUM(EventCTE.Count) FOR EventType
+	                    IN (Sag, Swell, Transient, Interruption, Fault)
+                    ) pvt
+                    ORDER BY Year, MonthInt
+                ", start, end);
+
+                if (table.Rows.Count == 0)
+                {
+                    List<Data> returnobj = new List<Data>() {
+                       new Data(){ Month = "May", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Jun", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Jul", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Aug", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Sep", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Oct", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Nov", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Dec", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Jan", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Feb", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Mar", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 },
+                       new Data(){ Month = "Apr", Sag = 0, Swell = 0, Transient = 0, Interruption = 0, Fault = 0, Total = 0 }
+                    };
+                    return Ok(returnobj);
+
+                }
+
+                else
+                    return Ok(table);
+            }
+
+#endif
         }
     }
 }

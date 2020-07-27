@@ -31,6 +31,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using PQDigest.Models;
 using Gemstone.Numeric.Random;
+using System.Data;
+
 namespace PQDigest.Controllers
 {
     [Route("api/[controller]")]
@@ -45,14 +47,58 @@ namespace PQDigest.Controllers
         }
 
         public ActionResult Get() {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["SystemSettings:ConnectionString"], m_configuration["SystemSettings:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-
+#if DEBUG 
                 NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.25);
                 IEnumerable<NormalRandomNumber> magRVs = magRandomGenerator.Next(100);
                 NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 1, 5);
                 IEnumerable<NormalRandomNumber> durRVs = durRandomGenerator.Next(100);
                 return Ok(magRVs.Zip(durRVs).Select(x => new { Magnitude = x.First.Value, Duration = Math.Pow(10, x.Second.Value) }));
+#else
+                DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
+                DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
+
+                DataTable table = connection.RetrieveData(@"
+                    DECLARE @startDate Date = {0}
+                    DECLARE @endDAte Date = {1}
+
+                    ;With WorstSeverityCode as (
+                    SELECT 
+	                    EventID,
+	                    MAX(DisturbanceSeverity.SeverityCode) as SeverityCode
+                    FROM 
+	                    Disturbance INNER HASH JOIN
+	                    DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
+                    WHERE
+	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+	                    (CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate)
+                    GROUP BY
+	                    EventID
+                    ), WorstSeverityRecord as (
+                    SELECT 
+	                    Disturbance.*, DisturbanceSeverity.SeverityCode, row_number() over (Partition By Disturbance.EventID Order By Disturbance.EventTypeID) as Ranking 
+                    FROM 
+	                    Disturbance INNER HASH JOIN
+	                    DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
+	                    WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
+                    WHERE
+	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+	                    (CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate)
+                    )
+                    SELECT
+                       Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds
+                    FROM
+	                    Event INNER HASH JOIN
+	                    Meter ON Meter.ID = Event.MeterID INNER HASH JOIN 
+	                    WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1 INNER HASH JOIN 
+	                    EventType ON WorstSeverityRecord.EventTypeID = EventType.ID 
+                    WHERE
+	                    (CAST(Event.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Event.EndTime as Date) BETWEEN @StartDate AND @EndDate)
+                ", start, end);
+
+                return Ok(table);
+#endif
             }
         }
     }

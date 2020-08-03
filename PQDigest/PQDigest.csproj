@@ -37,6 +37,8 @@
     <Content Remove="wwwroot\tsx\MultiSelect.tsx" />
     <Content Remove="wwwroot\tsx\PQDigest.tsx" />
     <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -98,6 +100,12 @@
     <TypeScriptCompile Include="wwwroot\tsx\MultiSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
   </ItemGroup>
 
 </Project>

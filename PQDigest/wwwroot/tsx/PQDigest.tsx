@@ -28,12 +28,15 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 
+
 const PQDigest: React.FunctionComponent = (props: {}) => {
     const Home = React.lazy(() => import(/* webpackChunkName: "Home" */ './Home/Home'));
     const Trending = React.lazy(() => import(/* webpackChunkName: "Trending" */ './Trending/Trending'));
     const MeterAvailability = React.lazy(() => import(/* webpackChunkName: "MeterAvailability" */ './MeterAvailability/MeterAvailability'));
     const Lightning = React.lazy(() => import(/* webpackChunkName: "Lightning" */ './Lightning/Lightning'));
     const EventSearch = React.lazy(() => import(/* webpackChunkName: "EventSearch" */ './EventSearch/EventSearch'));
+    const WaveformViewer = React.lazy(() => import(/* webpackChunkName: "WaveformViewer" */ './WaveformViewer/WaveformViewer'));
+
 
     return (
         <Router>
@@ -72,7 +75,11 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                             <Route path="/Trending"><Trending/></Route>
                             <Route path="/EventSearch"><EventSearch/></Route>
                             <Route path="/Lightning"><Lightning/></Route>
-                            <Route path="/MeterAvailability"><MeterAvailability/></Route>
+                            <Route path="/MeterAvailability"><MeterAvailability /></Route>
+                            <Route path="/WaveformViewer" children={(match, ...rest) => {
+                                let qs = queryString.parse(location.search);
+                                return <WaveformViewer EventID={parseInt(qs['?EventID'] as string)} />
+                            }}/>
                         </React.Suspense>
                     </div>
 

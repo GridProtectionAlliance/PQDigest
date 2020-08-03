@@ -75,10 +75,10 @@ namespace PQDigest.Controllers
                 double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
                 
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
-
+                DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);
                 if (dataType == "Time")
                 {
-                    DataGroup dataGroup = QueryDataGroup(eventId, meter); ;
+                    DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventId, meter); ;
                     bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
                     foreach (var series in dataGroup.DataSeries)
                     {
@@ -87,11 +87,11 @@ namespace PQDigest.Controllers
                         {
                             if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
                             {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
                             }
                             else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
                             {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
                             }
 
                         }
@@ -99,7 +99,7 @@ namespace PQDigest.Controllers
                         {
                             if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                             {
-                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, Downsample(data, pixels));
+                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
                             }
                         }
 
@@ -121,98 +121,98 @@ namespace PQDigest.Controllers
 
         }
 
-        private DataGroup QueryDataGroup(int eventID, Meter meter)
-        {
-            string target = $"DataGroup-{eventID}";
+        //private DataGroup QueryDataGroup(int eventID, Meter meter)
+        //{
+        //    string target = $"DataGroup-{eventID}";
 
-            //Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
-            //{
-            //    using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-            //    {
-            //        List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-            //        return ToDataGroup(meter, data);
-            //    }
-            //});
+        //    //Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
+        //    //{
+        //    //    using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        //    //    {
+        //    //        List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
+        //    //        return ToDataGroup(meter, data);
+        //    //    }
+        //    //});
 
-            //if (!m_memoryCache.Add(target, dataGroupTask, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(10.0D) }))
-            //    dataGroupTask.Start();
+        //    //if (!m_memoryCache.Add(target, dataGroupTask, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(10.0D) }))
+        //    //    dataGroupTask.Start();
 
-            //dataGroupTask = (Task<DataGroup>)s_memoryCache.Get(target);
-
-
-            DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
-            {
-                task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-                {
-                    List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-                    return ToDataGroup(meter, data);
-                }              
-            });
-            return dataGroup;
-        }
+        //    //dataGroupTask = (Task<DataGroup>)s_memoryCache.Get(target);
 
 
-        private DataGroup ToDataGroup(Meter meter, List<byte[]> data)
-        {
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, data);
-            VIDataGroup vIDataGroup = new VIDataGroup(dataGroup);
-            return vIDataGroup.ToDataGroup();
-        }
+        //    DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
+        //    {
+        //        task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
+        //        using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        //        {
+        //            List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
+        //            return ToDataGroup(meter, data);
+        //        }              
+        //    });
+        //    return dataGroup;
+        //}
 
-        private List<double[]> Downsample(List<double[]> series, int maxSampleCount)
-        {
-            List<double[]> data = new List<double[]>();
-            DateTime epoch = new DateTime(1970, 1, 1);
-            double startTime = series.First()[0];
-            double endTime = series.Last()[0];
-            int step = (int)(endTime * 1000 - startTime * 1000) / maxSampleCount;
-            if (step < 1)
-                step = 1;
 
-            series = series.Where(x => x[0] >= startTime && x[0] <= endTime).ToList();
+        //private DataGroup ToDataGroup(Meter meter, List<byte[]> data)
+        //{
+        //    DataGroup dataGroup = new DataGroup();
+        //    dataGroup.FromData(meter, data);
+        //    VIDataGroup vIDataGroup = new VIDataGroup(dataGroup);
+        //    return vIDataGroup.ToDataGroup();
+        //}
 
-            int index = 0;
+        //private List<double[]> Downsample(List<double[]> series, int maxSampleCount)
+        //{
+        //    List<double[]> data = new List<double[]>();
+        //    DateTime epoch = new DateTime(1970, 1, 1);
+        //    double startTime = series.First()[0];
+        //    double endTime = series.Last()[0];
+        //    int step = (int)(endTime * 1000 - startTime * 1000) / maxSampleCount;
+        //    if (step < 1)
+        //        step = 1;
 
-            for (double n = startTime * 1000; n <= endTime * 1000; n += 2 * step)
-            {
-                double[] min = null;
-                double[] max = null;
+        //    series = series.Where(x => x[0] >= startTime && x[0] <= endTime).ToList();
 
-                while (index < series.Count() && series[index][0] * 1000 < n + 2 * step)
-                {
-                    if (min == null || min[1] > series[index][1])
-                        min = series[index];
+        //    int index = 0;
 
-                    if (max == null || max[1] <= series[index][1])
-                        max = series[index];
+        //    for (double n = startTime * 1000; n <= endTime * 1000; n += 2 * step)
+        //    {
+        //        double[] min = null;
+        //        double[] max = null;
 
-                    ++index;
-                }
+        //        while (index < series.Count() && series[index][0] * 1000 < n + 2 * step)
+        //        {
+        //            if (min == null || min[1] > series[index][1])
+        //                min = series[index];
 
-                if (min != null)
-                {
-                    if (min[0] < max[0])
-                    {
-                        data.Add(min);
-                        data.Add(max);
-                    }
-                    else if (min[0] > max[0])
-                    {
-                        data.Add(max);
-                        data.Add(min);
-                    }
-                    else
-                    {
-                        data.Add(min);
-                    }
-                }
-            }
+        //            if (max == null || max[1] <= series[index][1])
+        //                max = series[index];
 
-            return data;
+        //            ++index;
+        //        }
 
-        }
+        //        if (min != null)
+        //        {
+        //            if (min[0] < max[0])
+        //            {
+        //                data.Add(min);
+        //                data.Add(max);
+        //            }
+        //            else if (min[0] > max[0])
+        //            {
+        //                data.Add(max);
+        //                data.Add(min);
+        //            }
+        //            else
+        //            {
+        //                data.Add(min);
+        //            }
+        //        }
+        //    }
+
+        //    return data;
+
+        //}
 
     }
 }

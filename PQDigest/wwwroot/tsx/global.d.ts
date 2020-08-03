@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+import { namespace } from "d3";
+
 declare global {
     var homePath: string;
     var controllerViewPath: string;
@@ -48,10 +50,16 @@ export namespace PQDigest {
 }
 
 export namespace OpenXDA {
+
     type EventTypeName = 'Sag' | 'Swell' | 'Transient' | 'Fault' | 'Interruption'
     interface EventType { ID: number, Name: EventTypeName, Description: string, Selected?: boolean }
     interface Meter { ID: number, AssetKey: string, Alias: string, Make: string, Model: string, Name: string, ShortName: string, TimeZone: string, LocationID: number, Description: string, Selected?: boolean }
     interface EventSearch { ID: number, StartTime: string, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number }
 
-    interface Disturbance { ID: number, EventID: number, PhaseID: number, Magnitude: number, PerUnitMagnitude: number, DurationSeconds: number}
+    interface Disturbance { ID: number, EventID: number, PhaseID: number, Magnitude: number, PerUnitMagnitude: number, DurationSeconds: number }
+
+    namespace Event {
+       interface Info { Meter: string, StartTime: string, Phase: string, EventType: string, Duration: string, Magnitude: string, SagDepth: string}
+    }
+
 }

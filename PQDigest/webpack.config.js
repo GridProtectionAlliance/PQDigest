@@ -9,7 +9,8 @@ module.exports = env => {
         context: path.resolve(__dirname, 'wwwroot'),
         cache: true,
         entry: {
-            PQDigest: "./tsx/PQDigest.tsx",
+            PQDigest: "./tsx/PQDigest.tsx"
+
         },
 
         output: {

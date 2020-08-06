@@ -37,6 +37,8 @@
     <Content Remove="wwwroot\tsx\MultiSelect.tsx" />
     <Content Remove="wwwroot\tsx\PQDigest.tsx" />
     <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx" />
   </ItemGroup>
@@ -50,11 +52,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.50" />
-    <PackageReference Include="Gemstone.Data" Version="1.0.50" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.50" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.50" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.50" />
+    <PackageReference Include="Gemstone.Common" Version="1.0.56" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.56" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.56" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.56" />
+    <PackageReference Include="Gemstone.Web" Version="1.0.56" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
@@ -100,6 +102,8 @@
     <TypeScriptCompile Include="wwwroot\tsx\MultiSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

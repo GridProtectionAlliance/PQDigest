@@ -69,6 +69,25 @@ namespace PQDigest
             return vIDataGroup.ToDataGroup();
         }
 
+        public VICycleDataGroup QueryVICycleDataGroup(int eventID, Meter meter)
+        {
+            string target = $"VICycleDataGroup-{eventID}";
+
+            VICycleDataGroup viCycleDataGroup = m_memoryCache.GetOrCreate(target, task =>
+            {
+                task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
+                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                {
+                    DataGroup dataGroup = QueryDataGroup(eventID, meter);
+                    double freq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
+                    return Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup), freq);
+                }
+            });
+
+            return viCycleDataGroup;
+        }
+
+
         public List<double[]> Downsample(List<double[]> series, int maxSampleCount)
         {
             List<double[]> data = new List<double[]>();

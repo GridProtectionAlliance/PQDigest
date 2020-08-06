@@ -26,12 +26,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FaultData.DataAnalysis;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using OpenXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -41,59 +43,44 @@ namespace PQDigest.Controllers
     public class VICycleDataController : ControllerBase
     {
         private readonly IConfiguration m_configuration;
-		private IMemoryCache m_memoryCache;
+        private IMemoryCache m_memoryCache;
 
-		public VICycleDataController(IConfiguration configuration, IMemoryCache memoryCache)
+        public VICycleDataController(IConfiguration configuration, IMemoryCache memoryCache)
         {
             m_configuration = configuration;
-			m_memoryCache = memoryCache;
-		}
+            m_memoryCache = memoryCache;
+        }
 
-		[HttpGet, Route("{eventID:int}")]
-        public ActionResult Get(int eventID) {
+        [HttpGet, Route("{eventID:int}/{type}/{pixels:int}")]
+        public ActionResult Get(int eventID, string type, int pixels)
+        {
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-                return Ok(connection.RetrieveData(@"
-					With WorstSeverityCode as (
-					SELECT 
-						EventID,
-						MAX(DisturbanceSeverity.SeverityCode) as SeverityCode
-					FROM 
-						Disturbance INNER HASH JOIN
-						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
-					WHERE
-						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						EventID = {0}
-					GROUP BY
-						EventID
-					), WorstSeverityRecord as (
-					SELECT 
-						Disturbance.*, DisturbanceSeverity.SeverityCode, row_number() over (Partition By Disturbance.EventID Order By Disturbance.EventTypeID) as Ranking 
-					FROM 
-						Disturbance INNER HASH JOIN
-						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
-						WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
-					WHERE
-						PhaseID IN (SELECT ID FROM Phase WHERE Name != 'Worst') AND Disturbance.EventID = {0}
-					)
-					SELECT 	
-						Meter.Name as Meter,
-						Event.StartTime,
-						Phase.Name as Phase,
-						EventType.Name as EventType,
-						CAST(ROUND(WorstSeverityRecord.DurationCycles, 2) as VARCHAR(20)) + ' cycles' as Duration,
-						CAST(WorstSeverityRecord.Magnitude as VARCHAR(20)) + ' Amps (RMS)' as Magnitude,
-						CAST(ROUND((1 - WorstSeverityRecord.PerUnitMagnitude) * 100,1) as VARCHAR(20)) + '%' as SagDepth
-					FROM
-						Event JOIN
-						Meter ON Event.MeterID = Meter.ID LEFT JOIN
-						WorstSeverityRecord ON Ranking = 1 LEFT JOIN
-						Phase ON WorstSeverityRecord.PhaseID = Phase.ID LEFT JOIN
-						EventType ON WorstSeverityRecord.EventTypeID = EventType.ID
-					WHERE	
-						Event.ID = {0}
-                ", eventID));
+                DateTime epoch = new DateTime(1970, 1, 1);
+
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                if (evt == null) return BadRequest("Must provide a valid EventID");
+                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
+                meter.ConnectionFactory = () => new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
+
+                Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
+                DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);
+                VICycleDataGroup viCycleDataGroup = dataGroupHelper.QueryVICycleDataGroup(eventID, meter); ;
+
+                foreach (CycleDataGroup cdg in viCycleDataGroup.CycleDataGroups.Where(ds => ds.RMS.SeriesInfo.Channel.MeasurementType.Name == type))
+                {
+                    List<double[]> rmsPoints = cdg.RMS.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.RMS.SeriesInfo.Channel.Phase.Name + " RMS", dataGroupHelper.Downsample(rmsPoints, pixels));
+                    List<double[]> ampPoints = cdg.Peak.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Peak.SeriesInfo.Channel.Phase.Name + " Amplitude", dataGroupHelper.Downsample(ampPoints, pixels));
+                    List<double[]> phPoints = cdg.Phase.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Phase.SeriesInfo.Channel.Phase.Name + " Phase", dataGroupHelper.Downsample(phPoints, pixels));
+
+                }
+
+                return Ok(returnData);
             }
+
         }
     }
 }

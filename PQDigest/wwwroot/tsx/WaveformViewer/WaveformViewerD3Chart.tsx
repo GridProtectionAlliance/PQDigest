@@ -28,7 +28,7 @@ import _ from 'lodash';
 const WaveformViewerD3Chart = (props: {
     EventID: number,
     Data: { Key: string, Show: boolean, Color: string, Data: [number,number][] }[],
-    MeasurementType: 'Current' | 'Voltage' | 'Analytic',
+    Units: string,
     DataType: 'Time' | 'Statistic' | 'Trending',
     Margin: { Left: number, Right: number, Top: number, Bottom: number },
     Width: number,
@@ -42,7 +42,6 @@ const WaveformViewerD3Chart = (props: {
 
 
     const chart = React.useRef(null);
-    const prefix = props.MeasurementType == 'Voltage' ? 'V' : 'I';
 
 
     function OnHover(evt: React.MouseEvent<SVGSVGElement, MouseEvent>) {
@@ -59,7 +58,7 @@ const WaveformViewerD3Chart = (props: {
     let x = scaleLinear().rangeRound([props.Margin.Left, props.Width - props.Margin.Right]);
     let y = scaleLinear().rangeRound([props.Height - props.Margin.Bottom, props.Margin.Top]);
 
-    let yextent = [9007199254740991, -9007199254740990];
+    let yextent = [1000000, -1000000];
     let xextent = [9007199254740991, -9007199254740990];
 
     $.each(props.Data.filter(x => x.Show), (index, value) => {
@@ -71,8 +70,11 @@ const WaveformViewerD3Chart = (props: {
         if (parseFloat(newxexent[0].toString()) < xextent[0]) xextent[0] = parseFloat(newxexent[0].toString())
         if (parseFloat(newxexent[1].toString()) > xextent[1]) xextent[1] = parseFloat(newxexent[1].toString())
     });
+    let yspan  = yextent[1] - yextent[0];
 
-    yextent = [(yextent[0] < 0 ? 1.20 * yextent[0] : 0.8* yextent[0]) , 1.20 * yextent[1]]
+    //yextent = [(yextent[0] < 0 ? 1.20 * yextent[0] : 0.8 * yextent[0]), 1.20 * yextent[1]]
+    yextent = [yextent[0] - yspan/10, yextent[1] + yspan/10]
+
     y.domain(yextent);
     x.domain(xextent);
 
@@ -99,19 +101,19 @@ const WaveformViewerD3Chart = (props: {
     let ySpan = (y.domain()[0] < 0 ? y.domain()[1] : y.domain()[1] - y.domain()[0]);
     let yMin = (y.domain()[0] < 0 ? 0 : y.domain()[0]);
     let divisor = 1;
-    if (span > 1000000) divisor = 1000000
-    if (span > 1000) divisor = 1000
+    if (ySpan > 1000000) divisor = 1000000
+    if (ySpan > 1000) divisor = 1000
 
-    for (let i = yMin; i < y.domain()[1]; i += Math.floor(ySpan / (y.domain()[0] < 0 ? 3 : 6))) {
+    for (let i = yMin; i < y.domain()[1]; i += ySpan / (y.domain()[0] < 0 ? 3 : 6)) {
         yTicks.push(
             <g key={i}>
                 <g key={i + 'pos'} className="tick" transform={`translate(${props.Margin.Left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
-                    <path d={`M 0,6 V -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
+                    <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
                     <text x="-15" dy="0.32em" textAnchor='middle'>{(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
                 </g>
                 {(y.domain()[0] < 0 && i != 0 ?
                     <g key={i + 'neg'} className="tick" transform={`translate(${props.Margin.Left},${y(-i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
-                        <path d={`M 0,6 V -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
+                        <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
                         <text x="-15" dy="0.32em" textAnchor='middle'>{-(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
 
                     </g> : null)}
@@ -125,7 +127,7 @@ const WaveformViewerD3Chart = (props: {
             <svg width={props.Width} height={props.Height} onMouseOver={OnHover} onMouseDown={OnClick} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px',  fontWeight: 'lighter', fontSize: 'small'}}>
                 {/* Chart borders */}
                 <path d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
-                <text transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.MeasurementType == "Voltage" ? "Voltage" : "Amps"}</text>
+                <text transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>
                 {newPaths}
                 {xTicks}
                 {yTicks}

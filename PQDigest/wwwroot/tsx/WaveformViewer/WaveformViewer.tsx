@@ -29,6 +29,7 @@ import _ from 'lodash';
 import { bisect } from 'd3';
 import PolarChart from './PolarChart';
 
+type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
 const WaveformViewer = (props: { EventID: number }) => {
     const infoWidth = 300;
     const pointsWidth = 500;
@@ -38,6 +39,10 @@ const WaveformViewer = (props: { EventID: number }) => {
 
     const [voltageData, setVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [currentData, setCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [analtyicData, setAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+
+    const [analtyic, setAnalytic] = React.useState<Analtyic>('Frequency');
+    const [harmonic, setHarmonic] = React.useState<number>(5);
 
     const [hover, setHover] = React.useState<number>(-1);
     const [click, setClick] = React.useState<number>(-1);
@@ -61,12 +66,27 @@ const WaveformViewer = (props: { EventID: number }) => {
             setVoltageData(returnData)
         });
 
+
         return function () {
             if (handle.abort != undefined) handle.abort();
             if (handle2.abort != undefined) handle2.abort();
             if (handle3.abort != undefined) handle3.abort();
+
         }
-    }, []);
+    }, [props.EventID]);
+
+    React.useEffect(() => {
+        let handle4 = GetAnalyticData(analtyic);
+        handle4.done(data => {
+            let returnData = Object.keys(data).map(key => { return { Key: key, Show: true, Color: GetColor(key), Data: data[key] } });
+            setAnaltyicData(returnData)
+        });
+
+        return function () {
+            if (handle4.abort != undefined) handle4.abort();
+        }
+    }, [analtyic, harmonic]);
+
 
     function GetEventInfo(): JQuery.jqXHR<OpenXDA.Event.Info[]> {
         return $.ajax({
@@ -83,6 +103,17 @@ const WaveformViewer = (props: { EventID: number }) => {
         return $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/Waveform/${props.EventID}/${type}/${waveformWidth}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+    function GetAnalyticData(type: string): JQuery.jqXHR<object> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${props.EventID}${(type == 'SpecifiedHarmonic'? '/' + harmonic: '')}/${waveformWidth}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -126,7 +157,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 newPath.Show = !path.Show;
                                 setVoltageData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} MeasurementType="Voltage" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
                             <Legend Type='Current' Paths={currentData} CallBack={(path) => {
@@ -135,15 +166,36 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 newPath.Show = !path.Show;
                                 setCurrentData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} MeasurementType="Current" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
 
 
                     </div>
                 </div>
                 <div className="card">
-                    <div className="card-header">Analytics</div>
+                    <div className="card-header">Analytics
+                        <select value={analtyic} onChange={(evt) => setAnalytic(evt.target.value as Analtyic)} style={{position: 'absolute', right: 0}}>
+                            <option value="Power">Power</option>
+                            <option value="Frequency">Frequency</option>
+                            <option value="RapidVoltageChange">Rapid Voltage Change</option>
+                            <option value="SpecifiedHarmonic">Specified Harmonic</option>
+                            <option value="SymmetricalComponents">Symmetrical Components</option>
+                            <option value="THD">Total Harmonic Distortion</option>
+                            <option value="Unbalance">Unbalance</option>
+                        </select>
+                    </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 3, height: (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
+                        <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
+                            <Legend Type='Analytic' Paths={analtyicData} CallBack={(path) => {
+                                let newPaths = _.clone(analtyicData);
+                                let newPath = newPaths.find(x => x.Key == path.Key);
+                                newPath.Show = !path.Show;
+                                setAnaltyicData(newPaths);
+                            }} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={analtyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                        </div>
+
+
                     </div>
                 </div>
             </div>

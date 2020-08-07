@@ -128,7 +128,7 @@ const WaveformViewer = (props: { EventID: number }) => {
             <div className="" style={{ padding: '0px 2px 0px 0px', width: infoWidth }}>
                 <div className="card">
                     <div className="card-header">Info</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 127) - 70, height: (window.innerHeight - 127) - 70, overflowY: 'hidden' }}>
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 2, height: (window.innerHeight - 296) / 2, overflowY: 'hidden' }}>
                         {(info != null ? 
                             <table className="table">
                                 <tbody>
@@ -144,7 +144,16 @@ const WaveformViewer = (props: { EventID: number }) => {
                         : null)}
                     </div>
                 </div>
-
+                <div className="card">
+                    <div className="card-header">Browse Events</div>
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4, height: (window.innerHeight - 296) / 4, overflowY: 'hidden' }}>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="card-header">Compare</div>
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4, height: (window.innerHeight - 296) / 4, overflowY: 'hidden' }}>
+                    </div>
+                </div>
             </div>
             <div className="" style={{ padding: '0px 2px 0px 0px', width: waveformWidth }}>
                 <div className="card">
@@ -173,8 +182,8 @@ const WaveformViewer = (props: { EventID: number }) => {
                     </div>
                 </div>
                 <div className="card">
-                    <div className="card-header">Analytics
-                        <select value={analtyic} onChange={(evt) => setAnalytic(evt.target.value as Analtyic)} style={{position: 'absolute', right: 0}}>
+                    <div className="card-header">
+                        <select value={analtyic} onChange={(evt) => setAnalytic(evt.target.value as Analtyic)} style={{width: 200}}>
                             <option value="Power">Power</option>
                             <option value="Frequency">Frequency</option>
                             <option value="RapidVoltageChange">Rapid Voltage Change</option>
@@ -183,6 +192,12 @@ const WaveformViewer = (props: { EventID: number }) => {
                             <option value="THD">Total Harmonic Distortion</option>
                             <option value="Unbalance">Unbalance</option>
                         </select>
+                        <select value={harmonic} onChange={(evt) => setHarmonic(parseInt(evt.target.value))} hidden={analtyic != 'SpecifiedHarmonic'}>
+                            {
+                                Array.from(Array(40), (x, i) => <option key={i} value={i}>{i}</option>)
+                            }
+                        </select>
+
                     </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 3, height: (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>

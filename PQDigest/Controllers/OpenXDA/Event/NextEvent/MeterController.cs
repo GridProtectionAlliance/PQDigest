@@ -61,7 +61,7 @@ namespace PQDigest.Controllers.NextEvent
 	                    e1.ID = {0} AND e1.StartTime < e2.StartTime
                     ORDER BY
 	                    Difference ASC
-                    ", eventID));
+                    ", eventID).Select().FirstOrDefault());
             }
         }
     }

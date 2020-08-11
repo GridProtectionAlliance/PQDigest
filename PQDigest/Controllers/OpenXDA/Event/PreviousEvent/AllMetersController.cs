@@ -36,7 +36,7 @@ using PQDigest.Models;
 
 namespace PQDigest.Controllers.PreviousEvent
 {
-    [Route("api/OpenXDA/Event/NextEvent/[controller]")]
+    [Route("api/OpenXDA/Event/PreviousEvent/[controller]")]
     [ApiController]
     public class AllMetersController : ControllerBase
     {
@@ -66,7 +66,7 @@ namespace PQDigest.Controllers.PreviousEvent
 	                    e1.ID = {0} AND e1.StartTime >= e2.StartTime
                     ORDER BY
 	                    Difference ASC
-                    ", eventID));
+                    ", eventID).Select().FirstOrDefault());
             }
         }
     }

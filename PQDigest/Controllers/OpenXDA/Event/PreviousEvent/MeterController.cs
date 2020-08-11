@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Gemstone.Data;
@@ -49,7 +50,8 @@ namespace PQDigest.Controllers.PreviousEvent
         public ActionResult Get(int eventID) {
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-                return Ok(connection.RetrieveData(@"
+
+                DataTable table = connection.RetrieveData(@"
                     SELECT
 	                    TOP 1
 	                    e2.*,
@@ -61,7 +63,8 @@ namespace PQDigest.Controllers.PreviousEvent
 	                    e1.ID = {0} AND e1.StartTime >= e2.StartTime
                     ORDER BY
 	                    Difference ASC
-                ", eventID));
+                ", eventID);
+                return Ok(table.Select().FirstOrDefault());
             }
         }
     }

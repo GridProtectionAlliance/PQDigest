@@ -28,6 +28,7 @@ import Legend from './Legend';
 import _ from 'lodash';
 import { bisect } from 'd3';
 import PolarChart from './PolarChart';
+import BrowseEvents from './BrowseEvents';
 
 type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
 const WaveformViewer = (props: { EventID: number }) => {
@@ -147,6 +148,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                 <div className="card">
                     <div className="card-header">Browse Events</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4, height: (window.innerHeight - 296) / 4, overflowY: 'hidden' }}>
+                        <BrowseEvents EventID={props.EventID}/>
                     </div>
                 </div>
                 <div className="card">

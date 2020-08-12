@@ -29,6 +29,8 @@ import _ from 'lodash';
 import { bisect } from 'd3';
 import PolarChart from './PolarChart';
 import BrowseEvents from './BrowseEvents';
+import Info from './Info';
+import ComparableEvents from './ComparableEvents';
 
 type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
 const WaveformViewer = (props: { EventID: number }) => {
@@ -36,11 +38,15 @@ const WaveformViewer = (props: { EventID: number }) => {
     const pointsWidth = 500;
     const waveformWidth = window.innerWidth - infoWidth - pointsWidth - 10;
 
-    const [info, setInfo] = React.useState<OpenXDA.Event.Info>(null);
+    const [compareEventID, setCompareEventID] = React.useState<number>(0);
 
     const [voltageData, setVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [currentData, setCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [analtyicData, setAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+
+    const [compareVoltageData, setCompareVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [compareCurrentData, setCompareCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [compareAnaltyicData, setCompareAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
 
     const [analtyic, setAnalytic] = React.useState<Analtyic>('Frequency');
     const [harmonic, setHarmonic] = React.useState<number>(5);
@@ -50,49 +56,83 @@ const WaveformViewer = (props: { EventID: number }) => {
 
 
     React.useEffect(() => {
-        let handle = GetEventInfo();
-        handle.done((data: OpenXDA.Event.Info[]) => {
-            setInfo(data[0]);
-        });
 
-        let handle2 = GetWaveformData('Current');
-        handle2.done(data => {
+        let handle1 = GetWaveformData('Current', props.EventID);
+        handle1.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: GetKey('I', key), Show: ShowPath(key), Color: GetColor(key), Data: data[key] } });
             setCurrentData(returnData)
         });
 
-        let handle3 = GetWaveformData('Voltage');
-        handle3.done(data => {
+        let handle2 = GetWaveformData('Voltage', props.EventID);
+        handle2.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: GetKey('V', key), Show: ShowPath(key), Color: GetColor(key), Data: data[key] } });
             setVoltageData(returnData)
         });
 
 
         return function () {
-            if (handle.abort != undefined) handle.abort();
+            if (handle1.abort != undefined) handle1.abort();
             if (handle2.abort != undefined) handle2.abort();
-            if (handle3.abort != undefined) handle3.abort();
 
         }
     }, [props.EventID]);
 
     React.useEffect(() => {
-        let handle4 = GetAnalyticData(analtyic);
-        handle4.done(data => {
+        let handle = GetAnalyticData(analtyic, props.EventID);
+        handle.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: key, Show: true, Color: GetColor(key), Data: data[key] } });
             setAnaltyicData(returnData)
         });
 
         return function () {
-            if (handle4.abort != undefined) handle4.abort();
+            if (handle.abort != undefined) handle.abort();
         }
-    }, [analtyic, harmonic]);
+    }, [props.EventID, analtyic, harmonic]);
+
+    React.useEffect(() => {
+        if (compareEventID == 0) {
+            setCompareVoltageData([]);
+            setCompareCurrentData([]);
+            setCompareAnaltyicData([]);
+            return;
+        }
+
+        let handle1 = GetWaveformData('Current', compareEventID);
+        handle1.done(data => {
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('I', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
+            setCompareCurrentData(returnData)
+        });
+
+        let handle2 = GetWaveformData('Voltage', compareEventID);
+        handle2.done(data => {
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('V', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
+            setCompareVoltageData(returnData)
+        });
 
 
-    function GetEventInfo(): JQuery.jqXHR<OpenXDA.Event.Info[]> {
+        return function () {
+            if (handle1.abort != undefined) handle1.abort();
+            if (handle2.abort != undefined) handle2.abort();
+
+        }
+    }, [compareEventID]);
+
+    React.useEffect(() => {
+        let handle = GetAnalyticData(analtyic, compareEventID);
+        handle.done(data => {
+            let returnData = Object.keys(data).map(key => { return { Key: key, Show: true, Color: GetCompareColor(key), Data: data[key] } });
+            setCompareAnaltyicData(returnData)
+        });
+
+        return function () {
+            if (handle.abort != undefined) handle.abort();
+        }
+    }, [compareEventID, analtyic, harmonic]);
+
+    function GetWaveformData(type: 'Current' | 'Voltage', id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Info/${props.EventID}`,
+            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}/${waveformWidth}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -100,21 +140,10 @@ const WaveformViewer = (props: { EventID: number }) => {
         });
     }
 
-    function GetWaveformData(type: 'Current' | 'Voltage'): JQuery.jqXHR<object> {
+    function GetAnalyticData(type: string, id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Waveform/${props.EventID}/${type}/${waveformWidth}`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetAnalyticData(type: string): JQuery.jqXHR<object> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${props.EventID}${(type == 'SpecifiedHarmonic'? '/' + harmonic: '')}/${waveformWidth}`,
+            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic'? '/' + harmonic: '')}/${waveformWidth}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -129,31 +158,20 @@ const WaveformViewer = (props: { EventID: number }) => {
             <div className="" style={{ padding: '0px 2px 0px 0px', width: infoWidth }}>
                 <div className="card">
                     <div className="card-header">Info</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 2, height: (window.innerHeight - 296) / 2, overflowY: 'hidden' }}>
-                        {(info != null ? 
-                            <table className="table">
-                                <tbody>
-                                    <tr><td>Meter</td><td>{info.Meter}</td></tr>
-                                    <tr><td>Time</td><td>{moment(info.StartTime).format('MM/DD/YYYY HH:mm')}&nbsp;(CST)</td></tr>
-                                    <tr><td>Type</td><td>{info.EventType}</td></tr>
-                                    <tr><td>Phase</td><td>{info.Phase}</td></tr>
-                                    <tr><td>Duration</td><td>{info.Duration}</td></tr>
-                                    <tr><td>Magnitude</td><td>{info.Magnitude}</td></tr>
-                                    <tr><td>Depth</td><td>{info.SagDepth}</td></tr>
-                                </tbody>
-                            </table>
-                        : null)}
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 2 + 25, height: (window.innerHeight - 296) / 2 + 25, overflowY: 'hidden' }}>
+                        <Info EventID={props.EventID} />
                     </div>
                 </div>
                 <div className="card">
                     <div className="card-header">Browse Events</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4, height: (window.innerHeight - 296) / 4, overflowY: 'hidden' }}>
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 - 75, height: (window.innerHeight - 296) / 4 - 75, overflowY: 'hidden' }}>
                         <BrowseEvents EventID={props.EventID}/>
                     </div>
                 </div>
                 <div className="card">
                     <div className="card-header">Compare</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4, height: (window.innerHeight - 296) / 4, overflowY: 'hidden' }}>
+                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 + 50, height: (window.innerHeight - 296) / 4 + 50, overflowY: 'hidden' }}>
+                        <ComparableEvents EventID={props.EventID} ComparableEventID={compareEventID} OnChange={(id) => setCompareEventID(id)} />
                     </div>
                 </div>
             </div>
@@ -162,22 +180,36 @@ const WaveformViewer = (props: { EventID: number }) => {
                     <div className="card-header">Waveforms</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: 2 * (window.innerHeight - 246) / 3, height: 2 * (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Voltage' Paths={voltageData} CallBack={(path) => {
+                            <Legend Type='Voltage' Paths={voltageData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
                                 let newPaths = _.clone(voltageData);
                                 let newPath = newPaths.find(x => x.Key == path.Key);
                                 newPath.Show = !path.Show;
                                 setVoltageData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <Legend Type='Voltage' Paths={compareVoltageData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                let newPaths = _.clone(compareVoltageData);
+                                let newPath = newPaths.find(x => x.Key == path.Key);
+                                newPath.Show = !path.Show;
+                                setCompareVoltageData(newPaths);
+                            }} />
+
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} CompareData={compareVoltageData} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Current' Paths={currentData} CallBack={(path) => {
+                            <Legend Type='Current' Paths={currentData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
                                 let newPaths = _.clone(currentData);
                                 let newPath = newPaths.find(x => x.Key == path.Key);
                                 newPath.Show = !path.Show;
                                 setCurrentData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <Legend Type='Current' Paths={compareCurrentData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                let newPaths = _.clone(compareCurrentData);
+                                let newPath = newPaths.find(x => x.Key == path.Key);
+                                newPath.Show = !path.Show;
+                                setCompareCurrentData(newPaths);
+                            }} />
+
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} CompareData={compareCurrentData} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
 
 
@@ -203,13 +235,13 @@ const WaveformViewer = (props: { EventID: number }) => {
                     </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 3, height: (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Analytic' Paths={analtyicData} CallBack={(path) => {
+                            <Legend Type='Analytic' Paths={analtyicData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
                                 let newPaths = _.clone(analtyicData);
                                 let newPath = newPaths.find(x => x.Key == path.Key);
                                 newPath.Show = !path.Show;
                                 setAnaltyicData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={analtyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={analtyicData} CompareData={compareAnaltyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
 
 
@@ -308,6 +340,25 @@ function GetColor(label) {
     if (label.indexOf('IC') >= 0) return '#33CC33';
     if (label.indexOf('NG') >= 0) return '#c3c3c3';
     if (label.indexOf('RES') >= 0) return '#ffc107';
+    else {
+        var ranNumOne = Math.floor(Math.random() * 256).toString(16);
+        var ranNumTwo = Math.floor(Math.random() * 256).toString(16);
+        var ranNumThree = Math.floor(Math.random() * 256).toString(16);
+
+        return `#${(ranNumOne.length > 1 ? ranNumOne : "0" + ranNumOne)}${(ranNumTwo.length > 1 ? ranNumTwo : "0" + ranNumTwo)}${(ranNumThree.length > 1 ? ranNumThree : "0" + ranNumThree)}`;
+    }
+}
+
+function GetCompareColor(label) {
+    if (label.indexOf('VA') >= 0) return '#E3A909';
+    if (label.indexOf('VB') >= 0) return '#9800A3';
+    if (label.indexOf('VC') >= 0) return '#707A00';
+    if (label.indexOf('VN') >= 0) return '#c3c3c3';
+    if (label.indexOf('IA') >= 0) return '#FF8000';
+    if (label.indexOf('IB') >= 0) return '#CF12E0';
+    if (label.indexOf('IC') >= 0) return '#FFFF00';
+    if (label.indexOf('NG') >= 0) return '#636161';
+    if (label.indexOf('RES') >= 0) return '#07FFFF';
     else {
         var ranNumOne = Math.floor(Math.random() * 256).toString(16);
         var ranNumTwo = Math.floor(Math.random() * 256).toString(16);

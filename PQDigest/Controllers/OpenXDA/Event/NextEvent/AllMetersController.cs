@@ -52,7 +52,7 @@ namespace PQDigest.Controllers.NextEvent
             using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE Name = {0})", User.Identity.Name);
+                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", User.Identity.Name);
                 
                 return Ok(connection.RetrieveData(@"
                     SELECT
@@ -66,7 +66,7 @@ namespace PQDigest.Controllers.NextEvent
 	                    e1.ID = {0} AND e1.StartTime < e2.StartTime
                     ORDER BY
 	                    Difference ASC
-                    ", eventID).Select().FirstOrDefault());
+                    ", eventID));
             }
         }
     }

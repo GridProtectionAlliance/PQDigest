@@ -38,6 +38,8 @@
     <Content Remove="wwwroot\tsx\PQDigest.tsx" />
     <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\BrowseEvents.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\ComparableEvents.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Info.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\Legend.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx" />
@@ -104,6 +106,12 @@
     <TypeScriptCompile Include="wwwroot\tsx\MultiSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\ComparableEvents.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Info.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\BrowseEvents.tsx">
       <SubType>Code</SubType>

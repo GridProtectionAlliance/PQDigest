@@ -27,7 +27,8 @@ import _ from 'lodash';
 
 const WaveformViewerD3Chart = (props: {
     EventID: number,
-    Data: { Key: string, Show: boolean, Color: string, Data: [number,number][] }[],
+    Data: { Key: string, Show: boolean, Color: string, Data: [number, number][] }[],
+    CompareData: { Key: string, Show: boolean, Color: string, Data: [number, number][] }[],
     Units: string,
     DataType: 'Time' | 'Statistic' | 'Trending',
     Margin: { Left: number, Right: number, Top: number, Bottom: number },
@@ -70,6 +71,17 @@ const WaveformViewerD3Chart = (props: {
         if (parseFloat(newxexent[0].toString()) < xextent[0]) xextent[0] = parseFloat(newxexent[0].toString())
         if (parseFloat(newxexent[1].toString()) > xextent[1]) xextent[1] = parseFloat(newxexent[1].toString())
     });
+
+    $.each(props.CompareData.filter(x => x.Show), (index, value) => {
+        let newyexent = extent(value.Data, d => d[1]);
+        let newxexent = extent(value.Data, d => d[0]);
+
+        if (parseFloat(newyexent[0].toString()) < yextent[0]) yextent[0] = parseFloat(newyexent[0].toString())
+        if (parseFloat(newyexent[1].toString()) > yextent[1]) yextent[1] = parseFloat(newyexent[1].toString())
+        //if (parseFloat(newxexent[0].toString()) < xextent[0]) xextent[0] = parseFloat(newxexent[0].toString())
+        //if (parseFloat(newxexent[1].toString()) > xextent[1]) xextent[1] = parseFloat(newxexent[1].toString())
+    });
+
     let yspan  = yextent[1] - yextent[0];
 
     //yextent = [(yextent[0] < 0 ? 1.20 * yextent[0] : 0.8 * yextent[0]), 1.20 * yextent[1]]
@@ -84,6 +96,12 @@ const WaveformViewerD3Chart = (props: {
     $.each(props.Data.filter(x => x.Show), (index, value) => {
             newPaths.push( <path key={value.Key} fill='none' strokeLinejoin='round' strokeWidth='1.5' stroke={value.Color} d={linefunc(value.Data)} />);
     });
+
+    let comparePaths = [];
+    $.each(props.CompareData.filter(x => x.Show), (index, value) => {
+        comparePaths.push(<path key={value.Key} fill='none' strokeLinejoin='round' strokeWidth='1.5' stroke={value.Color} d={linefunc(value.Data)} />);
+    });
+
 
     let xTicks = [];
     let span = x.domain()[1] - x.domain()[0];
@@ -129,6 +147,8 @@ const WaveformViewerD3Chart = (props: {
                 <path d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
                 <text transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>
                 {newPaths}
+                {comparePaths}
+
                 {xTicks}
                 {yTicks}
 

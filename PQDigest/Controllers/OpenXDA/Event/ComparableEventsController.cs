@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AllMetersController.cs - Gbtc
+//  ComparableEventsController.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,10 +16,11 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/07/2020 - Billy Ernest
+//  08/12/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
 
 
 using System;
@@ -34,15 +35,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using PQDigest.Models;
 
-namespace PQDigest.Controllers.PreviousEvent
+namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/Event/PreviousEvent/[controller]")]
+    [Route("api/OpenXDA/Event/[controller]")]
     [ApiController]
-    public class AllMetersController : ControllerBase
+    public class ComparableEventsController : ControllerBase
     {
         private readonly IConfiguration m_configuration;
 
-        public AllMetersController(IConfiguration configuration)
+        public ComparableEventsController(IConfiguration configuration)
         {
             m_configuration = configuration;
         }
@@ -56,14 +57,15 @@ namespace PQDigest.Controllers.PreviousEvent
                 
                 return Ok(connection.RetrieveData(@"
                     SELECT
-	                    TOP 1
-	                    e2.*,
-	                    DATEDIFF(SECOND, e2.StartTime, e1.StartTime) as Difference
+		                Meter.Name as Meter,
+		                e2.ID,
+	                    DATEDIFF(MILLISECOND, e1.StartTime, e2.StartTime) as Difference
                     FROM
 	                    Event e1 JOIN
-	                    Event e2 ON e1.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))+ @") AND e2.ID != {0}
+	                    Event e2 ON e1.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))+ @") AND e2.ID != {0} JOIN
+		                Meter ON e2.MeterID = Meter.ID
                     WHERE 
-	                    e1.ID = {0} AND e1.StartTime >= e2.StartTime
+	                    e1.ID = 11 AND (e2.StartTime BETWEEN e1.StartTime AND e1.EndTime OR e2.EndTime BETWEEN e1.StartTime AND e1.EndTime)
                     ORDER BY
 	                    Difference ASC
                     ", eventID));

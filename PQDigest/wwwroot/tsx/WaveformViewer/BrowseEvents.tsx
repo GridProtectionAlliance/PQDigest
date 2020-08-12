@@ -31,8 +31,8 @@ const BrowseEvents = (props: { EventID: number }) => {
     React.useEffect(() => {
         let handle1 = GetEventID(false, all);
         let handle2 = GetEventID(true, all);
-        handle1.done(next => setNextID(next == undefined ? null : next['ID']));
-        handle2.done(back => setBackID(back == undefined ? null : back['ID']));
+        handle1.done(next => setNextID(next == undefined || next.length == 0 ? null : next[0]['ID']));
+        handle2.done(back => setBackID(back == undefined || back.length == 0 ? null : back[0]['ID']));
 
         return () => {
             if (handle1.abort != undefined) handle1.abort();
@@ -40,7 +40,7 @@ const BrowseEvents = (props: { EventID: number }) => {
         }
     }, [props.EventID, all]);
 
-    function GetEventID(n: boolean, a: boolean ): JQuery.jqXHR<object> {
+    function GetEventID(n: boolean, a: boolean ): JQuery.jqXHR<object[]> {
         return $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/${n ? 'Next': 'Previous'}Event/${a? 'AllMeters':'Meter'}/${props.EventID}`,
@@ -58,17 +58,16 @@ const BrowseEvents = (props: { EventID: number }) => {
                 
                 <div className="form-check">
                     <label className="form-check-label">
-                        <input type="checkbox" className="form-check-input" checked={all} onChange={() => setAll(!all)}/>All Meters
+                        <input type="checkbox" style={{marginLeft: -15}} className="form-check-input" checked={all} onChange={() => setAll(!all)}/>All Meters
                   </label>
                 </div>
                 <table className="table">
-                    <tr>
-                        <td><a href={backID == null ? null : `${homePath}/WaveformViewer?EventID=${backID}`}>Previous</a>
-                        </td>
-                    <td>
-                        <a href={nextID == null ? null : `${homePath}/WaveformViewer?EventID=${nextID}`}>Next</a>
-                            </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td><a href={backID == null ? null : `${homePath}WaveformViewer?EventID=${backID}`}>Previous</a></td>
+                            <td><a href={nextID == null ? null : `${homePath}WaveformViewer?EventID=${nextID}`}>Next</a></td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         );

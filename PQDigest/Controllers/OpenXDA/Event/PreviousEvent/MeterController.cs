@@ -64,7 +64,7 @@ namespace PQDigest.Controllers.PreviousEvent
                     ORDER BY
 	                    Difference ASC
                 ", eventID);
-                return Ok(table.Select().FirstOrDefault());
+                return Ok(table);
             }
         }
     }

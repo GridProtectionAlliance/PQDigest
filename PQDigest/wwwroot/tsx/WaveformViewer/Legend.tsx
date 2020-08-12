@@ -26,7 +26,9 @@ import React from 'react';
 const Legend = (props: {
     Type: 'Voltage' | 'Current' | 'Analytic',
     Paths: { Key: string, Show: boolean, Color: string, Data: [number, number][] }[],
-    CallBack: (path: { Key: string, Show: boolean, Color: string, Data: [number,number][] }) => void
+    CallBack: (path: { Key: string, Show: boolean, Color: string, Data: [number, number][] }) => void,
+    CompareData: boolean,
+    GetColor: (key: string) => string
 }) => {
 
     const [all, setAll] = React.useState<boolean>(false);
@@ -44,31 +46,11 @@ const Legend = (props: {
     const [ca, setCa] = React.useState<boolean>(false);
     const [showLegend, setShowLegend] = React.useState<boolean>(false);
 
-    function getColor(label) {
-        if (label.indexOf('VA') >= 0) return '#A30000';
-        if (label.indexOf('VB') >= 0) return '#0029A3';
-        if (label.indexOf('VC') >= 0) return '#007A29';
-        if (label.indexOf('VN') >= 0) return '#c3c3c3';
-        if (label.indexOf('IA') >= 0) return '#FF0000';
-        if (label.indexOf('IB') >= 0) return '#0066CC';
-        if (label.indexOf('IC') >= 0) return '#33CC33';
-        if (label.indexOf('NG') >= 0) return '#c3c3c3';
-        if (label.indexOf('RES') >= 0) return '#ffc107';
-
-        else {
-            var ranNumOne = Math.floor(Math.random() * 256).toString(16);
-            var ranNumTwo = Math.floor(Math.random() * 256).toString(16);
-            var ranNumThree = Math.floor(Math.random() * 256).toString(16);
-
-            return `#${(ranNumOne.length > 1 ? ranNumOne : "0" + ranNumOne)}${(ranNumTwo.length > 1 ? ranNumTwo : "0" + ranNumTwo)}${(ranNumThree.length > 1 ? ranNumThree : "0" + ranNumThree)}`;
-        }
-    }
-
     const prefix = props.Type == 'Voltage' ? 'V' : 'I';
     if (props.Paths.length == 0) return null;
     return (
-        <div style={{position:'relative'}}>
-            <button className="btn btn-primary btn-sm dropdown-toggle" style={{ position: 'absolute', right: 0 }} onClick={() => setShowLegend(!showLegend)}>Legend</button>
+        <div style={{position:'relative', zIndex: 1000}}>
+            <button className="btn btn-primary btn-sm dropdown-toggle" style={{ position: 'absolute', width: 86, right: (props.CompareData ? 86 : 0) }} onClick={() => setShowLegend(!showLegend)}>{props.CompareData? 'Compare' : 'Legend'}</button>
 
         <div className="btn-group-vertical" style={{ display: showLegend ? 'block' : 'none', position: 'absolute', width: 400, right: 0, top: 40, backgroundColor: 'white' }}>
             <div className="btn-group">
@@ -106,7 +88,7 @@ const Legend = (props: {
                 }}>Ph</button>
             </div>
             <div className="btn-group" >
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: an ? 1 : 0.5, backgroundColor: getColor(prefix + 'AN') }} onClick={(evt) => {
+                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: an ? 1 : 0.5, backgroundColor: props.GetColor(prefix + 'AN') }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('an') >= 0 && x.Show == an).forEach(x => props.CallBack(x))
                     setAn(!an);
                 }}>{prefix}AN</button>
@@ -116,7 +98,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}AN`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}AN`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group">
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: bn ? 1 : 0.5, backgroundColor: getColor(prefix + 'BN') }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: bn ? 1 : 0.5, backgroundColor: props.GetColor(prefix + 'BN') }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('bn') >= 0 && x.Show == bn).forEach(x => props.CallBack(x))
                     setBn(!bn);
                 }}>{prefix}BN</button>
@@ -126,7 +108,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}BN`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}BN`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group">
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: cn ? 1 : 0.5, backgroundColor: getColor(prefix + 'CN') }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: cn ? 1 : 0.5, backgroundColor: props.GetColor(prefix + 'CN') }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('cn') >= 0 && x.Show == cn).forEach(x => props.CallBack(x))
                     setCn(!cn);
                 }}>{prefix}CN</button>
@@ -136,7 +118,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}CN`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}CN`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group" hidden={props.Type != 'Voltage'}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ab ? 1 : 0.5, backgroundColor: getColor(`${prefix}AB`) }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ab ? 1 : 0.5, backgroundColor: props.GetColor(`${prefix}AB`) }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('ab') >= 0 && x.Show == ab).forEach(x => props.CallBack(x))
                     setAb(!ab);
                 }}>{prefix}AB</button>
@@ -146,7 +128,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}AB`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}AB`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group" hidden={props.Type != 'Voltage'}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: bc ? 1 : 0.5, backgroundColor: getColor(`${prefix}BC`) }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: bc ? 1 : 0.5, backgroundColor: props.GetColor(`${prefix}BC`) }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('bc') >= 0 && x.Show == bc).forEach(x => props.CallBack(x))
                     setBc(!bc);
                 }}>{prefix}BC</button>
@@ -156,7 +138,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}BC`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}BC`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group" hidden={props.Type != 'Voltage'}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ca ? 1 : 0.5, backgroundColor: getColor(`${prefix}CA`) }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ca ? 1 : 0.5, backgroundColor: props.GetColor(`${prefix}CA`) }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('ca') >= 0 && x.Show == ca).forEach(x => props.CallBack(x))
                     setCa(!ca);
                 }}>{prefix}CA</button>
@@ -166,7 +148,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}CA`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}CA`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group" hidden={props.Type != 'Current'}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ng ? 1 : 0.5, backgroundColor: getColor(`${prefix}NG`) }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: ng ? 1 : 0.5, backgroundColor: props.GetColor(`${prefix}NG`) }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('ng') >= 0 && x.Show == ng).forEach(x => props.CallBack(x))
                     setNg(!ng);
                 }}>{prefix}NG</button>
@@ -176,7 +158,7 @@ const Legend = (props: {
                 <Button Key={`Ph-${prefix}NG`} Path={props.Paths.find(x => x.Key == `Ph-${prefix}NG`)} CallBack={(path) => props.CallBack(path)} />
             </div>
             <div className="btn-group" hidden={props.Type != 'Current'}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ opacity: res ? 1 : 0.5, backgroundColor: getColor(`${prefix}RES`) }} onClick={(evt) => {
+                    <button type="button" className="btn btn-primary btn-sm" style={{ opacity: res ? 1 : 0.5, backgroundColor: props.GetColor(`${prefix}RES`) }} onClick={(evt) => {
                     props.Paths.filter(x => x.Key.toLowerCase().indexOf('res') >= 0 && x.Show == res).forEach(x => props.CallBack(x))
                     setRes(!res);
                 }}>{prefix}RES</button>

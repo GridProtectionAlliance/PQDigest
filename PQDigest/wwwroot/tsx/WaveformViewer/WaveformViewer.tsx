@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { OpenXDA } from '../global';
+import { OpenXDA, PQDigest } from '../global';
 import WaveformViewerD3Chart from './WaveformViewerD3Chart';
 import Legend from './Legend';
 import _ from 'lodash';
@@ -32,7 +32,6 @@ import BrowseEvents from './BrowseEvents';
 import Info from './Info';
 import ComparableEvents from './ComparableEvents';
 
-type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
 const WaveformViewer = (props: { EventID: number }) => {
     const infoWidth = 300;
     const pointsWidth = 500;
@@ -42,13 +41,13 @@ const WaveformViewer = (props: { EventID: number }) => {
 
     const [voltageData, setVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [currentData, setCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
-    const [analtyicData, setAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [analyticData, setAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
 
     const [compareVoltageData, setCompareVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [compareCurrentData, setCompareCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
     const [compareAnaltyicData, setCompareAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
 
-    const [analtyic, setAnalytic] = React.useState<Analtyic>('Frequency');
+    const [analytic, setAnalytic] = React.useState<PQDigest.Analtyic>('Frequency');
     const [harmonic, setHarmonic] = React.useState<number>(5);
 
     const [hover, setHover] = React.useState<number>(-1);
@@ -59,13 +58,13 @@ const WaveformViewer = (props: { EventID: number }) => {
 
         let handle1 = GetWaveformData('Current', props.EventID);
         handle1.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('I', key), Show: ShowPath(key), Color: GetColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Current', key), Show: ShowPath('Current',key), Color: GetColor(key), Data: data[key] } });
             setCurrentData(returnData)
         });
 
         let handle2 = GetWaveformData('Voltage', props.EventID);
         handle2.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('V', key), Show: ShowPath(key), Color: GetColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Voltage', key), Show: ShowPath('Voltage',key), Color: GetColor(key), Data: data[key] } });
             setVoltageData(returnData)
         });
 
@@ -78,16 +77,16 @@ const WaveformViewer = (props: { EventID: number }) => {
     }, [props.EventID]);
 
     React.useEffect(() => {
-        let handle = GetAnalyticData(analtyic, props.EventID);
+        let handle = GetAnalyticData(analytic, props.EventID);
         handle.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: key, Show: true, Color: GetColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey(analytic, key), Show: ShowPath(analytic,key), Color: GetColor(key), Data: data[key] } });
             setAnaltyicData(returnData)
         });
 
         return function () {
             if (handle.abort != undefined) handle.abort();
         }
-    }, [props.EventID, analtyic, harmonic]);
+    }, [props.EventID, analytic, harmonic]);
 
     React.useEffect(() => {
         if (compareEventID == 0) {
@@ -99,13 +98,13 @@ const WaveformViewer = (props: { EventID: number }) => {
 
         let handle1 = GetWaveformData('Current', compareEventID);
         handle1.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('I', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Current', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
             setCompareCurrentData(returnData)
         });
 
         let handle2 = GetWaveformData('Voltage', compareEventID);
         handle2.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('V', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Voltage', key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
             setCompareVoltageData(returnData)
         });
 
@@ -118,16 +117,16 @@ const WaveformViewer = (props: { EventID: number }) => {
     }, [compareEventID]);
 
     React.useEffect(() => {
-        let handle = GetAnalyticData(analtyic, compareEventID);
+        let handle = GetAnalyticData(analytic, compareEventID);
         handle.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: key, Show: true, Color: GetCompareColor(key), Data: data[key] } });
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey(analytic, key), Show: false, Color: GetCompareColor(key), Data: data[key] } });
             setCompareAnaltyicData(returnData)
         });
 
         return function () {
             if (handle.abort != undefined) handle.abort();
         }
-    }, [compareEventID, analtyic, harmonic]);
+    }, [compareEventID, analytic, harmonic]);
 
     function GetWaveformData(type: 'Current' | 'Voltage', id: number): JQuery.jqXHR<object> {
         return $.ajax({
@@ -217,7 +216,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                 </div>
                 <div className="card">
                     <div className="card-header">
-                        <select value={analtyic} onChange={(evt) => setAnalytic(evt.target.value as Analtyic)} style={{width: 200}}>
+                        <select value={analytic} onChange={(evt) => setAnalytic(evt.target.value as PQDigest.Analtyic)} style={{width: 200}}>
                             <option value="Power">Power</option>
                             <option value="Frequency">Frequency</option>
                             <option value="RapidVoltageChange">Rapid Voltage Change</option>
@@ -226,7 +225,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                             <option value="THD">Total Harmonic Distortion</option>
                             <option value="Unbalance">Unbalance</option>
                         </select>
-                        <select value={harmonic} onChange={(evt) => setHarmonic(parseInt(evt.target.value))} hidden={analtyic != 'SpecifiedHarmonic'}>
+                        <select value={harmonic} onChange={(evt) => setHarmonic(parseInt(evt.target.value))} hidden={analytic != 'SpecifiedHarmonic'}>
                             {
                                 Array.from(Array(40), (x, i) => <option key={i} value={i}>{i}</option>)
                             }
@@ -235,13 +234,20 @@ const WaveformViewer = (props: { EventID: number }) => {
                     </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 3, height: (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Analytic' Paths={analtyicData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
-                                let newPaths = _.clone(analtyicData);
+                            <Legend Type={analytic} Paths={analyticData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
+                                let newPaths = _.clone(analyticData);
                                 let newPath = newPaths.find(x => x.Key == path.Key);
                                 newPath.Show = !path.Show;
                                 setAnaltyicData(newPaths);
                             }} />
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={analtyicData} CompareData={compareAnaltyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <Legend Type={analytic} Paths={compareAnaltyicData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                let newPaths = _.clone(compareAnaltyicData);
+                                let newPath = newPaths.find(x => x.Key == path.Key);
+                                newPath.Show = !path.Show;
+                                setCompareAnaltyicData(newPaths);
+                            }} />
+
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={analyticData} CompareData={compareAnaltyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
                         </div>
 
 
@@ -285,21 +291,32 @@ const WaveformViewer = (props: { EventID: number }) => {
     )
 }
 
-function ShowPath(label): boolean {
-    if (label.indexOf('RMS') >= 0) return false;
-    else if (label.indexOf('Amp') >= 0) return false;
-    else if (label.indexOf('Ph') >= 0) return false;
-    else if (label.indexOf('N') < 0) return false;
-    else return true;
+function ShowPath(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string): boolean {
+    if (type == 'Voltage' || type == 'Current' || type == 'RapidVoltageChange') {
+        if (label.match(/^[VI][ABC]N$/g) != null) return true;
+    }
+    else if (type == 'Frequency' && label == 'Average') return true;
+    else if (type == 'Power') {
+        if (label.match(/Active Power/g) != null) return true;
+    }
+    else if (type == 'SpecifiedHarmonic') {
+        if (label.match(/V[ABC]N Mag/g) != null) return true;
+    }
+    else if (type == 'SymmetricalComponents' && label.indexOf('Voltage') >= 0) return true;
+    else if (type == 'THD' && label.indexOf('V') >= 0) return true;
+    else if (type == 'Unbalance' && label.indexOf('Voltage') >= 0) return true;
+
+    return false;
 }
 
-function GetKey(prefix: string, label: string): string {
-    if (label == `${prefix}AN`) return `Wf-${prefix}AN`;
-    if (label == `${prefix}BN`) return `Wf-${prefix}BN`;
-    if (label == `${prefix}CN`) return `Wf-${prefix}CN`;
-    if (label == `${prefix}AB`) return `Wf-${prefix}AB`;
-    if (label == `${prefix}BC`) return `Wf-${prefix}BC`;
-    if (label == `${prefix}CA`) return `Wf-${prefix}CA`;
+function GetKey(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string): string {
+    const prefix = type == 'Voltage' ? 'V' : 'I';
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}AN`) return `Wf-${prefix}AN`;
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}BN`) return `Wf-${prefix}BN`;
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}CN`) return `Wf-${prefix}CN`;
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}AB`) return `Wf-${prefix}AB`;
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}BC`) return `Wf-${prefix}BC`;
+    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}CA`) return `Wf-${prefix}CA`;
     if (label == `${prefix}NG`) return `Wf-${prefix}NG`;
     if (label == `${prefix}RES`) return `Wf-${prefix}RES`;
     if (label == `${prefix}AN RMS`) return `RMS-${prefix}AN`;
@@ -326,8 +343,24 @@ function GetKey(prefix: string, label: string): string {
     if (label == `${prefix}CA Amplitude`) return `Amp-${prefix}CA`;
     if (label == `${prefix}NG Amplitude`) return `Amp-${prefix}NG`;
     if (label == `${prefix}RES Amplitude`) return `Amp-${prefix}RES`;
+    if (label == `AN Active Power`) return `AN-W`;
+    if (label == `BN Active Power`) return `BN-W`;
+    if (label == `CN Active Power`) return `CN-W`;
+    if (label == `Total Active Power`) return `Total-W`;
+    if (label == `AN Apparent Power`) return `AN-VA`;
+    if (label == `BN Apparent Power`) return `BN-VA`;
+    if (label == `CN Apparent Power`) return `CN-VA`;
+    if (label == `Total Apparent Power`) return `Total-VA`;
+    if (label == `AN Reactive Power`) return `AN-VAR`;
+    if (label == `BN Reactive Power`) return `BN-VAR`;
+    if (label == `CN Reactive Power`) return `CN-VAR`;
+    if (label == `Total Reactive Power`) return `Total-VAR`;
+    if (label == `AN Power Factor`) return `AN-PF`;
+    if (label == `BN Power Factor`) return `BN-PF`;
+    if (label == `CN Power Factor`) return `CN-PF`;
+    if (label == `Total Power Factor`) return `Total-PF`;
 
-    else return `${prefix}`;
+    else return label;
 }
 
 function GetColor(label) {
@@ -338,8 +371,17 @@ function GetColor(label) {
     if (label.indexOf('IA') >= 0) return '#FF0000';
     if (label.indexOf('IB') >= 0) return '#0066CC';
     if (label.indexOf('IC') >= 0) return '#33CC33';
+    if (label.indexOf('AN') >= 0) return '#FF0000';
+    if (label.indexOf('BN') >= 0) return '#0066CC';
+    if (label.indexOf('CN') >= 0) return '#33CC33';
     if (label.indexOf('NG') >= 0) return '#c3c3c3';
     if (label.indexOf('RES') >= 0) return '#ffc107';
+    if (label.indexOf('Average') >= 0) return '#9A52A4';
+    if (label.indexOf('Total') >= 0) return '#9A52A4';
+    if (label.indexOf('S0') >= 0) return '#A30000';
+    if (label.indexOf('S2') >= 0) return '#007A29';
+    if (label.indexOf('S1') >= 0) return '#0029A3';
+
     else {
         var ranNumOne = Math.floor(Math.random() * 256).toString(16);
         var ranNumTwo = Math.floor(Math.random() * 256).toString(16);
@@ -357,8 +399,17 @@ function GetCompareColor(label) {
     if (label.indexOf('IA') >= 0) return '#FF8000';
     if (label.indexOf('IB') >= 0) return '#CF12E0';
     if (label.indexOf('IC') >= 0) return '#FFFF00';
+    if (label.indexOf('AN') >= 0) return '#FF8000';
+    if (label.indexOf('BN') >= 0) return '#CF12E0';
+    if (label.indexOf('CN') >= 0) return '#FFFF00';
     if (label.indexOf('NG') >= 0) return '#636161';
     if (label.indexOf('RES') >= 0) return '#07FFFF';
+    if (label.indexOf('Average') >= 0) return '#A45289';
+    if (label.indexOf('Total') >= 0) return '#A45289';
+    if (label.indexOf('S0') >= 0) return '#E3A909';
+    if (label.indexOf('S1') >= 0) return '#9800A3';
+    if (label.indexOf('S2') >= 0) return '#707A00';
+
     else {
         var ranNumOne = Math.floor(Math.random() * 256).toString(16);
         var ranNumTwo = Math.floor(Math.random() * 256).toString(16);

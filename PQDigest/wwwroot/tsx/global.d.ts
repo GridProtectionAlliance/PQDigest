@@ -47,6 +47,9 @@ export namespace PQDigest {
         DefaultValue: string
     }
 
+    type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
+
+
 }
 
 export namespace OpenXDA {

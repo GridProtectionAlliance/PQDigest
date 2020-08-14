@@ -41,6 +41,17 @@
     <Content Remove="wwwroot\tsx\WaveformViewer\ComparableEvents.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\Info.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\Legend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\Button.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\CurrentLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\FrequencyLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\Legend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\PowerLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\RapidVoltageChangeLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\SpecifiedHarmonicLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\SymmetricalComponentsLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\THDLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\UnbalanceLegend.tsx" />
+    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\VoltageLegend.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx" />
     <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx" />
@@ -114,6 +125,39 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend.tsx" />
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\BrowseEvents.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\Button.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\PowerLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\RapidVoltageChangeLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\SpecifiedHarmonicLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\SymmetricalComponentsLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\UnbalanceLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\THDLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\FrequencyLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\CurrentLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\VoltageLegend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\Legend.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />

@@ -164,6 +164,23 @@ const WaveformViewer = (props: { EventID: number }) => {
             setExtents(value);
     }
 
+    function HandleExportCSV() {
+
+        var req = new XMLHttpRequest();
+        req.open("GET", `${homePath}api/OpenXDA/Event/CSV/${props.EventID}`, true);
+        req.responseType = "blob";
+        req.onload = function (event) {
+            var blob = req.response;
+            var fileName = req.getResponseHeader("fileName") //if you have the fileName header available
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        };
+
+        req.send();
+    }
+
 
     return (
         <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
@@ -219,6 +236,8 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 </div>
                             */}
                             <button onClick={HandleReset}>Reset</button>
+                            <button onClick={HandleExportCSV}>Export CSV</button>
+
                         </div>
                     </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: 2 * (window.innerHeight - 246) / 3, height: 2 * (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>

@@ -70,7 +70,7 @@ namespace PQDigest.Controllers
                 {
                     List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
                     if (series.SeriesInfo.Channel.MeasurementType.Name == type && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
-                        returnData.Add(( type == "Voltage" ? "V" : "I") + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
+                        returnData.Add(( type == "Voltage" ? "V" : "I") + series.SeriesInfo.Channel.Phase.Name, data);
 
                 }
 
@@ -79,11 +79,11 @@ namespace PQDigest.Controllers
                 foreach (CycleDataGroup cdg in viCycleDataGroup.CycleDataGroups.Where(ds => ds.RMS.SeriesInfo.Channel.MeasurementType.Name == type))
                 {
                     List<double[]> rmsPoints = cdg.RMS.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
-                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.RMS.SeriesInfo.Channel.Phase.Name + " RMS", dataGroupHelper.Downsample(rmsPoints, pixels));
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.RMS.SeriesInfo.Channel.Phase.Name + " RMS", rmsPoints);
                     List<double[]> ampPoints = cdg.Peak.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
-                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Peak.SeriesInfo.Channel.Phase.Name + " Amplitude", dataGroupHelper.Downsample(ampPoints, pixels));
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Peak.SeriesInfo.Channel.Phase.Name + " Amplitude", ampPoints);
                     List<double[]> phPoints = cdg.Phase.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value*180/Math.PI }).ToList();
-                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Phase.SeriesInfo.Channel.Phase.Name + " Phase", dataGroupHelper.Downsample(phPoints, pixels));
+                    returnData.Add((type == "Voltage" ? "V" : "I") + cdg.Phase.SeriesInfo.Channel.Phase.Name + " Phase", phPoints);
 
                 }
 

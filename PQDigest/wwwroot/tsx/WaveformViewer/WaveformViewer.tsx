@@ -26,11 +26,12 @@ import { OpenXDA, PQDigest } from '../global';
 import WaveformViewerD3Chart from './WaveformViewerD3Chart';
 import Legend from './Legend';
 import _ from 'lodash';
-import { bisect } from 'd3';
+import { bisect, extent } from 'd3';
 import PolarChart from './PolarChart';
 import BrowseEvents from './BrowseEvents';
 import Info from './Info';
 import ComparableEvents from './ComparableEvents';
+
 
 const WaveformViewer = (props: { EventID: number }) => {
     const infoWidth = 300;
@@ -49,10 +50,11 @@ const WaveformViewer = (props: { EventID: number }) => {
 
     const [analytic, setAnalytic] = React.useState<PQDigest.Analtyic>('Frequency');
     const [harmonic, setHarmonic] = React.useState<number>(5);
+    const [chartAction, setChartAction] = React.useState<PQDigest.ChartAction>('Click');
 
     const [hover, setHover] = React.useState<number>(-1);
     const [click, setClick] = React.useState<number>(-1);
-
+    const [extents, setExtents] = React.useState<PQDigest.D3Extent>({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
 
     React.useEffect(() => {
 
@@ -150,6 +152,17 @@ const WaveformViewer = (props: { EventID: number }) => {
         });
     }
 
+    function HandleReset() {
+        setExtents({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
+    }
+
+    function HandleChartAction(value: number | PQDigest.D3Extent) {
+        if (chartAction == 'Click' && typeof(value) == 'number') {
+            setClick(value);
+        }
+        else if(typeof(value) == 'object')
+            setExtents(value);
+    }
 
 
     return (
@@ -176,7 +189,38 @@ const WaveformViewer = (props: { EventID: number }) => {
             </div>
             <div className="" style={{ padding: '0px 2px 0px 0px', width: waveformWidth }}>
                 <div className="card">
-                    <div className="card-header">Waveforms</div>
+                    <div className="card-header" style={{ paddingBottom: 9, paddingTop: 9 }} >Waveforms
+                        <div className="pull-right">
+                            <div className="form-check-inline">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" checked={chartAction == 'Click'} onChange={(evt) => setChartAction('Click')}/>Click
+                                </label>
+                            </div>
+                            <div className="form-check-inline">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" checked={chartAction == 'Pan'} onChange={(evt) => setChartAction('Pan')}/>Pan
+                                </label>
+                            </div>
+                            <div className="form-check-inline">
+                                <label className="form-check-label">
+                                    <input type="radio" className="form-check-input" checked={chartAction == 'ZoomX'} onChange={(evt) => setChartAction('ZoomX')}/>Zoom
+                                </label>
+                            </div>
+                            {/*
+                                <div className="form-check-inline">
+                                    <label className="form-check-label">
+                                        <input type="radio" className="form-check-input" checked={chartAction == 'ZoomY'} onChange={(evt) => setChartAction('ZoomY')} />Zoom Y
+                                </label>
+                                </div>
+                                <div className="form-check-inline">
+                                    <label className="form-check-label">
+                                        <input type="radio" className="form-check-input" checked={chartAction == 'ZoomXY'} onChange={(evt) => setChartAction('ZoomXY')} />Zoom X & Y
+                                </label>
+                                </div>
+                            */}
+                            <button onClick={HandleReset}>Reset</button>
+                        </div>
+                    </div>
                     <div className="card-body" style={{ padding: 0, maxHeight: 2 * (window.innerHeight - 246) / 3, height: 2 * (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
                             <Legend Type='Voltage' Paths={voltageData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
@@ -192,7 +236,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareVoltageData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} CompareData={compareVoltageData} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} CompareData={compareVoltageData} ChartAction={chartAction} Extent={extents} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
                             <Legend Type='Current' Paths={currentData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
@@ -208,7 +252,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareCurrentData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} CompareData={compareCurrentData} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} CompareData={compareCurrentData} ChartAction={chartAction} Extent={extents} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
 
 
@@ -247,7 +291,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareAnaltyicData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={analyticData} CompareData={compareAnaltyicData} Units="Hz" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} SetClick={(value) => setClick(value)} />
+                            <WaveformViewerD3Chart EventID={props.EventID} Data={analyticData} CompareData={compareAnaltyicData} ChartAction={chartAction} Extent={extents} Units={GetUnits(analytic)} DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
 
 
@@ -289,6 +333,17 @@ const WaveformViewer = (props: { EventID: number }) => {
 
         </div>
     )
+}
+
+function GetUnits(type: PQDigest.Analtyic): string {
+    if (type == 'Frequency') return 'Hz';
+    else if (type == 'Power') return 'W/VA/pf/VAR';
+    else if (type == 'RapidVoltageChange') return 'Volts';
+    else if (type == 'SpecifiedHarmonic') return 'Volts/Amps/Degrees';
+    else if (type == 'SymmetricalComponents') return 'Volts/Amps';
+    else if (type == 'THD') return 'Volts/Amps';
+    else if (type == 'Unbalance') return '';
+    else return '';
 }
 
 function ShowPath(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string): boolean {

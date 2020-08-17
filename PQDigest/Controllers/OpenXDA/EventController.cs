@@ -87,11 +87,11 @@ namespace PQDigest.Controllers
                         {
                             if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
                             {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, data);
                             }
                             else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
                             {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
+                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, data);
                             }
 
                         }
@@ -99,7 +99,7 @@ namespace PQDigest.Controllers
                         {
                             if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                             {
-                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, dataGroupHelper.Downsample(data, pixels));
+                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, data);
                             }
                         }
 

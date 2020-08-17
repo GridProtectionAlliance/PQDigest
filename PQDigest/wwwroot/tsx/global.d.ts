@@ -48,8 +48,8 @@ export namespace PQDigest {
     }
 
     type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
-
-
+    type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
+    interface D3Extent { X: { Min: number, Max: number }, Y: { Min: number, Max: number } }
 }
 
 export namespace OpenXDA {

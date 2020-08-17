@@ -31,7 +31,7 @@ export default function EventSearchOpenSEE(props: { EventID: number, Width: numb
 
     return (
         <div className="card">
-            <div className="card-header"><a href={ homePath + 'OpenSEE?eventid=' + props.EventID} target="_blank">View in OpenSEE</a></div>
+            <div className="card-header"><a href={ homePath + 'WaveformViewer?EventID=' + props.EventID} target="_blank">View in OpenSEE</a></div>
             <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
                 <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Time' Margin={margin} Height={props.Height / 3} Width={props.Width - 10}/>
                 <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Time' Margin={margin} Width={props.Width - 10} Height={props.Height/3}/>

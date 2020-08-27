@@ -148,7 +148,7 @@ const EventSearch = (props: {}) => {
                             <div className="row">
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{border: '0px'}}>Return #</div>
+                                        <div className="form-control" style={{border: '0px', width: 100}}>Return #</div>
                                         <div className="col">
                                             <select value={returnLimit} className="form-control" onChange={e => setReturnLimit(parseInt(e.target.value))}>
                                                 <option>100</option>
@@ -161,7 +161,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Meters</div>
+                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Meters</div>
                                         <div className="col">
                                             <MultiSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newMeters = _.cloneDeep(meters);
@@ -175,7 +175,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Type</div>
+                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Type</div>
                                         <div className="col">
                                             <MultiSelect Options={types.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newTypes = _.cloneDeep(types);
@@ -189,7 +189,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Start Date</div>
+                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Start Date</div>
                                         <div className="col">
                                             <input className="form-control" value={startDate} type="date" onChange={e => setStartDate(e.target.value)}/>
                                         </div>
@@ -197,7 +197,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>End Date</div>
+                                        <div className="form-control" style={{ border: '0px', width: 100 }}>End Date</div>
                                         <div className="col">
                                             <input className="form-control" value={endDate} type="date" onChange={e => setEndDate(e.target.value)}/>
                                         </div>
@@ -223,12 +223,12 @@ const EventSearch = (props: {}) => {
                             {showEventList ?
                                 <Table<OpenXDA.EventSearch>
                                     cols={[
-                                        { key: 'StartTime', label: 'Date', headerStyle: { width: '25%' }, rowStyle: { width: '25%' }, content: (item, key, style) => moment(item[key]).format('MM/DD/YYYY HH:mm:ss') },
+                                        { key: 'StartTime', label: 'Date', headerStyle: { width: '25%' }, rowStyle: { width: '25%' }, content: (item, key, style) => item[key] != undefined ? moment(item[key]).format('MM/DD/YYYY HH:mm:ss'):'' },
                                         //{ key: 'StartTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key, style) => moment(item[key]).format('HH:mm:ss') },
                                         { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'EventType', label: 'Type', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                        { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => (item[key] as number).toFixed(2) },
-                                        { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => (item[key] as number).toFixed(2) },
+                                        { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
+                                        { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
                                         { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
 
                                     ]}

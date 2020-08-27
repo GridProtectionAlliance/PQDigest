@@ -76,8 +76,8 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         for (let i = 0; i < y.domain()[1]; i = i + 5) {
             yticks.push(
                 <g key={i} className="tick" opacity="1" transform={`translate(${margin.left},${y(i)})`}>
-                    <path d={`M -7 0 H ${svgWidth}`} strokeWidth={0.25}></path>
-                    <text x="-15" dy="0.32em" textAnchor='middle'>{i}</text>
+                    <path stroke='black' d={`M -7 0 H ${svgWidth}`} strokeWidth={0.25}></path>
+                    <text fill="black" fontSize="small"  x="-15" dy="0.32em" textAnchor='middle'>{i}</text>
                 </g>);
 
         }
@@ -86,7 +86,7 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let ticks = data.map((x, index) => {
             return (
                 <g key={index} className="tick" opacity="1" transform={`translate(${margin.left + svgWidth * (index + 1) / 12},${svgHeight})`}>
-                    <line y2="6"></line>
+                    <line stroke='black' y2="6"></line>
                 </g>
             )
         });
@@ -95,7 +95,7 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let labels = data.map((x, index) => {
             return (
                 <g key={index} className="tick" opacity="1" transform={`translate(${margin.left + (svgWidth * ((index + 0.25)) / 12)},${svgHeight})`}>
-                    <text y2="6" dy="1em">{x.Month}</text>
+                    <text fill="black" fontSize="small"  y2="6" dy="1em">{x.Month}</text>
                 </g>
             )
         });
@@ -108,11 +108,11 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let boxes = data.map((x, index) => {
             return (
                 <g key={index} onClick={() => { }}>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag)} width={20} height={svgHeight - y(x.Sag)} fill={getColor('sag')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell))} width={20} height={svgHeight - y(x.Swell)} fill={getColor('swell')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient))} width={20} height={svgHeight - y(x.Transient)} fill={getColor('Transient')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault))} width={20} height={svgHeight - y(x.Fault)} fill={getColor('Fault')}/>
-                    <rect x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault)) - (svgHeight - y(x.Interruption))} width={20} height={svgHeight - y(x.Interruption)} fill={getColor('Interruption')}/>
+                    <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag)} width={20} height={svgHeight - y(x.Sag)} fill={getColor('sag')}/>
+                    <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell))} width={20} height={svgHeight - y(x.Swell)} fill={getColor('swell')}/>
+                    <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient))} width={20} height={svgHeight - y(x.Transient)} fill={getColor('Transient')}/>
+                    <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault))} width={20} height={svgHeight - y(x.Fault)} fill={getColor('Fault')}/>
+                    <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient)) - (svgHeight - y(x.Fault)) - (svgHeight - y(x.Interruption))} width={20} height={svgHeight - y(x.Interruption)} fill={getColor('Interruption')}/>
                 </g>
             )
         });
@@ -133,14 +133,15 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
 
     return (
         <div style={{ height: props.Height, width: props.Width, textAlign: 'center' }} hidden={hidden}>
-            <svg width={props.Width} height={props.Height} style={{fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize:'small'}}>
+
+            <svg width={props.Width} height={props.Height} style={{fill: 'none',shapeRendering: 'crispEdges'}}>
 
                 {/* Chart borders */}
-                <path d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`}/>
+                <path stroke='black' d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`}/>
 
                 {/* XAxis ticks*/}
                 <g className="tick" opacity="1" transform={`translate(${margin.left},${svgHeight})`}>
-                    <line y2="6"></line>
+                    <line stroke='black' y2="6"></line>
                 </g>
                 {axisTicks}
 
@@ -151,22 +152,23 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
                 <g>{axisPaths}</g>
 
                 {/* Chart Legend */}
-                <rect x={margin.left + 10} y={svgHeight + 25} width={15} height={15} fill={getColor('sag')} />
-                <text y={svgHeight + 38} x={margin.left + 30} >Sag</text>
-                <rect x={margin.left + 70} y={svgHeight + 25} width={15} height={15} fill={getColor('swell')} />
-                <text y={svgHeight + 38} x={margin.left + 90} >Swell</text>
-                <rect x={margin.left + 140} y={svgHeight + 25} width={15} height={15} fill={getColor('transient')} />
-                <text y={svgHeight + 38} x={margin.left + 160} >Transient</text>
-                <rect x={margin.left + 240} y={svgHeight + 25} width={15} height={15} fill={getColor('fault')} />
-                <text y={svgHeight + 38} x={margin.left + 260} >Fault</text>
-                <rect x={margin.left + 320} y={svgHeight + 25} width={15} height={15} fill={getColor('interruption')} />
-                <text y={svgHeight + 38} x={margin.left + 340} >Interruption</text>
+                <rect stroke='black' x={margin.left + 10} y={svgHeight + 25} width={15} height={15} fill={getColor('sag')} />
+                <text fill="black" fontSize="small"  y={svgHeight + 38} x={margin.left + 30} >Sag</text>
+                <rect stroke='black' x={margin.left + 70} y={svgHeight + 25} width={15} height={15} fill={getColor('swell')} />
+                <text fill="black" fontSize="small"  y={svgHeight + 38} x={margin.left + 90} >Swell</text>
+                <rect stroke='black' x={margin.left + 140} y={svgHeight + 25} width={15} height={15} fill={getColor('transient')} />
+                <text fill="black" fontSize="small"  y={svgHeight + 38} x={margin.left + 160} >Transient</text>
+                <rect stroke='black' x={margin.left + 240} y={svgHeight + 25} width={15} height={15} fill={getColor('fault')} />
+                <text fill="black" fontSize="small"  y={svgHeight + 38} x={margin.left + 260} >Fault</text>
+                <rect stroke='black' x={margin.left + 320} y={svgHeight + 25} width={15} height={15} fill={getColor('interruption')} />
+                <text fill="black" fontSize="small"  y={svgHeight + 38} x={margin.left + 340} >Interruption</text>
 
                 {/* Stacked Bars */}
                 {paths}
 
-                {/* Line Above Stacked Bars */}
+                {/* Line Above Stacked Bars 
                 <path fill='none' strokeLinejoin='round' strokeWidth='3' stroke='darkblue' d={totalPath} />
+                */}
             </svg>
 
         </div>

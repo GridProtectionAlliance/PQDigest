@@ -26,6 +26,7 @@ import Table from '@gpa-gemstone/react-table';
 import _ from 'lodash';
 
 interface Meter {
+    ID: number,
     Name: string,
     Total: number,
     Sag: number,
@@ -91,7 +92,7 @@ const EventCountTable = (props: { Width: number, Height: number}) => {
                 setData(ordered);
             }
         }}
-        onClick={(data) => { }}
+        onClick={(data) => { window.open(`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100&meters=${btoa(data.row.ID.toString())}`)}}
         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
         tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: props.Height - 60, width: '100%' }}
         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}

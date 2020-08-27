@@ -105,10 +105,10 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
 
     return (
         <div style={{ height: props.Height /*, margin: '0x', padding: '0px'*/ }}>
-            <svg width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px',  fontFamily: 'sans-serif', fontSize: 'small'}}>
+            <svg width={props.Width} height={props.Height} style={{ fill: 'none'}}>
                 {/* Chart borders */}
-                <path d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
-                <text transform={`rotate(-90 0,0)`} y={props.Margin.Left - 15} x={-(props.Height + 35) / 2}>{props.MeasurementType == "Voltage" ? "Voltage" : "Amps"}</text>
+                <path stroke='black' d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
+                <text fill="black" fontSize="small"  transform={`rotate(-90 0,0)`} y={props.Margin.Left - 15} x={-(props.Height + 35) / 2}>{props.MeasurementType == "Voltage" ? "Voltage" : "Amps"}</text>
                 <g>
                     {paths}
                 </g>

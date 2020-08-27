@@ -158,7 +158,7 @@ const WaveformViewerD3Chart = (props: {
         xTicks.push(
             <g key={i} className="tick" transform={`translate(${x(i)},${props.Height - props.Margin.Bottom})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
                 <path d={`M 0,6 V -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                <text y="20" textAnchor='middle'>{moment('1970-01-01T00:00:00').add(i, 'milliseconds').format(props.DataType == 'Time' ? 'ss.SSS' : 'HH:ss')}</text>
+                <text fill="black" fontSize="small" y="20" textAnchor='middle'>{moment('1970-01-01T00:00:00').add(i, 'milliseconds').format(props.DataType == 'Time' ? 'ss.SSS' : 'HH:ss')}</text>
             </g>
         );
 
@@ -176,12 +176,12 @@ const WaveformViewerD3Chart = (props: {
             <g key={i}>
                 <g key={i + 'pos'} className="tick" transform={`translate(${props.Margin.Left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
                     <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                    <text x="-15" dy="0.32em" textAnchor='middle'>{(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
+                    <text fill="black" fontSize="small" x="-15" dy="0.32em" textAnchor='middle'>{(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
                 </g>
                 {(y.domain()[0] < 0 && i != 0 ?
                     <g key={i + 'neg'} className="tick" transform={`translate(${props.Margin.Left},${y(-i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
                         <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                        <text x="-15" dy="0.32em" textAnchor='middle'>{-(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
+                        <text fill="black" fontSize="small" x="-15" dy="0.32em" textAnchor='middle'>{-(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
 
                     </g> : null)}
             </g>
@@ -191,22 +191,22 @@ const WaveformViewerD3Chart = (props: {
 
 
     return (
-            <svg ref={chart} width={props.Width} height={props.Height} onMouseOver={OnHover} onMouseDown={HandleChartAction} onMouseUp={StopDrag} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px',  fontWeight: 'lighter', fontSize: 'small'}}>
+        <svg ref={chart} width={props.Width} height={props.Height} onMouseOver={OnHover} onMouseDown={HandleChartAction} onMouseUp={StopDrag} style={{ fill: 'none'}}>
                 {/* Chart borders */}
-                <path d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
-                <text transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>
+                <path  stroke='black' strokeWidth='0.5px' d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
+                <text fill="black" fontSize="small" transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>
                 {newPaths}
                 {comparePaths}
 
                 {xTicks}
                 {yTicks}
 
-                <path d={`M ${props.Hover},${props.Margin.Top} V ${props.Height- props.Margin.Bottom}`} style={{ stroke: 'black', opacity: props.Hover < props.Margin.Left? 0: 1 }} strokeWidth={0.5}></path>
-                <path d={`M ${x(props.Click)},${props.Margin.Top} V ${props.Height - props.Margin.Bottom}`} style={{ stroke: 'red', opacity: x(props.Click) < props.Margin.Left ? 0 : 1 }} strokeWidth={1}></path>
+                <path stroke='black' d={`M ${props.Hover},${props.Margin.Top} V ${props.Height- props.Margin.Bottom}`} style={{ stroke: 'black', opacity: props.Hover < props.Margin.Left? 0: 1 }} strokeWidth={0.5}></path>
+                <path stroke='black' d={`M ${x(props.Click)},${props.Margin.Top} V ${props.Height - props.Margin.Bottom}`} style={{ stroke: 'red', opacity: x(props.Click) < props.Margin.Left ? 0 : 1 }} strokeWidth={1}></path>
 
-                <text x={props.Width / 2} y={props.Height - 5}>Time</text>
+                <text fill="black" fontSize="small" x={props.Width / 2} y={props.Height - 5}>Time</text>
 
-                <rect x={Math.min(xStart, xEnd)} y={props.Margin.Top} width={Math.abs(xEnd - xStart)} height={props.Height - props.Margin.Top - props.Margin.Bottom} style={{ stroke: 'grey', fill: 'grey', opacity: 0.5 }}></rect>
+                <rect stroke='black' x={Math.min(xStart, xEnd)} y={props.Margin.Top} width={Math.abs(xEnd - xStart)} height={props.Height - props.Margin.Top - props.Margin.Bottom} style={{ stroke: 'grey', fill: 'grey', opacity: 0.5 }}></rect>
             </svg>
     );
 }

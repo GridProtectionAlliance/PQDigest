@@ -113,11 +113,11 @@ const MagDurChart = (props: { Width: number, Height: number, Points: Point[], On
         for (; i <= domains.X.Upper; i = i * 10) {
             ticks.push(
                 <g key={i} className="tick" transform={`translate(${x(i)},${svgHeight})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
-                    <path d={`M 0,6 V -${svgHeight - margin.top}`}  strokeWidth={0.25}></path>
-                    <text y="20" textAnchor='middle'>{xAxisText(i)}</text>
+                    <path stroke='black' d={`M 0,6 V -${svgHeight - margin.top}`}  strokeWidth={0.25}></path>
+                    <text fill="black" fontSize="small"  y="20" textAnchor='middle'>{xAxisText(i)}</text>
                     {(ldDiff < 5 ?
                         <g>
-                            {([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(num => <path key={num} d={`M ${/*Math.log(num * i) / Math.log(10) - Math.log(i) / Math.log(10)*/x(num * i) - x(i)},6 V -${svgHeight - margin.top}`} strokeWidth={0.25} />)}
+                            {([1, 2, 3, 4, 5, 6, 7, 8, 9]).map(num => <path stroke='black' key={num} d={`M ${/*Math.log(num * i) / Math.log(10) - Math.log(i) / Math.log(10)*/x(num * i) - x(i)},6 V -${svgHeight - margin.top}`} strokeWidth={0.25} />)}
                         </g>
                         : null)}
                 </g>
@@ -134,8 +134,8 @@ const MagDurChart = (props: { Width: number, Height: number, Points: Point[], On
         for (let i = Math.floor(domains.Y.Lower); i <= domains.Y.Upper; i = step + i) {
             yticks.push(
                 <g key={i} className="tick" transform={`translate(${margin.left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
-                    <path d={`M -6,0 H ${svgWidth}`} strokeWidth={0.25}></path>
-                    <text x="-15" dy="0.32em" textAnchor='middle'>{i.toFixed(1)}</text>
+                    <path stroke='black' d={`M -6,0 H ${svgWidth}`} strokeWidth={0.25}></path>
+                    <text fill="black" fontSize="small"  x="-15" dy="0.32em" textAnchor='middle'>{i.toFixed(1)}</text>
                 </g>);
 
         }
@@ -229,11 +229,11 @@ const MagDurChart = (props: { Width: number, Height: number, Points: Point[], On
     return (
         <div style={{ height: props.Height, width: props.Width, position: 'relative' }}>
             <button style={{ position: 'absolute', top: 20, right: 25 }} className="btn" onClick={resetZoom} hidden={hideReset()}>Reset</button>
-            <svg id="magDurChart" width={props.Width} height={props.Height} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px', shapeRendering: 'crispEdges', fontFamily: 'sans-serif', fontSize: 'small' }} onWheel={handleZoom} onMouseDown={handleDrag} onMouseUp={stopDrag}>
+            <svg id="magDurChart" width={props.Width} height={props.Height} style={{ fill: 'none', shapeRendering: 'crispEdges'}} onWheel={handleZoom} onMouseDown={handleDrag} onMouseUp={stopDrag}>
 
                 {/* Draw chart data first */}
                 <g>
-                    {magDurCurves.map((mdc, index) => (mdc.Visible ? <path key={index} d={mdc.Path} stroke={mdc.Color} /> : null))}
+                    {magDurCurves.map((mdc, index) => (mdc.Visible ? <path key={index} d={mdc.Path} stroke={mdc.Color}/> : null))}
                     {magDurCircles}
                 </g>
 
@@ -258,12 +258,12 @@ const MagDurChart = (props: { Width: number, Height: number, Points: Point[], On
 
                 {/* XAxis ticks*/}
                 {xAxisTicks}
-                <text x={svgWidth / 2} y={svgHeight + margin.top + 20}>Duration (s)</text>
+                <text fill="black" fontSize="small"  x={svgWidth / 2} y={svgHeight + margin.top + 20}>Duration (s)</text>
                 {/* YAxis ticks and Labels*/}
                 {yAxisTicks}
-                <text transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight / 2 - margin.bottom}>Per Unit Voltage</text>
+                <text fill="black" fontSize="small"  transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight / 2 - margin.bottom}>Per Unit Voltage</text>
                 {/* Chart borders */}
-                <path d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
+                <path stroke='black' d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
 
             </svg>
 

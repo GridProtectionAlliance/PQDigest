@@ -30,11 +30,18 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     const [component, setComponent] = React.useState<any>({TestCurveID: 0});
     const [points, setPoints] = React.useState<Point[]>([]);
     const [curve, setCurve] = React.useState<Point[]>([]);
+
     React.useEffect(() => {
+        setComponent({ TestCurveID: 0 });
+        setComponents([]);
+        setPoints([]);
+        setCurve([]);
+
         let handle1 = GetComponents();
         handle1.done((data: any[]) => {
             setComponents(data);
-            setComponent(data[0]);
+            if(data.length != 0)
+                setComponent(data[0]);
         });
 
         let handle2 = GetDisturbances();
@@ -48,7 +55,10 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     }, [props.EventID])
 
     React.useEffect(() => {
-        if (component == null) return;
+        if (component.TestCurveID == 0) {
+            setComponents([])
+            return;
+        }
         let handle1 = GetComponentCurve();
         handle1.done((data: any[]) => {
             setCurve(data);
@@ -94,18 +104,24 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     }
 
 
-    return (
-        <div className="card">
-            <div className="card-header">PQI - Ride-through Curves
-                <select value={component.TestCurveID} className='form-control' style={{ width: 200, position: 'absolute', right: 6, top: 4 }} onChange={(evt) => setComponent(components.find( x => x.TestCurveID ==evt.target.value))}>
-                    {
-                        components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
-                    }
-                </select>
+    try {
+        return (
+            <div className="card">
+                <div className="card-header">PQI - Ride-through Curves
+                <select value={component.TestCurveID} className='form-control' style={{ width: 200, position: 'absolute', right: 6, top: 4 }} onChange={(evt) => setComponent(components.find(x => x.TestCurveID == evt.target.value))}>
+                        <option value='0' hidden={component.TestCurveID != 0}>None Available</option>
+                        {
+                            components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
+                        }
+                    </select>
+                </div>
+                <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
+                    <PQIChart Height={props.Height - 50} Width={props.Width} EventID={props.EventID} Points={points} Curve={curve} />
+                </div>
             </div>
-            <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
-                <PQIChart Height={props.Height - 50} Width={props.Width} EventID={props.EventID} Points={points} Curve={curve}/>
-            </div>
-        </div>
-    )
+        )
+    }
+    catch(err){
+        return err 
+    }
 }

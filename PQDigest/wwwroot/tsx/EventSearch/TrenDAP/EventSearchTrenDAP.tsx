@@ -32,7 +32,7 @@ export default function EventSearchTrenDAP(props: { EventID: number, Width: numb
 
     return (
         <div className="card">
-            <div className="card-header"><a href={homePath + 'TrenDAP?eventid=' + props.EventID} target="_blank">View in TrenDAP</a></div>
+            <div className="card-header"><a href={homePath + 'TrenDAP?eventid=' + props.EventID} target="_blank">View Trending Data</a></div>
             <div className="card-body" style={{ height: props.Height - 50, padding:0 }}>
                 <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Trending' Margin={margin} Width={props.Width - 10} Height={props.Height /3} />
                 <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Trending' Margin={margin}Width={props.Width - 10} Height={props.Height / 3} />

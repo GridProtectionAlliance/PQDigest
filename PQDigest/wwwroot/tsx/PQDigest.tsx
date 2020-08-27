@@ -49,7 +49,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                                 <a className={"nav-link " + (location.pathname == '/' ? "active" : "")} href="/"><span><img style={{ height: 36 }} src="/Image/home.png" /></span>Home</a>
                             </li>
                             <li className="nav-item">
-                                <a className={"nav-link " + (location.pathname == '/Trending'? "active" : "" ) } href="/Trending"><span><img style={{ height: 36 }} src="/Image/trending.png"/></span>Trending</a>
+                                <button className={"nav-link " + (location.pathname == '/Trending' ? "active" : "")} onClick={() => window.location.href = homePath + "Trending"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true }><span><img style={{ height: 36 }} src="/Image/trending.png" /></span>Trending</button>
                             </li>
                             <li className="nav-item">
                                 <a className={"nav-link " + (location.pathname == '/EventSearch' ? "active" : "")} href="/EventSearch"><span><img style={{ height: 36 }} src="/Image/search.png" /></span>Find Events</a>
@@ -58,7 +58,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                                 <a className={"nav-link " + (location.pathname == '/Lightning' ? "active" : "")} href="/Lightning"><span><img style={{ height: 36 }} src="/Image/lightning.png" /></span>Lightning</a>
                             </li>
                             <li className="nav-item">
-                                <a className={"nav-link " + (location.pathname == '/MeterAvailability' ? "active" : "")} href="/MeterAvailability"><span><img style={{ height: 36 }} src="/Image/availability.png" /></span>Meter Availability</a>
+                                <button className={"nav-link " + (location.pathname == '/MeterAvailability' ? "active" : "")} onClick={() => window.location.href = homePath + "MeterAvailability"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src="/Image/availability.png" /></span>Meter Availability</button>
                             </li>
                             <li className="nav-item">
                                 <a style={{ marginTop: 4 }} className="nav-link" href="#">Sign out</a>
@@ -76,7 +76,8 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                             <Route path="/EventSearch"><EventSearch/></Route>
                             <Route path="/Lightning"><Lightning/></Route>
                             <Route path="/MeterAvailability"><MeterAvailability /></Route>
-                            <Route path="/WaveformViewer" children={(match, ...rest) => {
+                            <Route children={(match, ...rest) => {
+                                if (match.location.pathname != "/WaveformViewer") return null; 
                                 let qs = queryString.parse(location.search);
                                 return <WaveformViewer EventID={parseInt(qs['?EventID'] as string)} />
                             }}/>

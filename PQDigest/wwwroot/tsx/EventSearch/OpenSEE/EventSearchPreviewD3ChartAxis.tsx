@@ -99,8 +99,8 @@ const EventSearchPreviewD3ChartAxis = (props: { EventID: number, Margin: { Left:
         for (let i = x.domain()[0] + span / 7; i < x.domain()[1]; i += span/7) {
             ticks.push(
                 <g key={i} className="tick" transform={`translate(${x(i)},${0})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
-                    <path d={`M 0,6 V -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                    <text y="20" textAnchor='middle'>{moment('1970-01-01T00:00:00').add(i, 'milliseconds').format(props.DataType == 'Time' ? 'ss.SSS' : 'HH:ss')}</text>
+                    <path stroke='black' d={`M 0,6 V -6`} strokeWidth={0.5}></path>
+                    <text fill="black" fontSize="small" y="20" textAnchor='middle'>{moment('1970-01-01T00:00:00').add(i, 'milliseconds').format(props.DataType == 'Time' ? 'ss.SSS' : 'HH:ss')}</text>
                 </g>
             );
 
@@ -111,10 +111,10 @@ const EventSearchPreviewD3ChartAxis = (props: { EventID: number, Margin: { Left:
 
     return (
         <div style={{ height: svgHeight /*, margin: '0x', padding: '0px'*/ }} hidden={hidden}>
-            <svg width={svgWidth} height={svgHeight} style={{ fill: 'none', stroke: 'black', strokeWidth: '1px', fontFamily: 'sans-serif', fontSize: 'small'}}>
-                <path d={`M ${props.Margin.Left} ${props.Margin.Top + 1} H ${props.Width - props.Margin.Right}`} style={{ shapeRendering: 'crispEdges' }} />
+            <svg width={svgWidth} height={svgHeight} style={{ fill: 'none'}}>
+                <path stroke='black' d={`M ${props.Margin.Left} ${props.Margin.Top + 1} H ${props.Width - props.Margin.Right}`} style={{ shapeRendering: 'crispEdges' }} />
                 {xAxisTicks}
-                <text x={svgWidth / 2} y={svgHeight - 10}>Time</text>
+                <text fill="black" fontSize="small" x={svgWidth / 2} y={svgHeight - 10}>Time</text>
             </svg>
 
         </div>

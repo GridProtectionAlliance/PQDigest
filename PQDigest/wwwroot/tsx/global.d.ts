@@ -26,6 +26,8 @@ import { namespace } from "d3";
 declare global {
     var homePath: string;
     var controllerViewPath: string;
+    var userName: string;
+    var isAuthenticated: boolean;
 
     interface String {
         countOccurrences: (chars: string) => number

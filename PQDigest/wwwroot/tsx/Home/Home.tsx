@@ -55,7 +55,7 @@ const Home = (props: {}) => {
             <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
                 <div className="card">
                     <div className="card-header">
-                        Welcome, User
+                        Welcome, { userName}
                     </div>
                     <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
                         <br />

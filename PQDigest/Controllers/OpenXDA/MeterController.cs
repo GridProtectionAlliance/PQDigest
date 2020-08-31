@@ -30,6 +30,7 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -39,16 +40,25 @@ namespace PQDigest.Controllers
     public class MeterController : ControllerBase
     {
         private readonly IConfiguration m_configuration;
-
-        public MeterController(IConfiguration configuration)
+        private readonly ILogger<MeterController> m_logger;
+        public MeterController(IConfiguration configuration, ILogger<MeterController> logger)
         {
             m_configuration = configuration;
+            m_logger = logger;
         }
 
-        public ActionResult Get() {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public IActionResult Get() {
+            try
             {
-                return Ok(connection.RetrieveData("SELECT * FROM Meter"));
+                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                {
+                    return Ok(connection.RetrieveData("SELECT * FROM Meter"));
+                }
+
+            }
+            catch (Exception ex) {
+                m_logger.LogError(ex.Message);
+                return StatusCode(500, ex);
             }
         }
     }

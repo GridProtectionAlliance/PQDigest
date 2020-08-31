@@ -42,27 +42,33 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
         <Router>
             <nav className="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3" style={{ height: 75 }}>
                 <div className="container-fluid">
-                <a className="col-sm-3 col-md-2 mr-0" style={{ textAlign: 'center' }} href="https://www.gridprotectionalliance.org"><img style={{ width: 400, margin: 0 }} src={"../Image/PQDigest.png"} /></a>
+                <a className="col-sm-3 col-md-2 mr-0" style={{ textAlign: 'center' }} href="https://www.gridprotectionalliance.org"><img style={{ width: 400, margin: 0 }} src={`${homePath}Image/PQDigest.png`} /></a>
                     <div className="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul className="navbar-nav flex-grow-1">
                             <li className="nav-item">
-                                <a className={"nav-link " + (location.pathname == '/' ? "active" : "")} href="/"><span><img style={{ height: 36 }} src="/Image/home.png" /></span>Home</a>
+                                <a className={"nav-link " + (location.pathname == `${homePath}` ? "active" : "")} href={`${homePath}` }><span><img style={{ height: 36 }} src={`${homePath}Image/home.png`} /></span>Home</a>
                             </li>
                             <li className="nav-item">
-                                <button className={"nav-link " + (location.pathname == '/Trending' ? "active" : "")} onClick={() => window.location.href = homePath + "Trending"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true }><span><img style={{ height: 36 }} src="/Image/trending.png" /></span>Trending</button>
+                                <button className={"nav-link " + (location.pathname == `${homePath}Trending` ? "active" : "")} onClick={() => window.location.href = homePath + "Trending"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src={`${homePath}Image/trending.png`} /></span>Trending</button>
                             </li>
                             <li className="nav-item">
-                                <a className={"nav-link " + (location.pathname == '/EventSearch' ? "active" : "")} href="/EventSearch"><span><img style={{ height: 36 }} src="/Image/search.png" /></span>Find Events</a>
+                                <a className={"nav-link " + (location.pathname == `${homePath}EventSearch` ? "active" : "")} href={`${homePath}EventSearch`}><span><img style={{ height: 36 }} src={`${homePath}Image/search.png`} /></span>Find Events</a>
                             </li>
                             <li className="nav-item">
-                                <a className={"nav-link " + (location.pathname == '/Lightning' ? "active" : "")} href="/Lightning"><span><img style={{ height: 36 }} src="/Image/lightning.png" /></span>Lightning</a>
+                                <button className={"nav-link " + (location.pathname == `${homePath}Lightning` ? "active" : "")} onClick={() => window.location.href = homePath + "Lightning"} style={{ border: 'none', backgroundColor: 'white' }} disabled={false}><span><img style={{ height: 36 }} src={`${homePath}Image/lightning.png`} /></span>Lightning</button>
                             </li>
                             <li className="nav-item">
-                                <button className={"nav-link " + (location.pathname == '/MeterAvailability' ? "active" : "")} onClick={() => window.location.href = homePath + "MeterAvailability"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src="/Image/availability.png" /></span>Meter Availability</button>
+                                <button className={"nav-link " + (location.pathname == `${homePath}MeterAvailability` ? "active" : "")} onClick={() => window.location.href = homePath + "MeterAvailability"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src={`${homePath}Image/availability.png`} /></span>Meter Availability</button>
                             </li>
-                            <li className="nav-item">
-                                <a style={{ marginTop: 4 }} className="nav-link" href="#">Sign out</a>
-                            </li>
+                            {isAuthenticated?
+                                <li className="nav-item">
+                                    <a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}AzureAD/Account/SignOut`}>Sign out</a>
+                                </li>
+                                :
+                                <ul className="nav-item">
+                                    <li><a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}AzureAD/Account/SignIn`}>Sign in</a></li>
+                                </ul>
+                            }
                         </ul>
                     </div>
                 </div>
@@ -71,13 +77,13 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                 <div className="row" style={{ height: '100%' }}>
                     <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>
                         <React.Suspense fallback={<div>Loading...</div>}>
-                            <Route exact path="/"><Home/></Route>
-                            <Route path="/Trending"><Trending/></Route>
-                            <Route path="/EventSearch"><EventSearch/></Route>
-                            <Route path="/Lightning"><Lightning/></Route>
-                            <Route path="/MeterAvailability"><MeterAvailability /></Route>
+                            <Route exact path={`${homePath}`}><Home/></Route>
+                            <Route path={`${homePath}Trending`}><Trending/></Route>
+                            <Route path={`${homePath}EventSearch`}><EventSearch/></Route>
+                            <Route path={`${homePath}Lightning`}><Lightning/></Route>
+                            <Route path={`${homePath}MeterAvailability`}><MeterAvailability /></Route>
                             <Route children={(match, ...rest) => {
-                                if (match.location.pathname != "/WaveformViewer") return null; 
+                                if (match.location.pathname != `${homePath}WaveformViewer`) return null; 
                                 let qs = queryString.parse(location.search);
                                 return <WaveformViewer EventID={parseInt(qs['?EventID'] as string)} />
                             }}/>

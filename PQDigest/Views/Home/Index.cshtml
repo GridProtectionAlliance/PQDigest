@@ -21,6 +21,7 @@
 //
 //*******************************************************************************************************@
 @using System.Security.Claims
+@using Newtonsoft.Json
 @{
     ViewData["Title"] = "PQDigest";
     Layout = "";
@@ -57,7 +58,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PQDigest - @identity.Claims.FirstOrDefault(c=> c.Type=="name")?.Value)</title>
+    <title>@ViewData["Title"] - @ViewBag.User.displayName)</title>
     <link href="@Url.Content("~/@Gemstone/Content/bootstrap4.css")" rel="stylesheet">
     <link href="@Url.Content("~/@Gemstone/Content/font-awesome.css")" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" />
@@ -72,6 +73,7 @@
         var homePath = '@Html.Raw(Url.Content("~/"))';
         var userName = '@identity.Claims.FirstOrDefault(c=> c.Type=="name")?.Value';
         var isAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
+        var user = JSON.parse(@Html.Raw(JsonConvert.SerializeObject(ViewBag.User, new JsonSerializerSettings() { ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore })))
     </script>
     <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     @if (DetectIE(Context.Request.Headers["User-Agent"].ToString())) {

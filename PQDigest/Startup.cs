@@ -21,29 +21,17 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Gemstone.Web;
-using System.Reflection;
-using Microsoft.Extensions.FileProviders;
-using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using PQDigest.Models;
 using Newtonsoft.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 
 namespace PQDigest
 {
@@ -64,6 +52,7 @@ namespace PQDigest
             IMvcBuilder builder = services.AddControllersWithViews( options => {
                 options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
             })
+             
             .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
@@ -71,7 +60,6 @@ namespace PQDigest
                 }
             );
 
-            //IMvcBuilder builder = services.AddRazorPages();
 #if DEBUG
             if (Env.IsDevelopment())
             {
@@ -79,40 +67,37 @@ namespace PQDigest
             }
 
 #endif
-            //services.AddAuthentication(options =>
+
+            // Legacy Microsoft.AspNet.Core.AuthenticationAzureAD.UI
+            //services.Configure<CookiePolicyOptions>(options =>
             //{
-            //    var policy  = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-            //    var ops = new AuthorizationOptions() { DefaultPolicy= policy };
-            //    // options.AddScheme
-            //    options.Filters.Add(new AuthorizeFilter(policy));
-            //    // options.AddRole
+            //    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+            //    options.CheckConsentNeeded = context => true;
+            //    options.MinimumSameSitePolicy = SameSiteMode.None;
+
             //});
 
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-                
-            });
+            //services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+            //    .AddAzureAD(options => Configuration.Bind("AzureAd", options));
 
-            services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                .AddAzureAD(options => Configuration.Bind("AzureAd", options));
+            //services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
+            //{
+            //    options.Authority = options.Authority + "/v2.0/";
+            //    options.TokenValidationParameters.ValidateIssuer = false;
+            //});
 
-            services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
-            {
-                options.Authority = options.Authority + "/v2.0/";
-                options.TokenValidationParameters.ValidateIssuer = false;
-            });
-
+            //services.AddGraphService(Configuration);
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+                .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read"})
+                .AddInMemoryTokenCaches();
             services.AddMvc(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
-            })
-           .SetCompatibilityVersion(CompatibilityVersion.Latest);
+            }).AddMicrosoftIdentityUI();
+           //.SetCompatibilityVersion(CompatibilityVersion.Latest);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -142,7 +127,7 @@ namespace PQDigest
             });
 
             app.UseAuthentication();
-            //app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

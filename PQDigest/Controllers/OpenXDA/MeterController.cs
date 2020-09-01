@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Gemstone.Data;
 using Gemstone.Data.Model;
@@ -31,6 +32,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -57,6 +59,7 @@ namespace PQDigest.Controllers
 
             }
             catch (Exception ex) {
+                
                 m_logger.LogError(ex.Message);
                 return StatusCode(500, ex);
             }

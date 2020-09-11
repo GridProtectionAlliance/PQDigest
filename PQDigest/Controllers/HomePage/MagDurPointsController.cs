@@ -63,6 +63,8 @@ namespace PQDigest.Controllers
                 string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
                 DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
 
+                if (meters.Rows.Count == 0) return Ok(new DataTable());
+
                 DataTable table = connection.RetrieveData(@"
                     DECLARE @startDate Date = {0}
                     DECLARE @endDAte Date = {1}

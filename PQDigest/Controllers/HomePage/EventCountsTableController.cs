@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
@@ -81,10 +82,13 @@ namespace PQDigest.Controllers
             return Ok(returnobj);
 
 #else
+            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
+                string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
 
                 DataTable table = connection.RetrieveData(@"
                     DECLARE @startDate Date = {0}
@@ -101,9 +105,10 @@ namespace PQDigest.Controllers
 		                    EventType LEFT JOIN
 		                    Event ON Event.MeterID =  Meter.ID AND  Event.EventTypeID = EventType.ID AND Event.StartTime BETWEEN @startDate AND @endDAte
 	                    WHERE
-		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') 
+		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') AND
+                            Meter.ID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 	                    GROUP BY
-		                    Meter.Name, EventType.Name
+		                    Meter.Name, EventType.Name, Meter.ID
                     )
                     SELECT
                         ID,

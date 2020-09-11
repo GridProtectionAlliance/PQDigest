@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
@@ -76,14 +77,19 @@ namespace PQDigest.Controllers
             };
             return Ok(returnobj);
 #else
+            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddSeconds(-1);
                 DateTime start = end.AddMonths(-12).AddSeconds(1);
 
+                string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
+
+
                 DataTable table = connection.RetrieveData(@"
                     DECLARE @startDate Date = {0}
-                    DECLARE @endDAte Date = {1}
+                    DECLARE @endDate Date = {1}
 
                     ;WITH EventCTE AS (
 	                    SELECT
@@ -97,7 +103,8 @@ namespace PQDigest.Controllers
 		                    EventType ON Event.EventTypeID = EventType.ID	
 	                    WHERE
 		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') AND 
-		                    Event.StartTime BETWEEN @startDate AND @endDAte
+		                    Event.StartTime BETWEEN @startDate AND @endDate AND
+                            Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 	                    GROUP BY
 		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
                     )

@@ -68,25 +68,6 @@ namespace PQDigest
 
 #endif
 
-            // Legacy Microsoft.AspNet.Core.AuthenticationAzureAD.UI
-            //services.Configure<CookiePolicyOptions>(options =>
-            //{
-            //    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-            //    options.CheckConsentNeeded = context => true;
-            //    options.MinimumSameSitePolicy = SameSiteMode.None;
-
-            //});
-
-            //services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-            //    .AddAzureAD(options => Configuration.Bind("AzureAd", options));
-
-            //services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
-            //{
-            //    options.Authority = options.Authority + "/v2.0/";
-            //    options.TokenValidationParameters.ValidateIssuer = false;
-            //});
-
-            //services.AddGraphService(Configuration);
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
                 .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read"})
                 .AddInMemoryTokenCaches();
@@ -97,7 +78,6 @@ namespace PQDigest
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddMicrosoftIdentityUI();
-           //.SetCompatibilityVersion(CompatibilityVersion.Latest);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

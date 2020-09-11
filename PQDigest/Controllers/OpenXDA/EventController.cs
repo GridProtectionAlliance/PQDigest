@@ -52,13 +52,6 @@ namespace PQDigest.Controllers
             m_memoryCache = memoryCache;
         }
 
-        public ActionResult Get() {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-            {
-                return Ok(connection.RetrieveData("SELECT * FROM Meter"));
-            }
-        }
-
         [HttpGet("Data")]
         public ActionResult GetData(int eventId, string type, string dataType, int pixels, string startDate, string endDate)
         {
@@ -120,99 +113,5 @@ namespace PQDigest.Controllers
             }
 
         }
-
-        //private DataGroup QueryDataGroup(int eventID, Meter meter)
-        //{
-        //    string target = $"DataGroup-{eventID}";
-
-        //    //Task<DataGroup> dataGroupTask = new Task<DataGroup>(() =>
-        //    //{
-        //    //    using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-        //    //    {
-        //    //        List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-        //    //        return ToDataGroup(meter, data);
-        //    //    }
-        //    //});
-
-        //    //if (!m_memoryCache.Add(target, dataGroupTask, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(10.0D) }))
-        //    //    dataGroupTask.Start();
-
-        //    //dataGroupTask = (Task<DataGroup>)s_memoryCache.Get(target);
-
-
-        //    DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
-        //    {
-        //        task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-        //        using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-        //        {
-        //            List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-        //            return ToDataGroup(meter, data);
-        //        }              
-        //    });
-        //    return dataGroup;
-        //}
-
-
-        //private DataGroup ToDataGroup(Meter meter, List<byte[]> data)
-        //{
-        //    DataGroup dataGroup = new DataGroup();
-        //    dataGroup.FromData(meter, data);
-        //    VIDataGroup vIDataGroup = new VIDataGroup(dataGroup);
-        //    return vIDataGroup.ToDataGroup();
-        //}
-
-        //private List<double[]> Downsample(List<double[]> series, int maxSampleCount)
-        //{
-        //    List<double[]> data = new List<double[]>();
-        //    DateTime epoch = new DateTime(1970, 1, 1);
-        //    double startTime = series.First()[0];
-        //    double endTime = series.Last()[0];
-        //    int step = (int)(endTime * 1000 - startTime * 1000) / maxSampleCount;
-        //    if (step < 1)
-        //        step = 1;
-
-        //    series = series.Where(x => x[0] >= startTime && x[0] <= endTime).ToList();
-
-        //    int index = 0;
-
-        //    for (double n = startTime * 1000; n <= endTime * 1000; n += 2 * step)
-        //    {
-        //        double[] min = null;
-        //        double[] max = null;
-
-        //        while (index < series.Count() && series[index][0] * 1000 < n + 2 * step)
-        //        {
-        //            if (min == null || min[1] > series[index][1])
-        //                min = series[index];
-
-        //            if (max == null || max[1] <= series[index][1])
-        //                max = series[index];
-
-        //            ++index;
-        //        }
-
-        //        if (min != null)
-        //        {
-        //            if (min[0] < max[0])
-        //            {
-        //                data.Add(min);
-        //                data.Add(max);
-        //            }
-        //            else if (min[0] > max[0])
-        //            {
-        //                data.Add(max);
-        //                data.Add(min);
-        //            }
-        //            else
-        //            {
-        //                data.Add(min);
-        //            }
-        //        }
-        //    }
-
-        //    return data;
-
-        //}
-
     }
 }

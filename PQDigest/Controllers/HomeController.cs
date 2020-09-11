@@ -62,7 +62,13 @@ namespace PQDigest.Controllers
                 HttpClient client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 string json = await client.GetStringAsync("https://graph.microsoft.com/beta/me");
-                ViewBag.User = JsonConvert.DeserializeObject(json);
+                try
+                {
+                    ViewBag.User = JsonConvert.DeserializeObject(json);
+                }
+                catch (Exception ex) {
+                    ViewBag.User = new { companyName = "", displayName = ""};
+                }
             }
             return View();
         }

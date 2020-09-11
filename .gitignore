@@ -350,3 +350,5 @@ MigrationBackup/
 .ionide/
 /PQDigest/.config
 /Publish.zip
+
+package-lock.json

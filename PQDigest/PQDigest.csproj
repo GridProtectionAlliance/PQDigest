@@ -84,7 +84,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.5" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
     <PackageReference Include="Microsoft.Graph" Version="3.12.0" />
@@ -93,12 +92,6 @@
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="OpenXDA">
-      <HintPath>..\Dependencies\OpenXDA.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -185,6 +178,12 @@
 
   <ItemGroup>
     <Folder Include="Views\Shared\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="OpenXDA.NetCore">
+      <HintPath>..\Dependencies\OpenXDA.NetCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

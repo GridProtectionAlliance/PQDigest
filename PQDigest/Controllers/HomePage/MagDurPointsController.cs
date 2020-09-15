@@ -79,7 +79,7 @@ namespace PQDigest.Controllers
                         Event ON Disturbance.EventID = Event.ID
                     WHERE
 	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-	                    (CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+	                    (CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
                     GROUP BY
 	                    EventID
@@ -89,10 +89,12 @@ namespace PQDigest.Controllers
                     FROM 
 	                    Disturbance INNER HASH JOIN
 	                    DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
-	                    WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
+	                    WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode INNER HASH JOIN
+                        Event ON Disturbance.EventID = Event.ID
                     WHERE
 	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-	                    (CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate)
+	                    (CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+                        Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
                     )
                     SELECT
                        Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds

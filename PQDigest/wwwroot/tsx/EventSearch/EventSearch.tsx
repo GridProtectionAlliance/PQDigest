@@ -97,7 +97,7 @@ const EventSearch = (props: {}) => {
         }
 
 
-    }, [types, startDate, endDate, meters, returnLimit, eventID]);
+    }, [types, startDate, endDate, meters, returnLimit]);
 
     function GetTypes(): JQuery.jqXHR<OpenXDA.EventType[]> {
         return $.ajax({

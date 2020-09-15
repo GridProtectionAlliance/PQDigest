@@ -133,7 +133,7 @@ const WaveformViewer = (props: { EventID: number }) => {
     function GetWaveformData(type: 'Current' | 'Voltage', id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}/${waveformWidth}`,
+            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}/${Math.floor(waveformWidth)}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -144,7 +144,7 @@ const WaveformViewer = (props: { EventID: number }) => {
     function GetAnalyticData(type: string, id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic'? '/' + harmonic: '')}/${waveformWidth}`,
+            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic' ? '/' + harmonic : '')}/${Math.floor(waveformWidth)}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

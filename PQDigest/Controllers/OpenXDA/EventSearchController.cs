@@ -79,7 +79,7 @@ namespace PQDigest.Controllers
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
 						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					GROUP BY
 						EventID
@@ -93,7 +93,7 @@ namespace PQDigest.Controllers
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
 						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					)
 					SELECT
@@ -136,7 +136,7 @@ namespace PQDigest.Controllers
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
 						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					GROUP BY
 						EventID
@@ -150,7 +150,7 @@ namespace PQDigest.Controllers
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
 						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						(CAST(StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
+						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					)
 					SELECT

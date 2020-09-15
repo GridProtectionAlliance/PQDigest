@@ -60,14 +60,6 @@ namespace PQDigest
                 }
             );
 
-#if DEBUG
-            if (Env.IsDevelopment())
-            {
-                builder.AddRazorRuntimeCompilation();
-            }
-
-#endif
-
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
                 .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read"})
                 .AddInMemoryTokenCaches();

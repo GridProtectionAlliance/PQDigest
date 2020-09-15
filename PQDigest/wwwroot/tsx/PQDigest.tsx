@@ -42,7 +42,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
         <Router>
             <nav className="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3" style={{ height: 75 }}>
                 <div className="container-fluid">
-                <a className="col-sm-3 col-md-2 mr-0" style={{ textAlign: 'center' }} href="https://www.gridprotectionalliance.org"><img style={{ width: 400, margin: 0 }} src={`${homePath}Image/PQDigest.png`} /></a>
+                    <a className="col-sm-3 col-md-2 mr-0" style={{ textAlign: 'center' }} href={ homePath}><img style={{ width: 400, margin: 0 }} src={`${homePath}Image/PQDigest.png`} /></a>
                     <div className="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul className="navbar-nav flex-grow-1">
                             <li className="nav-item">

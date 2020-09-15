@@ -41,7 +41,7 @@ const EventSearchPreviewD3ChartAxis = (props: { EventID: number, Margin: { Left:
         let handle = $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.EventID}` +
-                `&pixels=${svgWidth}` +
+                `&pixels=${Math.floor(svgWidth)}` +
                 `&type=Voltage` +
                 `&dataType=${props.DataType}`,
             contentType: "application/json; charset=utf-8",

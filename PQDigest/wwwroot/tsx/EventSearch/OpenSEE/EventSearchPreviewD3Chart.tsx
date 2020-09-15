@@ -37,7 +37,7 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
         let handle = $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.EventID}` +
-                `&pixels=${props.Width}` +
+                `&pixels=${Math.floor(props.Width)}` +
                 `&type=${props.MeasurementType}` +
                 `&dataType=${props.DataType}`,
             contentType: "application/json; charset=utf-8",

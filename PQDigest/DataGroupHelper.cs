@@ -29,6 +29,7 @@ using OpenXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PQDigest
@@ -48,16 +49,29 @@ namespace PQDigest
         {
             string target = $"DataGroup-{eventID}";
 
-            DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
+            try
             {
-                task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                bool isSafe = s_mutex.WaitOne();
+                if (isSafe)
                 {
-                    List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-                    return ToDataGroup(meter, data);
+                    DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
+                    {
+                        task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
+                        using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                        {
+                            List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
+                            return ToDataGroup(meter, data);
+                        }
+                    });
+                    return dataGroup;
                 }
-            });
-            return dataGroup;
+                else
+                    return null;
+
+            }
+            finally {
+                s_mutex.ReleaseMutex();
+            }
         }
 
 
@@ -142,6 +156,13 @@ namespace PQDigest
         }
 
 
+        #region [ Static ]
+        private static Mutex s_mutex;
+        static DataGroupHelper()
+        {
+            s_mutex = new Mutex();
+        }
 
+        #endregion
     }
 }

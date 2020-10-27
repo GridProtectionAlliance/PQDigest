@@ -56,7 +56,7 @@ namespace PQDigest.Controllers
                 IEnumerable<NormalRandomNumber> magRVs = magRandomGenerator.Next(100);
                 NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 1, 5);
                 IEnumerable<NormalRandomNumber> durRVs = durRandomGenerator.Next(100);
-                return Ok(magRVs.Zip(durRVs).Select(x => new { Magnitude = x.First.Value, Duration = Math.Pow(10, x.Second.Value) }));
+                return Ok(magRVs.Zip(durRVs).Select(x => new { PerUnitMagnitude = x.First.Value, DurationSeconds = Math.Pow(10, x.Second.Value) }));
 #else
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);

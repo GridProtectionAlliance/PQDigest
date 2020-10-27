@@ -28,7 +28,8 @@ import Table from '@gpa-gemstone/react-table';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
-import MultiSelect from '../MultiSelect';
+import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
+
 import ESRIMap from './ESRIMap';
 
 type ToleranceUnit = 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years';
@@ -39,7 +40,7 @@ const Lightning = (props: {}) => {
     const [date, setDate] = React.useState<string>(qs.startDate == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date)
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.toleranceUnits == undefined ? 'minutes' : qs.toleranceUnits as ToleranceUnit)
-    const [radius, setRadius] = React.useState<number>(qs.radius == undefined ? 1 : parseInt(qs.radius as string))
+    const [radius, setRadius] = React.useState<number>(qs.radius == undefined ? 20 : parseInt(qs.radius as string))
 
     const [meters, setMeters] = React.useState<OpenXDA.Meter[]>([]);
     const [sortField, setSortField] = React.useState<keyof OpenXDA.EventSearch>('StartTime');
@@ -173,20 +174,22 @@ const Lightning = (props: {}) => {
                     <div className="card">
                         <div className="card-body" style={{ height: 75 }}>
                             <div className="row">
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Meters</div>
-                                        <div className="col">
-                                            <MultiSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
-                                                let newMeters = _.cloneDeep(meters);
-                                                $.each(options, (index, option) => {
-                                                    newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
-                                                });
-                                                setMeters(newMeters)
-                                            }} />
+                                {/*
+                                    <div className="col">
+                                        <div className="row">
+                                            <div className="col form-control" style={{ border: '0px' }}>Meters</div>
+                                            <div className="col">
+                                                <MultiCheckBoxSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
+                                                    let newMeters = _.cloneDeep(meters);
+                                                    $.each(options, (index, option) => {
+                                                        newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
+                                                    });
+                                                    setMeters(newMeters)
+                                                }} />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                */}
                                 <div className="col">
                                     <div className="row">
                                         <div className="col form-control" style={{ border: '0px' }}>Date</div>
@@ -214,16 +217,16 @@ const Lightning = (props: {}) => {
 
                                     </div>
                                 </div>
-
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Radius (mi)</div>
-                                        <div className="col">
-                                            <input className="form-control" value={radius} type="number" onChange={e => setRadius(parseFloat(e.target.value))} />
+                                {/*
+                                    <div className="col">
+                                        <div className="row">
+                                            <div className="col form-control" style={{ border: '0px' }}>Radius (mi)</div>
+                                            <div className="col">
+                                                <input className="form-control" value={radius} type="number" onChange={e => setRadius(parseFloat(e.target.value))} />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
+                                */}
                             </div>
                         </div>
                     </div>

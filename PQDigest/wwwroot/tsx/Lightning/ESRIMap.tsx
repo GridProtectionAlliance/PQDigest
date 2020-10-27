@@ -165,14 +165,14 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: any, Lines: 
 
                         /> : null)
                     }
-                {(props.Lines != null ?
+                {/*(props.Lines != null ?
                     <GeoJSON data={props.Lines} /> :
-                    null)}
-                {(props.Buffers != null ?
+                    null)*/}
+                {/*(props.Buffers != null ?
                     <GeoJSON data={buffers} style={function (feature) {
                             return { stroke: true, color: 'black', weight: 1, fillColor: 'black' };
                         }}/> :
-                    null)}
+                    null)*/}
                     {(props.Strikes != null ? props.Strikes.features.map((s, index) => <CircleMarker key={index} center={[s.attributes.LATITUDE, s.attributes.LONGITUDE]} radius="5" color='red' weight="1" fillColor="red" fillOpacity="1" />) : null)}
 
                 </Map>

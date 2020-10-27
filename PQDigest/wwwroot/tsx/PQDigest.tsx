@@ -37,6 +37,14 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
     const EventSearch = React.lazy(() => import(/* webpackChunkName: "EventSearch" */ './EventSearch/EventSearch'));
     const WaveformViewer = React.lazy(() => import(/* webpackChunkName: "WaveformViewer" */ './WaveformViewer/WaveformViewer'));
 
+    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
+    React.useEffect(() => {
+        window.addEventListener('resize', (evt) => forceUpdate());
+
+        return function cleanup() {
+            window.removeEventListener('resize', (evt) => { });
+        }
+    }, []);
 
     return (
         <Router>

@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
+//using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using Newtonsoft.Json;
 using PQDigest.Models;
@@ -43,6 +44,7 @@ namespace PQDigest.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ITokenAcquisition _tokenAcquisition;
+        private readonly IGraphServiceClient _graphServiceClient;
         public HomeController(ILogger<HomeController> logger, ITokenAcquisition tokenAcquisition)
         {
             _logger = logger;
@@ -85,14 +87,5 @@ namespace PQDigest.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        //private void GetGraphServiceClient(string[] scopes)
-        //{
-        //    return GraphServiceClientFactory.GetAuthenticatedGraphClient(async () =>
-        //    {
-               
-        //        string result = await _tokenAcquisition.GetAccessTokenForUserAsync(scopes);
-        //        return result;
-        //    }, "");
-        //}
     }
 }

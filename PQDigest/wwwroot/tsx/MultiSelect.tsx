@@ -25,10 +25,11 @@ import React from 'react';
 
 const MultiSelect = (props: { Options: { Value: number, Text: string, Selected: boolean }[], OnChange: (evt: any, Options: { Value: number, Text: string, Selected: boolean }[]) => void }) => {
     const [show, setShow] = React.useState<boolean>(false);
-    const multiSelect = React.useRef(null);
+    const multiSelect = React.useRef<HTMLDivElement>(null);
 
-    function HandleShow(evt) {
-        if (!multiSelect.current.contains(evt.target))
+    function HandleShow(evt: React.MouseEvent<HTMLButtonElement, MouseEvent> | MouseEvent) {
+        if (multiSelect.current === null) setShow(!show);
+        else if (!(multiSelect.current as HTMLDivElement).contains(evt.target as Node))
             setShow(false);
         else
             setShow(true);

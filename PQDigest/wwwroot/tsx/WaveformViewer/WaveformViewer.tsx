@@ -56,6 +56,15 @@ const WaveformViewer = (props: { EventID: number }) => {
     const [click, setClick] = React.useState<number>(-1);
     const [extents, setExtents] = React.useState<PQDigest.D3Extent>({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
 
+    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
+    React.useEffect(() => {
+        window.addEventListener('resize', (evt) => forceUpdate());
+
+        return function cleanup() {
+            window.removeEventListener('resize', (evt) => { });
+        }
+    }, []);
+
     React.useEffect(() => {
 
         let handle1 = GetWaveformData('Current', props.EventID);

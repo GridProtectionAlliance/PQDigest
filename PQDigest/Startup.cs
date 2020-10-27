@@ -31,7 +31,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Newtonsoft.Json.Serialization;
 using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
+using Microsoft.AspNetCore.Authentication;
 
 namespace PQDigest
 {
@@ -62,6 +62,7 @@ namespace PQDigest
 
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
                 .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read"})
+                .AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
                 .AddInMemoryTokenCaches();
             services.AddMvc(options =>
             {
@@ -69,7 +70,7 @@ namespace PQDigest
                     .RequireAuthenticatedUser()
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
-            }).AddMicrosoftIdentityUI();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -93,13 +94,21 @@ namespace PQDigest
 
             app.UseRouting();
 
-            app.Use((context, next) => {
-
-                return next.Invoke();
-            });
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.Use((context, next) =>
+            {
+                //if (context.User.Identity.IsAuthenticated)
+                //{
+                //    var token = context.GetTokenAsync("access_token");
+                //    var tokenAcquisition = context.RequestServices.GetService<ITokenAcquisition>();
+                //    string[] scopes = new string[] { "user.read" };
+                //    string accessToken = tokenAcquisition.GetAccessTokenForUserAsync(scopes, user: context.User).Result;
+                //}
+                return next.Invoke();
+            });
 
             app.UseEndpoints(endpoints =>
             {

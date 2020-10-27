@@ -11,65 +11,19 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Data\**" />
-    <Content Remove="Data\**" />
-    <EmbeddedResource Remove="Data\**" />
-    <None Remove="Data\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="tsconfig.json" />
-    <Content Remove="wwwroot\tsx\EventSearch\EventCountsByMonth.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\EventSearch.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\OpenSEE\EventSearchOpenSEE.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3Chart.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3ChartAxis.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\PQI\EventSearchPQI.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\PQI\PQIChart.tsx" />
-    <Content Remove="wwwroot\tsx\EventSearch\TrenDAP\EventSearchTrenDAP.tsx" />
-    <Content Remove="wwwroot\tsx\ExportCSV.tsx" />
-    <Content Remove="wwwroot\tsx\global.d.ts" />
-    <Content Remove="wwwroot\tsx\Home\EventCountTable.tsx" />
-    <Content Remove="wwwroot\tsx\Home\Home.tsx" />
-    <Content Remove="wwwroot\tsx\Home\MagDurChart.tsx" />
-    <Content Remove="wwwroot\tsx\Lightning\ESRIMap.tsx" />
-    <Content Remove="wwwroot\tsx\Lightning\Lightning.tsx" />
-    <Content Remove="wwwroot\tsx\MagDurChart.tsx" />
-    <Content Remove="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
-    <Content Remove="wwwroot\tsx\MultiSelect.tsx" />
-    <Content Remove="wwwroot\tsx\PQDigest.tsx" />
-    <Content Remove="wwwroot\tsx\Trending\Trending.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\BrowseEvents.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\ComparableEvents.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Info.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\Button.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\CurrentLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\FrequencyLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\Legend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\PowerLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\RapidVoltageChangeLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\SpecifiedHarmonicLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\SymmetricalComponentsLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\THDLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\UnbalanceLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\Legend\VoltageLegend.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx" />
-    <Content Remove="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="PQDigest.sql" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="package.json" />
+    <TypeScriptCompile Include="wwwroot\tsx\**">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </TypeScriptCompile>
     <None Include="tsconfig.json" />
+    <Content Remove="Data/PQDigest.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\tsx\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -80,101 +34,20 @@
     <PackageReference Include="Gemstone.Web" Version="1.0.56" />
     <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" />
+    <!--PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" /-->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" />
+    <!--PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" /-->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" />
+    <!--PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" /-->
     <PackageReference Include="Microsoft.Graph" Version="3.12.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="0.3.1-preview" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="0.3.1-preview" />
+    <!--PackageReference Include="Microsoft.Identity.Web.UI" Version="0.3.1-preview" /-->
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchMagDur.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchPreview.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearchTable.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\OpenSEE\EventSearchOpenSEE.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3Chart.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\OpenSEE\EventSearchPreviewD3ChartAxis.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\PQI\EventSearchPQI.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\PQI\PQIChart.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\TrenDAP\EventSearchTrenDAP.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\ExportCSV.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\Home\MagDurChart.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\Home\EventCountsByMonth.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\EventSearch\EventSearch.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\global.d.ts" />
-    <TypeScriptCompile Include="wwwroot\tsx\Home\EventCountTable.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\Home\Home.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\Lightning\ESRIMap.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\Lightning\Lightning.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\MagDurChart.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\MeterAvailability\MeterAvailability.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\MultiSelect.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\PQDigest.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\Trending\Trending.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\ComparableEvents.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Info.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\BrowseEvents.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\Button.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\PowerLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\RapidVoltageChangeLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\SpecifiedHarmonicLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\SymmetricalComponentsLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\UnbalanceLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\THDLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\FrequencyLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\CurrentLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\VoltageLegend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\Legend\Legend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\PolarChart.tsx" />
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\WaveformViewerD3Chart.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\tsx\WaveformViewer\WaveformViewer.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Shared\" />

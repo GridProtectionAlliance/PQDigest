@@ -110,7 +110,13 @@ namespace PQDigest.Controllers
 		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
                     )
                     SELECT
-	                    Month, Sag, Swell, Transient, Interruption, Fault, (Sag + Swell + Transient + Interruption + Fault) as Total
+	                    Month, 
+						COALESCE(Sag,0) as Sag, 
+						COALESCE(Swell,0) as Swell, 
+						COALESCE(Transient,0) as Transient, 
+						COALESCE(Interruption,0) as Interruption, 
+						COALESCE(Fault,0) as Fault, 
+						(COALESCE(Sag,0) + COALESCE(Swell,0) + COALESCE(Transient,0) + COALESCE(Interruption,0) + COALESCE(Fault,0)) as Total
                     FROM
 	                    EventCTE
                     PIVOT

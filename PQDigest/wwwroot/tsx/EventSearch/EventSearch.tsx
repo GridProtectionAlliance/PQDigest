@@ -27,11 +27,11 @@ import EventSearchMagDur from '../EventSearch/EventSearchMagDur';
 import { PQDigest, OpenXDA } from '../global';
 import _ from 'lodash';
 import Table from '@gpa-gemstone/react-table';
+import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 import MagDurChart from '../MagDurChart';
-import MultiSelect from '../MultiSelect';
 
 const EventSearch = (props: {}) => {
     const history = createBrowserHistory();
@@ -163,7 +163,7 @@ const EventSearch = (props: {}) => {
                                     <div className="row">
                                         <div className="form-control" style={{ border: '0px', width: 100 }}>Meters</div>
                                         <div className="col">
-                                            <MultiSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
+                                            <MultiCheckBoxSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newMeters = _.cloneDeep(meters);
                                                 $.each(options, (index, option) => {
                                                     newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
@@ -177,7 +177,7 @@ const EventSearch = (props: {}) => {
                                     <div className="row">
                                         <div className="form-control" style={{ border: '0px', width: 100 }}>Type</div>
                                         <div className="col">
-                                            <MultiSelect Options={types.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
+                                            <MultiCheckBoxSelect Options={types.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newTypes = _.cloneDeep(types);
                                                 $.each(options, (index, option) => {
                                                     newTypes.find(type => type.ID == option.Value).Selected = !option.Selected

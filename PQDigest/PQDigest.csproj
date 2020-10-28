@@ -59,4 +59,13 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <TypeScriptCompile Update="wwwroot\tsx\Lightning\ESRIMap - Old.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Lightning\Lightning - Old.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+  </ItemGroup>
+
 </Project>

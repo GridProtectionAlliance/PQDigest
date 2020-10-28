@@ -44,7 +44,6 @@ namespace PQDigest.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ITokenAcquisition _tokenAcquisition;
-        private readonly IGraphServiceClient _graphServiceClient;
         public HomeController(ILogger<HomeController> logger, ITokenAcquisition tokenAcquisition)
         {
             _logger = logger;
@@ -64,6 +63,7 @@ namespace PQDigest.Controllers
                 HttpClient client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 string json = await client.GetStringAsync("https://graph.microsoft.com/beta/me");
+                
                 try
                 {
                     ViewBag.User = JsonConvert.DeserializeObject(json);

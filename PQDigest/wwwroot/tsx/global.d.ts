@@ -68,3 +68,7 @@ export namespace OpenXDA {
     }
 
 }
+
+export namespace Lightning {
+    interface Strike { DisplayTime: string, Amplitude: number, Latitude: number, Longitude: number}
+}

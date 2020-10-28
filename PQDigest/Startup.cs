@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Newtonsoft.Json.Serialization;
 using Microsoft.Identity.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Graph;
 
 namespace PQDigest
 {
@@ -100,13 +101,13 @@ namespace PQDigest
 
             app.Use((context, next) =>
             {
-                //if (context.User.Identity.IsAuthenticated)
-                //{
-                //    var token = context.GetTokenAsync("access_token");
-                //    var tokenAcquisition = context.RequestServices.GetService<ITokenAcquisition>();
-                //    string[] scopes = new string[] { "user.read" };
-                //    string accessToken = tokenAcquisition.GetAccessTokenForUserAsync(scopes, user: context.User).Result;
-                //}
+                if (context.User.Identity.IsAuthenticated)
+                {
+                    //var token = context.GetTokenAsync("access_token");
+                    //var tokenAcquisition = context.RequestServices.GetService<IAuthenticationProvider>();
+                    //string[] scopes = new string[] { "user.read" };
+                    //string accessToken = tokenAcquisition.GetAccessTokenForUserAsync(scopes, user: context.User).Result;
+                }
                 return next.Invoke();
             });
 

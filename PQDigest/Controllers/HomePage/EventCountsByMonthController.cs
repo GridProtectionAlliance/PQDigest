@@ -32,6 +32,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Graph;
+using Newtonsoft.Json;
 
 namespace PQDigest.Controllers
 {
@@ -44,6 +46,7 @@ namespace PQDigest.Controllers
 
         public class Data
         {
+            public int Year { get; set; }
             public string Month { get; set; }
             public int Sag { get; set; }
             public int Swell { get; set; }
@@ -62,18 +65,18 @@ namespace PQDigest.Controllers
         public ActionResult Get() {
 #if DEBUG
             List<Data> returnobj = new List<Data>() {
-               new Data(){ Month = "May", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
-               new Data(){ Month = "Jun", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
-               new Data(){ Month = "Jul", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
-               new Data(){ Month = "Aug", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
-               new Data(){ Month = "Sep", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
-               new Data(){ Month = "Oct", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
-               new Data(){ Month = "Nov", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
-               new Data(){ Month = "Dec", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
-               new Data(){ Month = "Jan", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
-               new Data(){ Month = "Feb", Sag = 8, Swell = 0, Transient = 7, Interruption = 0, Fault = 1, Total = 16 },
-               new Data(){ Month = "Mar", Sag = 10, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 19 },
-               new Data(){ Month = "Apr", Sag = 9, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 21 }
+               new Data(){ Year=2019, Month = "May", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
+               new Data(){ Year=2019,Month = "Jun", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
+               new Data(){ Year=2019,Month = "Jul", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
+               new Data(){ Year=2019,Month = "Aug", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
+               new Data(){ Year=2019,Month = "Sep", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
+               new Data(){ Year=2019,Month = "Oct", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
+               new Data(){ Year=2019,Month = "Nov", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
+               new Data(){ Year=2019,Month = "Dec", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
+               new Data(){ Year=2020,Month = "Jan", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
+               new Data(){ Year=2020,Month = "Feb", Sag = 8, Swell = 0, Transient = 7, Interruption = 0, Fault = 1, Total = 16 },
+               new Data(){ Year=2020,Month = "Mar", Sag = 10, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 19 },
+               new Data(){ Year=2020,Month = "Apr", Sag = 9, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 21 }
             };
             return Ok(returnobj);
 #else
@@ -82,6 +85,8 @@ namespace PQDigest.Controllers
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddSeconds(-1);
                 DateTime start = end.AddMonths(-12).AddSeconds(1);
+                string json = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "graph")?.Value;
+                User user = JsonConvert.DeserializeObject<User>(json);
 
                 string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
                 DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
@@ -110,6 +115,7 @@ namespace PQDigest.Controllers
 		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
                     )
                     SELECT
+                        Year,
 	                    Month, 
 						COALESCE(Sag,0) as Sag, 
 						COALESCE(Swell,0) as Swell, 

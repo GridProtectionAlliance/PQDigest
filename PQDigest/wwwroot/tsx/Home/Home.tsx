@@ -29,13 +29,31 @@ import { PQDigest } from '../global';
 
 const Home = (props: {}) => {
     const [mailTo, setMailTo] = React.useState<string>('');
+    const [numberMeters, setNumberMeters] = React.useState<number>(0);
+    const [eventCount, setEventCount] = React.useState<number>(0);
+
     React.useEffect(() => {
         let handle = GetMailto();
         handle.done((data: PQDigest.Setting) => {
             setMailTo(`mailto:${data.Value}`);
         });
+
+        let handle2 = GetMeterCount();
+        handle2.done((data: number) => {
+            setNumberMeters(data);
+        });
+
+        let handle3 = GetEventCount();
+        handle3.done((data: number) => {
+            setEventCount(data);
+        });
+
+
         return function () {
             if (handle.abort != undefined) handle.abort();
+            if (handle2.abort != undefined) handle2.abort();
+            if (handle3.abort != undefined) handle3.abort();
+
         }
     }, []);
 
@@ -50,6 +68,30 @@ const Home = (props: {}) => {
         });
     }
 
+    function GetMeterCount(): JQuery.jqXHR<number> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Meter/Count`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+    function GetEventCount(): JQuery.jqXHR<number> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Event/Count`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
+
+
     return (
         <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
             <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
@@ -59,7 +101,7 @@ const Home = (props: {}) => {
                     </div>
                     <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
                         <br />
-                        <p>So far this month there have been xx events recorded from your yy power quality meters.</p>
+                        <p>So far this month there have been {eventCount} events recorded from your {numberMeters} power quality meters.</p>
                         <br />
                         <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(365, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100`}>List of last 100 events from all meters over last 365 days</a></p>
                         <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=1000`}>List of all meter activity over last 30 days</a></p>

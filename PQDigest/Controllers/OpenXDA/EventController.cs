@@ -36,6 +36,8 @@ using OpenXDA.Model;
 using PQDigest.Models;
 using System.Net.Http;
 using Gemstone.Numeric.Random;
+using System.Security.Claims;
+using System.Data;
 
 namespace PQDigest.Controllers
 {
@@ -51,6 +53,29 @@ namespace PQDigest.Controllers
             m_configuration = configuration;
             m_memoryCache = memoryCache;
         }
+
+        [HttpGet("Count")]
+        public ActionResult GetCount()
+        {
+            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            {
+                string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
+                if (meters.Rows.Count == 0) return Ok(new DataTable());
+
+                return Ok(connection.ExecuteScalar<int>(@"
+                SELECT
+	                COUNT(*)
+                FROM
+	                Event
+                WHERE
+	                StartTime BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND GETDATE() AND 
+	                MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+                      "));
+            }
+        }
+
 
         [HttpGet("Data")]
         public ActionResult GetData(int eventId, string type, string dataType, int pixels, string startDate, string endDate)

@@ -24,6 +24,7 @@
 import React from 'react';
 import { scaleOrdinal, scaleLinear, select, axisBottom, max, line } from 'd3';
 interface iData {
+    Year: number,
     Month: string,
     Sag: number, 
     Swell: number, 
@@ -109,7 +110,13 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
 
         let boxes = data.map((x, index) => {
             return (
-                <g key={index} onClick={() => { }}>
+                <g style={{ cursor: 'pointer' }} key={index} onClick={() => {
+                    let start = moment(x.Year.toString() + "-" + x.Month + '-1', 'YYYY-MMM-D');
+                    let end = moment(x.Year.toString() + "-" + x.Month + '-1', 'YYYY-MMM-D');
+                    end.add(1, 'month');
+                    end.add(-1, 'second');
+                    window.location.href = `${homePath}EventSearch?startDate=${start.format('YYYY-MM-DD')}&endDate=${end.format('YYYY-MM-DD')}`;
+                }}>
                     <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag)} width={20} height={svgHeight - y(x.Sag)} fill={getColor('sag')}/>
                     <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell))} width={20} height={svgHeight - y(x.Swell)} fill={getColor('swell')}/>
                     <rect stroke='black' x={margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(x.Month) + 0.35)) / 12)} y={y(x.Sag) - (svgHeight - y(x.Swell)) - (svgHeight - y(x.Transient))} width={20} height={svgHeight - y(x.Transient)} fill={getColor('Transient')}/>

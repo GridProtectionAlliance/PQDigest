@@ -63,7 +63,7 @@ namespace PQDigest.Controllers
                     DECLARE @BeginningOfPeriod DATETIME2 = DATEADD(" + postData.Units + @",-{1}*2, @EndOfPeriod);
 
                     SELECT DisplayTime, Amplitude, Latitude, Longitude, 'Weatherbug' as Service
-                    FROM [TX_Lightning.LIGHTNING_WEATHERBUG]
+                    FROM TX_Lightning.LIGHTNING_WEATHERBUG
                     WHERE 
 	                    eventtime >= @BeginningOfPeriod and eventtime < @EndOfPeriod AND
 	                    Latitude BETWEEN {2} and {3} AND 

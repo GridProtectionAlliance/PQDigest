@@ -31,8 +31,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Newtonsoft.Json.Serialization;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Graph;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace PQDigest
 {
@@ -61,10 +66,41 @@ namespace PQDigest
                 }
             );
 
-            services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
-                .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read"})
-                .AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
-                .AddInMemoryTokenCaches();
+            //services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+            //    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read" })
+            //    //.AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
+            //    .AddInMemoryTokenCaches();
+            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+               .AddMicrosoftIdentityWebApp(options =>
+               {
+                   Configuration.Bind("AzureAd", options);
+                   // do something
+                   options.Events.OnTokenValidated = async context =>
+                   {
+                       var tokenAcquisition = context.HttpContext.RequestServices
+                           .GetRequiredService<ITokenAcquisition>();
+
+                       var authProvider = new DelegateAuthenticationProvider(async (request) =>
+                       {
+                           var token = await tokenAcquisition
+                               .GetAccessTokenForUserAsync(new string[] { Configuration.GetSection("GraphAPI")["Scopes"] }, user: context.Principal);
+                           request.Headers.Authorization =
+                               new AuthenticationHeaderValue("Bearer", token);
+                       });
+
+                       var graphClient = new GraphServiceClient(authProvider);
+
+                       var user = await graphClient.Me.Request().GetAsync();
+                       AddUserGraphInfo(context.Principal, user);
+                   };
+               })
+              .EnableTokenAcquisitionToCallDownstreamApi(options =>
+                {
+                      Configuration.Bind("AzureAd", options);
+                }
+             )
+            .AddInMemoryTokenCaches();
+
             services.AddMvc(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
@@ -126,6 +162,19 @@ namespace PQDigest
                 endpoints.MapControllers();
             });
 
+        }
+
+        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, User user)
+        {
+            var identity = claimsPrincipal.Identity as ClaimsIdentity;
+
+            identity.AddClaim(new Claim("graph", JsonConvert.SerializeObject(user)));
+            //identity.AddClaim(
+            //    new Claim("graph_email", user.Mail ?? user.UserPrincipalName));
+            //identity.AddClaim(
+            //    new Claim("graph_TimeZone", user.MailboxSettings.TimeZone));
+            //identity.AddClaim(
+                //new Claim("graph_TimeFormat", user.MailboxSettings.TimeFormat));
         }
     }
 }

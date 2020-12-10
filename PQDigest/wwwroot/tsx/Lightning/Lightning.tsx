@@ -96,7 +96,7 @@ const Lightning = (props: {}) => {
                             <div className="row">                               
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Date</div>
+                                        <div className="col form-control text-right" style={{ border: '0px' }}>Date</div>
                                         <div className="col">
                                             <input className="form-control" value={date} type="datetime-local" onChange={e => setDate(e.target.value)} />
                                         </div>
@@ -104,7 +104,7 @@ const Lightning = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control" style={{ border: '0px' }}>Tolerance</div>
+                                        <div className="col form-control text-right" style={{ border: '0px' }}>Tolerance</div>
                                         <div className="col">
                                             <input className="form-control" value={tolerance} type="number" onChange={e => setTolerance(parseFloat(e.target.value))} />
                                         </div>

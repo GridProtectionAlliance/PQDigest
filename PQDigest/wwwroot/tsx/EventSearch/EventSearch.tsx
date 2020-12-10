@@ -21,10 +21,8 @@
 //
 //******************************************************************************************************
 import React from 'react';
-import EventSearchTable from '../EventSearch/EventSearchTable';
 import EventSearchPreview from '../EventSearch/EventSearchPreview';
-import EventSearchMagDur from '../EventSearch/EventSearchMagDur';
-import { PQDigest, OpenXDA } from '../global';
+import { OpenXDA } from '../global';
 import _ from 'lodash';
 import Table from '@gpa-gemstone/react-table';
 import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
@@ -148,7 +146,7 @@ const EventSearch = (props: {}) => {
                             <div className="row">
                                 <div className="col">
                                     <div className="row">
-                                        <div className="form-control" style={{border: '0px', width: 100}}>Return #</div>
+                                        <div className="form-control text-right" style={{border: '0px', width: 100}}>Return #</div>
                                         <div className="col">
                                             <select value={returnLimit} className="form-control" onChange={e => setReturnLimit(parseInt(e.target.value))}>
                                                 <option>100</option>
@@ -161,7 +159,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Meters</div>
+                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Meters</div>
                                         <div className="col">
                                             <MultiCheckBoxSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newMeters = _.cloneDeep(meters);
@@ -175,7 +173,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Type</div>
+                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Type</div>
                                         <div className="col">
                                             <MultiCheckBoxSelect Options={types.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                                 let newTypes = _.cloneDeep(types);
@@ -189,7 +187,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="form-control" style={{ border: '0px', width: 100 }}>Start Date</div>
+                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Start Date</div>
                                         <div className="col">
                                             <input className="form-control" value={startDate} type="date" onChange={e => setStartDate(e.target.value)}/>
                                         </div>
@@ -197,7 +195,7 @@ const EventSearch = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="form-control" style={{ border: '0px', width: 100 }}>End Date</div>
+                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>End Date</div>
                                         <div className="col">
                                             <input className="form-control" value={endDate} type="date" onChange={e => setEndDate(e.target.value)}/>
                                         </div>
@@ -251,7 +249,7 @@ const EventSearch = (props: {}) => {
                                     }}
                                     onClick={(data) => { setEventID(data.row.ID) }}
                                     theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 300, width: '100%' }}
+                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 340, width: '100%' }}
                                     rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     selected={(item) => item.ID == eventID}
                                 /> :

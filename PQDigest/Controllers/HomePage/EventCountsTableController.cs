@@ -34,6 +34,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Graph;
+using Newtonsoft.Json;
 
 namespace PQDigest.Controllers
 {
@@ -87,6 +89,10 @@ namespace PQDigest.Controllers
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
+
+                string json = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "graph")?.Value;
+                User user = JsonConvert.DeserializeObject<User>(json);
+
                 string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
                 DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());

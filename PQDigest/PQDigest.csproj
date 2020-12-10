@@ -33,15 +33,13 @@
     <PackageReference Include="Gemstone.PQDIF" Version="1.0.56" />
     <PackageReference Include="Gemstone.Web" Version="1.0.56" />
     <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <!--PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" /-->
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.7" />
     <!--PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" /-->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
     <!--PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.5" /-->
-    <PackageReference Include="Microsoft.Graph" Version="3.12.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="0.3.1-preview" />
+    <PackageReference Include="Microsoft.Graph" Version="3.21.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="1.4.0" />
     <!--PackageReference Include="Microsoft.Identity.Web.UI" Version="0.3.1-preview" /-->
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />

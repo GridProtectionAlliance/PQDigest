@@ -277,10 +277,10 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
                 
                 {/* XAxis ticks*/}
                 {xAxisTicks}
-                <text x={svgWidth/2} y={svgHeight + margin.top + 20}>Duration (s)</text>
+                <text fill="black" fontSize="small" x={svgWidth/2} y={svgHeight + margin.top + 20}>Duration (s)</text>
                 {/* YAxis ticks and Labels*/}
                 {yAxisTicks}
-                <text transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight/2 - margin.bottom}>Per Unit Voltage</text>
+                <text fill="black" fontSize="small" transform={`rotate(-90 0,0)`} y={margin.left - 25} x={-svgHeight/2 - margin.bottom}>Per Unit Voltage</text>
                 {/* Chart borders */}
                 <path stroke='black' d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
 

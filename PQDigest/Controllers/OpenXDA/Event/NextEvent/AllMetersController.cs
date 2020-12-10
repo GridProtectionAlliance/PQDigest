@@ -33,6 +33,8 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Graph;
+using Newtonsoft.Json;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers.NextEvent
@@ -53,6 +55,9 @@ namespace PQDigest.Controllers.NextEvent
             using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
+                string json = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "graph")?.Value;
+                User user = JsonConvert.DeserializeObject<User>(json);
+
                 string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
                 DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());

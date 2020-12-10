@@ -32,7 +32,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
-//using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using Newtonsoft.Json;
 using PQDigest.Models;
@@ -43,35 +42,13 @@ namespace PQDigest.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ITokenAcquisition _tokenAcquisition;
-        public HomeController(ILogger<HomeController> logger, ITokenAcquisition tokenAcquisition)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _tokenAcquisition = tokenAcquisition;
         }
 
-        [AuthorizeForScopes(Scopes = new[] { "user.read" })]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                // Acquire the access token.
-                string[] scopes = new string[] { "user.read" };
-                string accessToken = await _tokenAcquisition.GetAccessTokenForUserAsync(scopes);
-
-                // Use the access token to call a protected web API.
-                HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                string json = await client.GetStringAsync("https://graph.microsoft.com/beta/me");
-                
-                try
-                {
-                    ViewBag.User = JsonConvert.DeserializeObject(json);
-                }
-                catch (Exception ex) {
-                    ViewBag.User = new { companyName = "", displayName = ""};
-                }
-            }
             return View();
         }
 

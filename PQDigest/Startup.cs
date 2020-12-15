@@ -38,6 +38,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using System.Net.Http;
 
 namespace PQDigest
 {
@@ -80,24 +81,28 @@ namespace PQDigest
                        var tokenAcquisition = context.HttpContext.RequestServices
                            .GetRequiredService<ITokenAcquisition>();
 
+                       HttpClient client = new HttpClient();
+
                        var authProvider = new DelegateAuthenticationProvider(async (request) =>
                        {
                            var token = await tokenAcquisition
-                               .GetAccessTokenForUserAsync(new string[] { Configuration.GetSection("GraphAPI")["Scopes"] }, user: context.Principal);
+                               .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
                            request.Headers.Authorization =
                                new AuthenticationHeaderValue("Bearer", token);
+                           client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                        });
 
                        var graphClient = new GraphServiceClient(authProvider);
 
                        var user = await graphClient.Me.Request().GetAsync();
-                       AddUserGraphInfo(context.Principal, user);
+                       string json = client.GetStringAsync(Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me").Result;
+                       AddUserGraphInfo(context.Principal, user,json);
                    };
                })
               .EnableTokenAcquisitionToCallDownstreamApi(options =>
                 {
                       Configuration.Bind("AzureAd", options);
-                }
+                },Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
              )
             .AddInMemoryTokenCaches();
 
@@ -164,11 +169,12 @@ namespace PQDigest
 
         }
 
-        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, User user)
+        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, User user, string json)
         {
             var identity = claimsPrincipal.Identity as ClaimsIdentity;
-
+            
             identity.AddClaim(new Claim("graph", JsonConvert.SerializeObject(user)));
+            identity.AddClaim(new Claim("graph_json", json));
             //identity.AddClaim(
             //    new Claim("graph_email", user.Mail ?? user.UserPrincipalName));
             //identity.AddClaim(

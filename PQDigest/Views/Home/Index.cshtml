@@ -44,6 +44,8 @@
 
     //object user = ViewBag.User;
     string json = identity.Claims.FirstOrDefault(c => c.Type == "graph")?.Value;
+    string graphjson = identity.Claims.FirstOrDefault(c => c.Type == "graph_json")?.Value;
+
     User user = JsonConvert.DeserializeObject<User>(json);
     string companyName = user?.CompanyName ?? "";
     string displayName = user?.DisplayName ?? "";
@@ -71,6 +73,8 @@
         var isAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
         var companyName = '@companyName';
         var user = @Html.Raw(JsonConvert.SerializeObject(json));
+        var graphJson = @Html.Raw(JsonConvert.SerializeObject(graphjson));
+
     </script>
     <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     @if (DetectIE(Context.Request.Headers["User-Agent"].ToString())) {

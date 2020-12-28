@@ -67,34 +67,31 @@ namespace PQDigest.Controllers
 
         public ActionResult Get() {
 
-#if DEBUG
-            List<TableData> returnobj = new List<TableData>() {
-               new TableData(){ ID=37, Name = "Meter 1", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
-               new TableData(){ ID=38, Name = "Meter 2", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
-               new TableData(){ ID=39, Name = "Meter 3", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
-               new TableData(){ ID=47, Name = "Meter 4", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
-               new TableData(){ ID=49, Name = "Meter 5", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
-               new TableData(){ ID=50, Name = "Meter 6", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
-               new TableData(){ ID=52, Name = "Meter 7", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
-               new TableData(){ ID=53, Name = "Meter 8", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
-               new TableData(){ ID=56, Name = "Meter 9", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
-            };
+//#if DEBUG
+//            List<TableData> returnobj = new List<TableData>() {
+//               new TableData(){ ID=37, Name = "Meter 1", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
+//               new TableData(){ ID=38, Name = "Meter 2", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
+//               new TableData(){ ID=39, Name = "Meter 3", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
+//               new TableData(){ ID=47, Name = "Meter 4", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
+//               new TableData(){ ID=49, Name = "Meter 5", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
+//               new TableData(){ ID=50, Name = "Meter 6", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
+//               new TableData(){ ID=52, Name = "Meter 7", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
+//               new TableData(){ ID=53, Name = "Meter 8", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
+//               new TableData(){ ID=56, Name = "Meter 9", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
+//            };
 
 
-            return Ok(returnobj);
+//            return Ok(returnobj);
 
-#else
+//#else
             using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
 
-                string json = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "graph")?.Value;
-                User user = JsonConvert.DeserializeObject<User>(json);
-
-                string username = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CustomerAccessPQDigest WHERE CustomerID = (SELECT ID FROM Customer WHERE AccountName = {0})", username.Split('@')[0]);
+                string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
+                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 DataTable table = connection.RetrieveData(@"
@@ -139,7 +136,7 @@ namespace PQDigest.Controllers
                 return Ok(table);
             }
 
-#endif
+//#endif
 
         }
     }

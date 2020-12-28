@@ -76,7 +76,7 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0, max(data.map(x => x.Total))]);
 
         let yticks = [];
-        for (let i = 0; i <= y.domain()[1]; i = i + Math.floor(y.domain()[1]/10)) {
+        for (let i = 0; i <= y.domain()[1]; i = i + (Math.floor(y.domain()[1] / 10) == 0 ? 1 : Math.floor(y.domain()[1] / 10) )) {
             yticks.push(
                 <g key={i} className="tick" opacity="1" transform={`translate(${margin.left},${y(i)})`}>
                     <path stroke='black' d={`M -7 0 H ${svgWidth}`} strokeWidth={0.25}></path>

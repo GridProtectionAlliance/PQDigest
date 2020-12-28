@@ -70,11 +70,11 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                             </li>
                             {isAuthenticated?
                                 <li className="nav-item">
-                                    <a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}AzureAD/Account/SignOut`}>Sign out</a>
+                                    <a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignOut`} onClick={() => { isAuthenticated = false }}>Sign out</a>
                                 </li>
                                 :
                                 <ul className="nav-item">
-                                    <li><a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}AzureAD/Account/SignIn`}>Sign in</a></li>
+                                    <li><a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignIn`}>Sign in</a></li>
                                 </ul>
                             }
                         </ul>

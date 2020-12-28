@@ -35,10 +35,14 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Graph;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web.UI;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using Newtonsoft.Json;
 using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace PQDigest
 {
@@ -78,25 +82,27 @@ namespace PQDigest
                    // do something
                    options.Events.OnTokenValidated = async context =>
                    {
-                       var tokenAcquisition = context.HttpContext.RequestServices
-                           .GetRequiredService<ITokenAcquisition>();
+                       var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
 
                        HttpClient client = new HttpClient();
+                       var token = await tokenAcquisition.GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(","), user: context.Principal);
+                       client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                       var authProvider = new DelegateAuthenticationProvider(async (request) =>
-                       {
-                           var token = await tokenAcquisition
-                               .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
-                           request.Headers.Authorization =
-                               new AuthenticationHeaderValue("Bearer", token);
-                           client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                       });
+                       //var authProvider = new DelegateAuthenticationProvider(async (request) =>
+                       //{
+                       //    var token = await tokenAcquisition
+                       //        .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
+                       //    request.Headers.Authorization =
+                       //        new AuthenticationHeaderValue("Bearer", token);
+                       //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                       //});
 
-                       var graphClient = new GraphServiceClient(authProvider);
+                       //var graphClient = new GraphServiceClient(authProvider);
 
-                       var user = await graphClient.Me.Request().GetAsync();
-                       string json = client.GetStringAsync(Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me").Result;
-                       AddUserGraphInfo(context.Principal, user,json);
+                       //var user = await graphClient.Me.Request().GetAsync();
+                       //var extensions = await graphClient.Me.Extensions.Request().GetAsync();
+                       string json = await client.GetStringAsync(Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me");
+                       AddUserGraphInfo(context.Principal, json);
                    };
                })
               .EnableTokenAcquisitionToCallDownstreamApi(options =>
@@ -112,7 +118,7 @@ namespace PQDigest
                     .RequireAuthenticatedUser()
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
-            });
+            }).AddMicrosoftIdentityUI();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -140,22 +146,9 @@ namespace PQDigest
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.Use((context, next) =>
-            {
-                if (context.User.Identity.IsAuthenticated)
-                {
-                    //var token = context.GetTokenAsync("access_token");
-                    //var tokenAcquisition = context.RequestServices.GetService<IAuthenticationProvider>();
-                    //string[] scopes = new string[] { "user.read" };
-                    //string accessToken = tokenAcquisition.GetAccessTokenForUserAsync(scopes, user: context.User).Result;
-                }
-                return next.Invoke();
-            });
 
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapRazorPages();
-
                 endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{newaction?}/{id?}",
@@ -169,18 +162,13 @@ namespace PQDigest
 
         }
 
-        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, User user, string json)
+        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, string json)
         {
             var identity = claimsPrincipal.Identity as ClaimsIdentity;
-            
-            identity.AddClaim(new Claim("graph", JsonConvert.SerializeObject(user)));
+            var graph = JObject.Parse(json);
             identity.AddClaim(new Claim("graph_json", json));
-            //identity.AddClaim(
-            //    new Claim("graph_email", user.Mail ?? user.UserPrincipalName));
-            //identity.AddClaim(
-            //    new Claim("graph_TimeZone", user.MailboxSettings.TimeZone));
-            //identity.AddClaim(
-                //new Claim("graph_TimeFormat", user.MailboxSettings.TimeFormat));
+            string name = graph.Properties().Select(p => p.Name).FirstOrDefault(n => n.ToLower().Contains("tvaorgid")) ?? "";
+            identity.AddClaim(new Claim("org_id", Regex.Replace(graph[name]?.Value<string>() ?? "d0001", "[A-Za-z]", "0000")));
         }
     }
 }

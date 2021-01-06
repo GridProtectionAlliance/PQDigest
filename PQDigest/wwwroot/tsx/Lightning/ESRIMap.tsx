@@ -27,11 +27,11 @@ import { Map, CircleMarker, TileLayer, WMSTileLayer, GeoJSON } from 'react-leafl
 import { BasemapLayer } from 'esri-leaflet';
 import proj4 from 'proj4';
 import 'proj4leaflet';
-import { Lightning } from '../global';
+import { Lightning, OpenXDA } from '../global';
 import L from 'leaflet';
 
 
-const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: Lightning.Strike[], Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void }> = (props) => {
+const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[],Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
     const [baseMap, setBaseMap] = React.useState<leaflet.esri.Basemaps>('Streets');
 
@@ -93,6 +93,7 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: Lightning.St
                         /> : null)
                     }
                     {props.Strikes.map((s, index) => <CircleMarker key={index} center={[s.Latitude, s.Longitude]} radius="3" color='red' weight="1" fillColor="red" fillOpacity="1" />)}
+                    {/*props.Locations.map((s, index) => <CircleMarker key={index} center={[s.Latitude, s.Longitude]} style={{display: 'none'} }/>)*/}
 
                 </Map>
             </div>

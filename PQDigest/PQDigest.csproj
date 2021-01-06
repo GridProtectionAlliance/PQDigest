@@ -57,6 +57,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\XAxis.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Series.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\YAxis.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Plot.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\MagDurChart.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Update="wwwroot\tsx\Lightning\ESRIMap - Old.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

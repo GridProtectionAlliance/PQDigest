@@ -30,6 +30,7 @@ import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 
 import ESRIMap from './ESRIMap';
+import L from 'leaflet';
 
 type ToleranceUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
 const Lightning = (props: {}) => {
@@ -39,6 +40,7 @@ const Lightning = (props: {}) => {
     const [date, setDate] = React.useState<string>(qs.date == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date)
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.units == undefined ? 'minute' : qs.units as ToleranceUnit)
+    const [locations, setLocations] = React.useState<OpenXDA.Location[]>([]);
 
     const [bounds, setBounds] = React.useState<[[number, number], [number, number]]>([
         [
@@ -53,6 +55,33 @@ const Lightning = (props: {}) => {
     const [strikes, setStrikes] = React.useState<Lightning.Strike[]>([]);
 
     React.useEffect(() => {
+        let handle2 = GetLocations();
+        handle2.done((data: OpenXDA.Location[]) => {
+            setLocations(data);
+            let json: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+                type: "FeatureCollection",
+                features: data.map(location => {
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [location.Latitude, location.Longitude]
+                        },
+                        properties: {}
+
+                    }
+                })
+            };
+            let b = L.geoJSON(json).getBounds();
+            setBounds([[b.getSouthWest().lat, b.getSouthWest().lng], [b.getNorthEast().lat, b.getNorthEast().lng]]);
+        });
+        return function () {
+            if (handle2.abort != undefined) handle2.abort();
+
+        }
+
+    }, []);
+    React.useEffect(() => {
         history.push({
             pathname: homePath + 'Lightning',
             search: `?date=${date}&tolerance=${tolerance}&units=${toleranceUnits}&nelat=${bounds[1][0]}&swlat=${bounds[0][0]}&nelng=${bounds[1][1]}&swlng=${bounds[0][1]}`
@@ -60,8 +89,10 @@ const Lightning = (props: {}) => {
 
         let handle = GetStrikes();
         handle.done(s => setStrikes(s));
+
         return function () {
             if (handle.abort != undefined) handle.abort();
+
         }
     }, [bounds, tolerance, toleranceUnits]);
 
@@ -82,6 +113,17 @@ const Lightning = (props: {}) => {
                 SWLat: bounds[0][0],
                 SWLng: bounds[0][1]
             }),
+            cache: true,
+            async: true
+        });
+    }
+
+    function GetLocations(): JQuery.jqXHR<OpenXDA.Location[]> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Location`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
             cache: true,
             async: true
         });
@@ -130,7 +172,7 @@ const Lightning = (props: {}) => {
                 <div className="col" style={{ padding: '0px 0px 0px 3px', width: window.innerWidth / 2 }}>
                     <div className="card">
                         <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>
-                            <ESRIMap DateTime={date} Strikes={strikes} Height={(window.innerHeight) - 226} Width={window.innerWidth / 2} Bounds={bounds} SetBounds={setBounds }/>
+                            <ESRIMap DateTime={date} Strikes={strikes} Locations={locations} Height={(window.innerHeight) - 226} Width={window.innerWidth / 2} Bounds={bounds} SetBounds={setBounds }/>
                         </div>
                     </div>
                 </div>

@@ -168,7 +168,7 @@ namespace PQDigest
             var graph = JObject.Parse(json);
             identity.AddClaim(new Claim("graph_json", json));
             string name = graph.Properties().Select(p => p.Name).FirstOrDefault(n => n.ToLower().Contains("tvaorgid")) ?? "";
-            identity.AddClaim(new Claim("org_id", Regex.Replace(graph[name]?.Value<string>() ?? "d0001", "[A-Za-z]", "0000")));
+            identity.AddClaim(new Claim("org_id", Regex.Replace(graph[name]?.Value<string>() ?? "d9999", "[A-Za-z]", "0000")));
         }
     }
 }

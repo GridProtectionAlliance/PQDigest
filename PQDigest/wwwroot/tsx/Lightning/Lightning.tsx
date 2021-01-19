@@ -65,7 +65,7 @@ const Lightning = (props: {}) => {
                         type: 'Feature',
                         geometry: {
                             type: 'Point',
-                            coordinates: [location.Latitude, location.Longitude]
+                            coordinates: [location.Longitude, location.Latitude]
                         },
                         properties: {}
 

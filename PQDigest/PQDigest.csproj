@@ -57,6 +57,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Store\XAxisSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Store\YAxisSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Store\LegendSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Store\Store.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Update="wwwroot\tsx\Chart\Legend.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Update="wwwroot\tsx\Chart\XAxis.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

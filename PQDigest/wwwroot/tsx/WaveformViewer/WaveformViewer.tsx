@@ -58,7 +58,7 @@ const WaveformViewer = (props: { EventID: number }) => {
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate());
+        window.addEventListener('resize', (evt) => forceUpdate(1));
 
         return function cleanup() {
             window.removeEventListener('resize', (evt) => { });
@@ -328,7 +328,7 @@ const WaveformViewer = (props: { EventID: number }) => {
             </div>
             <div className="" style={{ padding: '0px 2px 0px 0px', width: pointsWidth }}>
                 <div className="card">
-                    <div className="card-header">{click < 0 ? 'Click to get values ...' : 'Values at ' + moment.utc(click).format('MM/DD/YYYY HH:mm:ss.SSSS') + ' (CST)'}</div>
+                    <div className="card-header">{click < 0 ? 'Click to get values ...' : 'Values at ' + moment(click).utc().format('MM/DD/YYYY HH:mm:ss.SSSS') + ' (CST)'}</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 2, height: (window.innerHeight - 246) / 2, overflowY: 'auto' }}>
                         <table className="table">
                             <tbody>

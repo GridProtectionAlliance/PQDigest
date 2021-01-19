@@ -39,7 +39,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate());
+        window.addEventListener('resize', (evt) => forceUpdate(1));
 
         return function cleanup() {
             window.removeEventListener('resize', (evt) => { });

@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { Point } from '../MagDurChart';
+import { iPoint } from '../MagDurChart';
 import MagDurChart from '../MagDurChart';
 
-const EventSearchMagDur = (props: {Points: Point[]}) => {
-    const [magDurData, setMagDurData] = React.useState<Point[]>([]);
+const EventSearchMagDur = (props: {Points: iPoint[]}) => {
+    const [magDurData, setMagDurData] = React.useState<iPoint[]>([]);
 
     return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points} OnSelect={(evt, point) => { }}/>
 }

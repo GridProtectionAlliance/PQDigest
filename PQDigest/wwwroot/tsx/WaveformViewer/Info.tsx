@@ -60,8 +60,8 @@ const Info = (props: { EventID: number }) => {
                     <tr><td>Type</td><td>{info.EventType}</td></tr>
                     <tr><td>Phase</td><td>{info.Phase}</td></tr>
                     <tr><td>Duration</td><td>{info.Duration}</td></tr>
-                    <tr><td>Magnitude</td><td>{info.Magnitude}</td></tr>
-                    <tr><td>Depth</td><td>{info.SagDepth}</td></tr>
+                    {/*<tr><td>Magnitude</td><td>{info.Magnitude}</td></tr>*/}
+                    <tr><td>Magnitude</td><td>{info.SagDepth}</td></tr>
                 </tbody>
             </table>
         );

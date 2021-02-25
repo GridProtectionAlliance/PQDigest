@@ -94,17 +94,18 @@ namespace PQDigest.Controllers
 						WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode INNER HASH JOIN
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
-						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+						PhaseID <> (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
 						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					)
 					SELECT
-						TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds
+						TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds, Phase.Name as Phase
 					FROM
 						Event INNER HASH JOIN
 						Meter ON Meter.ID = Event.MeterID INNER HASH JOIN 
 						EventType ON Event.EventTypeID = EventType.ID LEFT HASH JOIN
-						WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1
+						WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1 LEFT HASH JOIN
+						Phase ON WorstSeverityRecord.PhaseID = Phase.ID
 					WHERE
 						(CAST(Event.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Event.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND " +
 					 $" Event.EventTypeID IN (${(postData.Types.Length > 0 ? string.Join(",", postData.Types): "0")}) AND " +
@@ -151,17 +152,18 @@ namespace PQDigest.Controllers
 						WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode INNER HASH JOIN
 						Event ON Disturbance.EventID = Event.ID 
 					WHERE
-						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+						PhaseID <> (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
 						(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
                         Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
 					)
 					SELECT
-						TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds
+						TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds, Phase.Name as Phase
 					FROM
 						Event INNER HASH JOIN
 						Meter ON Meter.ID = Event.MeterID INNER HASH JOIN 
 						EventType ON Event.EventTypeID = EventType.ID LEFT HASH JOIN
-						WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1
+						WorstSeverityRecord ON Event.ID = WorstSeverityRecord.EventID AND WorstSeverityRecord.Ranking = 1 LEFT HASH JOIN
+						Phase ON WorstSeverityRecord.PhaseID = Phase.ID
 					WHERE
 						(CAST(Event.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Event.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND " +
 					 $" Event.EventTypeID IN (${(postData.Types.Length > 0 ? string.Join(",", postData.Types) : "0")}) AND " +

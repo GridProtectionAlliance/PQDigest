@@ -31,7 +31,7 @@ import { Lightning, OpenXDA } from '../global';
 import L from 'leaflet';
 
 
-const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[],Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void }> = (props) => {
+const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[],Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void, SetStrike: (strike)=> void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
     const [baseMap, setBaseMap] = React.useState<leaflet.esri.Basemaps>('Streets');
 
@@ -92,7 +92,19 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: Lightning.St
 
                         /> : null)
                     }
-                    {props.Strikes.map((s, index) => <CircleMarker key={index} center={[s.Latitude, s.Longitude]} radius="3" color='red' weight="1" fillColor="red" fillOpacity="1" />)}
+                    {props.Strikes.map((s, index) =>
+                        <CircleMarker
+                            key={index}
+                            center={[s.Latitude, s.Longitude]}
+                            style={{ cursor: 'pointer' }}
+                            radius={(props.Strike?.DisplayTime == s.DisplayTime && s.Amplitude == props.Strike?.Amplitude && s.Latitude == props.Strike?.Latitude && s.Longitude == props.Strike?.Longitude ? 5 : 3)}
+                            color={(props.Strike?.DisplayTime == s.DisplayTime && s.Amplitude == props.Strike?.Amplitude && s.Latitude == props.Strike?.Latitude && s.Longitude == props.Strike?.Longitude ? 'black' : 'red')}
+                            weight="1"
+                            fillColor="red"
+                            fillOpacity="1"
+                            onClick={() => props.SetStrike(s)}
+                        />)
+                    }
                     {/*props.Locations.map((s, index) => <CircleMarker key={index} center={[s.Latitude, s.Longitude]} style={{display: 'none'} }/>)*/}
 
                 </Map>

@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { scaleLinear, line, extent } from 'd3';
+import { scaleLinear, line, extent, axisLeft, axisBottom,select } from 'd3';
 import _ from 'lodash';
 import { PQDigest } from '../global';
 
@@ -151,44 +151,21 @@ const WaveformViewerD3Chart = (props: {
         comparePaths.push(<path key={value.Key} fill='none' strokeLinejoin='round' strokeWidth='1.5' stroke={value.Color} d={linefunc(value.Data.filter(d => d[0] >= x.domain()[0] && d[0] <= x.domain()[1]))} />);
     });
 
-
-    let xTicks = [];
-    let span = x.domain()[1] - x.domain()[0];
-    for (let i = x.domain()[0]; i < x.domain()[1]; i += span / 7) {
-        xTicks.push(
-            <g key={i} className="tick" transform={`translate(${x(i)},${props.Height - props.Margin.Bottom})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
-                <path d={`M 0,6 V -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                <text fill="black" fontSize="small" y="20" textAnchor='middle'>{moment('1970-01-01T00:00:00').add(i, 'milliseconds').format(props.DataType == 'Time' ? 'ss.SSS' : 'HH:ss')}</text>
-            </g>
-        );
-
-    }
-
-    let yTicks = [];
-    let ySpan = (y.domain()[0] < 0 ? y.domain()[1] : y.domain()[1] - y.domain()[0]);
-    let yMin = (y.domain()[0] < 0 ? 0 : y.domain()[0]);
-    let divisor = 1;
-    if (ySpan > 1000000) divisor = 1000000
-    if (ySpan > 1000) divisor = 1000
-
-    for (let i = yMin; i < y.domain()[1]; i += ySpan / (y.domain()[0] < 0 ? 3 : 6)) {
-        yTicks.push(
-            <g key={i}>
-                <g key={i + 'pos'} className="tick" transform={`translate(${props.Margin.Left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
-                    <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                    <text fill="black" fontSize="small" x="-15" dy="0.32em" textAnchor='middle'>{(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
-                </g>
-                {(y.domain()[0] < 0 && i != 0 ?
-                    <g key={i + 'neg'} className="tick" transform={`translate(${props.Margin.Left},${y(-i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1 }}>
-                        <path d={`M 6, 0 H -6`} style={{ stroke: 'black' }} strokeWidth={0.5}></path>
-                        <text fill="black" fontSize="small" x="-15" dy="0.32em" textAnchor='middle'>{-(i / divisor).toFixed(0) + (divisor == 1000 ? 'k' : '') + (divisor == 1000000 ? 'M' : '')}</text>
-
-                    </g> : null)}
-            </g>
-        );
-
-    }
-
+    const svg = select(chart.current);
+    svg.selectAll("g.axis").remove();
+    svg.append("g")
+        .classed("axis",true)
+        .attr("transform", "translate(0," + (props.Height - props.Margin.Bottom) + ")")
+        .call(axisBottom(x).ticks(10).tickFormat((value, index) => {
+            if (index == 0)
+                return moment(value).format("HH:mm:ss.SSS")
+            else
+                return moment(value).format("ss.SSS")
+        }))
+    svg.append("g")
+        .classed("axis", true)
+        .attr("transform", `translate(${props.Margin.Left},0)`)
+        .call(axisLeft(y).ticks(8))
 
     return (
         <svg ref={chart} width={props.Width} height={props.Height} onMouseOver={OnHover} onMouseDown={HandleChartAction} onMouseUp={StopDrag} style={{ fill: 'none'}}>
@@ -198,8 +175,7 @@ const WaveformViewerD3Chart = (props: {
                 {newPaths}
                 {comparePaths}
 
-                {xTicks}
-                {yTicks}
+                {/*yTicks*/}
 
                 <path stroke='black' d={`M ${props.Hover},${props.Margin.Top} V ${props.Height- props.Margin.Bottom}`} style={{ stroke: 'black', opacity: props.Hover < props.Margin.Left? 0: 1 }} strokeWidth={0.5}></path>
                 <path stroke='black' d={`M ${x(props.Click)},${props.Margin.Top} V ${props.Height - props.Margin.Bottom}`} style={{ stroke: 'red', opacity: x(props.Click) < props.Margin.Left ? 0 : 1 }} strokeWidth={1}></path>

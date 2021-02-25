@@ -55,6 +55,10 @@ namespace PQDigest.Controllers
 	                    MagDurCurve.Name,
 	                    MagDurCurve.Visible,
 	                    MagDurCurve.Color,
+                        MagDurCurve.XHigh,
+                        MagDurCurve.XLow,
+                        MagDurCurve.YHigh,
+                        MagDurcurve.YLow,
 	                    MagDurCurvePoint.PerUnitMagnitude,
 	                    MagDurCurvePoint.DurationSeconds,
 	                    MagDurCurvePoint.LoadOrder

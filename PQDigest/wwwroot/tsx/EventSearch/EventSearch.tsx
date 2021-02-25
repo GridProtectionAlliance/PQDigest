@@ -211,10 +211,7 @@ const EventSearch = (props: {}) => {
                     <div className="card">
                         <div className="card-header">
                             Events
-                            <select className="form-control" value={showEventList.toString()} onChange={evt => setShowEventList(evt.target.value == 'true')} style={{width: 115, position: 'absolute', top: 5, right: 115}}>
-                                <option value='true'>List</option>
-                                <option value='false'>Mag/Dur</option>
-                            </select>
+                            <button className="btn btn-danger" style={{ position: 'absolute', top: 5, right: 120 }} onClick={() => setShowEventList(!showEventList)}>View as {(showEventList? 'Mag/Dur' : 'List')}</button>
                             <button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button>
                         </div>
                         <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
@@ -225,6 +222,7 @@ const EventSearch = (props: {}) => {
                                         //{ key: 'StartTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key, style) => moment(item[key]).format('HH:mm:ss') },
                                         { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
                                         { key: 'EventType', label: 'Type', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
+                                        { key: 'Phase', label: 'Phase', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
                                         { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
                                         { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
                                         { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },

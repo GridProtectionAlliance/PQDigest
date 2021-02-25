@@ -54,9 +54,9 @@ namespace PQDigest.Controllers
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
 #if DEBUG 
-                NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.25);
+                NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.1);
                 IEnumerable<NormalRandomNumber> magRVs = magRandomGenerator.Next(100);
-                NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 1, 5);
+                NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 0.1, 0.5);
                 IEnumerable<NormalRandomNumber> durRVs = durRandomGenerator.Next(100);
                 return Ok(magRVs.Zip(durRVs).Select(x => new { PerUnitMagnitude = x.First.Value, DurationSeconds = Math.Pow(10, x.Second.Value) }));
 #else

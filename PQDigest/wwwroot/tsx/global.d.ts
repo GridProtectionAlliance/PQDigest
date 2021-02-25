@@ -61,7 +61,7 @@ export namespace OpenXDA {
     interface Meter { ID: number, AssetKey: string, Alias: string, Make: string, Model: string, Name: string, ShortName: string, TimeZone: string, LocationID: number, Description: string, Selected?: boolean }
     interface Location { ID: number, LocationKey: string, Name: string, Alias: string, ShortName: string, Latitude: number, Longitude: number, Description: string }
 
-    interface EventSearch { ID: number, StartTime: string, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number }
+    interface EventSearch { ID: number, StartTime: string, Phase: string, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number }
 
     interface Disturbance { ID: number, EventID: number, PhaseID: number, Magnitude: number, PerUnitMagnitude: number, DurationSeconds: number }
 

@@ -41,6 +41,7 @@ const Lightning = (props: {}) => {
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.units == undefined ? 'minute' : qs.units as ToleranceUnit)
     const [locations, setLocations] = React.useState<OpenXDA.Location[]>([]);
+    const [strike, setStrike] = React.useState<Lightning.Strike>(null)
 
     const [bounds, setBounds] = React.useState<[[number, number], [number, number]]>([
         [
@@ -138,7 +139,7 @@ const Lightning = (props: {}) => {
                             <div className="row">                               
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control text-right" style={{ border: '0px' }}>Date</div>
+                                        <div className="col form-control text-right" style={{ border: '0px' }}>Date (CST)</div>
                                         <div className="col">
                                             <input className="form-control" value={date} type="datetime-local" onChange={e => setDate(e.target.value)} />
                                         </div>
@@ -146,7 +147,7 @@ const Lightning = (props: {}) => {
                                 </div>
                                 <div className="col">
                                     <div className="row">
-                                        <div className="col form-control text-right" style={{ border: '0px' }}>Tolerance</div>
+                                        <div className="col form-control text-right" style={{ border: '0px' }}>Time Window (+/-)</div>
                                         <div className="col">
                                             <input className="form-control" value={tolerance} type="number" onChange={e => setTolerance(parseFloat(e.target.value))} />
                                         </div>
@@ -172,7 +173,7 @@ const Lightning = (props: {}) => {
                 <div className="col" style={{ padding: '0px 0px 0px 3px', width: window.innerWidth / 2 }}>
                     <div className="card">
                         <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>
-                            <ESRIMap DateTime={date} Strikes={strikes} Locations={locations} Height={(window.innerHeight) - 226} Width={window.innerWidth / 2} Bounds={bounds} SetBounds={setBounds }/>
+                            <ESRIMap DateTime={date} Strike={strike} SetStrike={setStrike}Strikes={strikes} Locations={locations} Height={(window.innerHeight) - 226} Width={window.innerWidth / 2} Bounds={bounds} SetBounds={setBounds }/>
                         </div>
                     </div>
                 </div>
@@ -186,8 +187,8 @@ const Lightning = (props: {}) => {
                         <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
                             <Table<Lightning.Strike>
                                 cols={[
-                                    { key: 'DisplayTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Amplitude', label: 'Amplitude', headerStyle: { width: '25%' }, rowStyle: { width: '25%' } },
+                                    { key: 'DisplayTime', label: 'Time (CST)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                                    { key: 'Amplitude', label: 'Amplitude (kA)', headerStyle: { width: '25%' }, rowStyle: { width: '25%' } },
                                     { key: 'Latitude', label: 'Lat', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
                                     { key: 'Longitude', label: 'Lon', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
                                     { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
@@ -198,11 +199,11 @@ const Lightning = (props: {}) => {
                                 sortField={"DisplayTime"}
                                 ascending={true}
                                 onSort={null}
-                                onClick={null}
+                                onClick={(data) => setStrike(data.row)}
                                 theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
                                 tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 340, width: '100%' }}
                                 rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                selected={() => false}
+                                selected={(data) => data.DisplayTime == strike?.DisplayTime && data.Amplitude == strike?.Amplitude && data.Latitude == strike?.Latitude && data.Longitude == strike?.Longitude}
                                 />
                         </div>
                     </div>

@@ -57,7 +57,6 @@ namespace PQDigest.Controllers
             using (AdoDataConnection lightningConnection = new AdoDataConnection(m_configuration["Lightning:ConnectionString"], m_configuration["Lightning:DataProviderString"]))
             {
 
-
                 DataTable data = lightningConnection.RetrieveData(@"
                     DECLARE @EndOfPeriod DATETIME2 = DATEADD("+ postData.Units + @",{1}, CAST({0} as DATETIME2));
                     DECLARE @BeginningOfPeriod DATETIME2 = DATEADD(" + postData.Units + @",-{1}*2, @EndOfPeriod);
@@ -70,7 +69,6 @@ namespace PQDigest.Controllers
 	                    Longitude BETWEEN {4} AND {5}
                 ", postData.DateTime.Replace("T", " "), postData.Tolerance, postData.SWLat, postData.NELat, postData.SWLng, postData.NELng);
                 return Ok(data);
-
 
             }
         }

@@ -81,17 +81,17 @@ const PolarChart = (props: { Width: number, Height: number, Time: number, Voltag
                     <thead>
                         <tr>
                             <th></th>
-                            <th>VAN</th>
-                            <th>VBN</th>
-                            <th>VCN</th>
-                            <th>IAN</th>
-                            <th>IBN</th>
-                            <th>ICN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VAN')?.Color ?? null, color: 'white' }}>VAN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VBN')?.Color ?? null, color: 'white'  }}>VBN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VCN')?.Color ?? null, color: 'white'  }}>VCN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IAN')?.Color ?? null, color: 'white'  }}>IAN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IBN')?.Color ?? null, color: 'white'  }}>IBN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-ICN')?.Color ?? null, color: 'white'  }}>ICN</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Mag</td>
+                            <td>Mag (V or A)</td>
                             <td>{vData.find(x => x.Key == 'RMS-VAN') != undefined ? vData.find(x => x.Key == 'RMS-VAN').Value.toFixed(0) : ''}</td>
                             <td>{vData.find(x => x.Key == 'RMS-VBN') != undefined ? vData.find(x => x.Key == 'RMS-VBN').Value.toFixed(0) : ''}</td>
                             <td>{vData.find(x => x.Key == 'RMS-VCN') != undefined ? vData.find(x => x.Key == 'RMS-VCN').Value.toFixed(0) : ''}</td>
@@ -100,7 +100,7 @@ const PolarChart = (props: { Width: number, Height: number, Time: number, Voltag
                             <td>{iData.find(x => x.Key == 'RMS-ICN') != undefined ? iData.find(x => x.Key == 'RMS-ICN').Value.toFixed(0) : ''}</td>
                         </tr>
                         <tr>
-                            <td>Ang</td>
+                            <td>Ang (Degrees)</td>
                             <td>{vData.find(x => x.Key == 'Ph-VAN') != undefined ? vData.find(x => x.Key == 'Ph-VAN').Value.toFixed(0) : ''}</td>
                             <td>{vData.find(x => x.Key == 'Ph-VBN') != undefined ? vData.find(x => x.Key == 'Ph-VBN').Value.toFixed(0) : ''}</td>
                             <td>{vData.find(x => x.Key == 'Ph-VCN') != undefined ? vData.find(x => x.Key == 'Ph-VCN').Value.toFixed(0) : ''}</td>

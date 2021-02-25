@@ -40,8 +40,6 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
         let handle1 = GetComponents();
         handle1.done((data: any[]) => {
             setComponents(data);
-            if(data.length != 0)
-                setComponent(data[0]);
         });
 
         let handle2 = GetDisturbances();
@@ -55,10 +53,6 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
     }, [props.EventID])
 
     React.useEffect(() => {
-        if (component.TestCurveID == 0) {
-            setComponents([])
-            return;
-        }
         let handle1 = GetComponentCurve();
         handle1.done((data: any[]) => {
             setCurve(data);
@@ -108,15 +102,18 @@ export default function EventSearchPQI(props: { EventID: number, Width: number, 
         return (
             <div className="card">
                 <div className="card-header">PQI - Ride-through Curves
-                <select value={component.TestCurveID} className='form-control' style={{ width: 200, position: 'absolute', right: 6, top: 4 }} onChange={(evt) => setComponent(components.find(x => x.TestCurveID == evt.target.value))}>
-                        <option value='0' hidden={component.TestCurveID != 0}>None Available</option>
+                <select value={component.TestCurveID} className='form-control' style={{ width: 200, position: 'absolute', right: 6, top: 4 }} onChange={(evt) => {
+                        let c = components.find(x => x.TestCurveID == evt.target.value);
+                        setComponent(c == undefined ? { TestCurveID: 0}: c)
+                    }}>
+                        <option value='0'>NERC PRC-024-2</option>
                         {
                             components.map((comp, index) => <option key={index} value={comp.TestCurveID}>{comp.Title}</option>)
                         }
                     </select>
                 </div>
                 <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
-                    <PQIChart Height={props.Height - 50} Width={props.Width} EventID={props.EventID} Points={points} Curve={curve} />
+                    <PQIChart Height={props.Height - 50} Width={props.Width} Points={points} Curve={curve} />
                 </div>
             </div>
         )

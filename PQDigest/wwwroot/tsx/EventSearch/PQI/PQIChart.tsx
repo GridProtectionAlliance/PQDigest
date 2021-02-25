@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { scaleLinear, min, max, line } from 'd3';
+import * as d3 from 'd3';
 import _ from 'lodash';
 
 interface iData {
@@ -47,48 +47,116 @@ interface MagDurCurve {
     Path: string
 }
 
-const PQIChart = (props: { Width: number, Height: number, EventID: number, Points: Point[], Curve: Point[] }) => {
-
+const PQIChart = (props: { Width: number, Height: number,Points: Point[], Curve: Point[] }) => {
+    const chart = React.useRef(null);
     const margin = { top: 15, right: 30, bottom: 40, left: 50 };
     const svgWidth = props.Width - margin.left - margin.right;
     const svgHeight = props.Height - margin.top - margin.bottom;
-    const xmax = (props.Curve.length > 0 ? max(props.Curve.map(a => a.Duration)):3)
-    const x = scaleLinear().range([margin.left, svgWidth + margin.left]).domain([0, xmax]);
-    const y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0,1.1]);
-
+    const xmax = (props.Curve.length > 0 ? d3.max(props.Curve.map(a => a.Duration)):4)
+    const x = d3.scaleLinear().range([margin.left, svgWidth + margin.left]).domain([0, xmax]);
+    const y = d3.scaleLinear().rangeRound([svgHeight, margin.top]).domain([0,1.3]);
+    
     React.useEffect(() => {
-    }, []);
+        d3.select(chart.current).selectAll('svg').remove();
+        const svg = d3.select(chart.current)
+            .append('svg').attr('width', props.Width).attr('height', props.Height);
+
+        let clip = svg.append("defs").append("svg:clipPath")
+            .attr("id", "clip")
+            .append("svg:rect")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight - margin.top)
+            .attr("x", margin.left)
+            .attr("y", margin.top);
+
+        let scatter = svg.append('g')
+            .attr("clip-path", "url(#clip)")
+            .attr('id', 'chartdata');
 
 
-    function BuildXAxis() {
-        let ticks = []
-        for (let i = x.domain()[0]; i <= x.domain()[1]; i++) {
-            ticks.push(
-                <g key={i} className="tick" transform={`translate(${x(i)},${svgHeight})`} style={{ opacity: i < x.domain()[0] || i > x.domain()[1] ? 0 : 1 }}>
-                    <path stroke='black' d={`M 0,6 V -${svgHeight - margin.top}`} strokeWidth={0.25}></path>
-                    <text fill="black" fontSize="small" y="20" textAnchor='middle'>{i}</text>
-                </g>
-            );
+        svg.selectAll("g.xaxis").remove();
+        const xg = svg.append("g")
+            .classed("xaxis", true)
+            .attr("transform", "translate(0," + (props.Height - margin.bottom - margin.top) + ")");
+
+        const xAxis = xg.call(d3.axisBottom(x).tickSize(-(svgHeight - margin.top)));
+        xg.append('text').text('Duration(s)').attr('x', (svgWidth - margin.right) / 2 + margin.left).attr('y', margin.bottom / 2).attr('fill', 'black').style('font-size', 'small');
+
+        svg.selectAll("g.yaxis").remove();
+        const yg = svg.append("g")
+            .classed("yaxis", true)
+            .attr("transform", `translate(${margin.left},0)`)
+
+        const yAxis = yg.call(d3.axisLeft(y).ticks(8).tickSize(-(svgWidth)));
+        yg.append('text').text('Per Unit Voltage').attr('transform', 'rotate(-90 0,0)').attr('x', -(svgHeight - margin.bottom) / 2 + margin.top).attr('y', -margin.left * 3 / 4).attr('fill', 'black').style('font-size', 'small');
+
+        svg.selectAll('line').style("stroke", "lightgrey").style("stroke-opacity", 0.8).style("shape-rendering", "crispEdges").style("z-index", "0")
+
+        const lineFunc = d3.line<Point>().x(xd => x(xd.Duration)).y(yd => y(yd.Magnitude));
+        const lines = scatter.selectAll('path')
+            .data([props.Curve])
+            .enter()
+            .append('path')
+            .attr('stroke', 'red')
+            .attr('fill', 'none')
+            .attr('d', (d) => lineFunc(d));
+
+        if (props.Curve.length === 0) {
+            const lines = scatter.selectAll('g.line')
+                .data([[
+                    { Magnitude: 0, Duration: 0 },
+                    { Magnitude: 0, Duration: 0.15 },
+                    { Magnitude: 0.45, Duration: 0.15 },
+                    { Magnitude: 0.45, Duration: 0.3 },
+                    { Magnitude: 0.65, Duration: 0.3 },
+                    { Magnitude: 0.65, Duration: 2 },
+                    { Magnitude: 0.75, Duration: 2 },
+                    { Magnitude: 0.75, Duration: 3 },
+                    { Magnitude: 0.90, Duration: 3 },
+                    { Magnitude: 0.90, Duration: 4 }
+                ], [
+                    { Magnitude: 1.2, Duration: 0 },
+                    { Magnitude: 1.2, Duration: 0.20 },
+                    { Magnitude: 1.175, Duration: 0.20 },
+                    { Magnitude: 1.175, Duration: 0.50 },
+                    { Magnitude: 1.15, Duration: 0.50 },
+                    { Magnitude: 1.15, Duration: 1 },
+                    { Magnitude: 1.10, Duration: 1 },
+                    { Magnitude: 1.10, Duration: 4 }
+                    ]])
+                .enter()
+                .append('g')
+                .attr('class', 'line')
+                .append('path')
+                .attr('class', 'line')
+                .attr('stroke', 'red')
+                .attr('fill', 'none')
+                .attr('d', (d) => {
+
+                   return lineFunc(d)
+                });
 
         }
-        return ticks;
-    }
 
-    function BuildYAxis() {
-        let yticks = [];
-        for (let i = y.domain()[0]; i <= y.domain()[1]; i = 0.5 + i) {
-            yticks.push(
-                <g key={i} className="tick" transform={`translate(${margin.left},${y(i)})`} style={{ opacity: i < y.domain()[0] || i > y.domain()[1] ? 0 : 1}}>
-                    <path stroke='black' d={`M -6,0 H ${svgWidth}`} strokeWidth={0.25}></path>
-                    <text fill="black" fontSize="small" x="-15" dy="0.32em" textAnchor='middle'>{i.toFixed(1)}</text>
-                </g>);
+        const circles = scatter.selectAll('g.points')
+            .data([props.Points])
+            .enter()
+            .append('g').attr('class', 'points')
+            .selectAll('circle')
+            .data(d => d)
+            .enter()
+            .append('circle')
+            .attr('r', 5)
+            .style('cursor', 'pointer')
+            .attr('fill', 'blue')
+            .attr('cx', d => x(d.Duration))
+            .attr('cy', d => y(d.Magnitude));
 
-        }
-        return yticks;
-    }
+    }, [props.Points, props.Curve]);
+
 
     function GetPath(data: Point[]): string {
-        let linefunc = line<Point>().x(d => x(d.Duration)).y(d => y(d.Magnitude));
+        let linefunc = d3.line<Point>().x(d => x(d.Duration)).y(d => y(d.Magnitude));
         return linefunc(data)
     }
 
@@ -99,26 +167,7 @@ const PQIChart = (props: { Width: number, Height: number, EventID: number, Point
 
     try {
         return (
-            <div style={{ height: props.Height, width: props.Width }}>
-                <svg id="PQIChart" width={props.Width} height={props.Height} style={{ fill: 'none', shapeRendering: 'crispEdges' }}>
-
-                    {/* Draw chart data first */}
-                    <g>
-                        <path d={GetPath(props.Curve)} stroke='red' />
-                        {BuildMadDurCircles(props.Points)}
-                    </g>
-
-                    {/* XAxis ticks*/}
-                    {BuildXAxis()}
-                    <text fill="black" fontSize="small" x={svgWidth / 2} y={svgHeight + margin.top + 20}>Duration (s)</text>
-                    {/* YAxis ticks and Labels*/}
-                    {BuildYAxis()}
-                    <text fill="black" fontSize="small" transform={`rotate(-90 0,0)`} y={margin.left - 35} x={-svgHeight / 2 - margin.bottom}>Per Unit Voltage</text>
-                    {/* Chart borders */}
-                    <path stroke='black' d={`M ${margin.left} ${margin.top} H ${svgWidth + margin.left} V ${svgHeight} H ${margin.left} V ${margin.top}`} />
-
-                </svg>
-
+            <div ref={chart} style={{ height: props.Height, width: props.Width }}>
             </div>
         )
     }

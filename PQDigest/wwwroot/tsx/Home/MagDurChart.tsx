@@ -54,7 +54,7 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
     const chart = React.useRef(null);
     const [magDurCurveData, setMagDurCurveData] = React.useState<iCurve[]>([]);
     const [magDurData, setMagDurData] = React.useState<iPoint[]>([]);
-    const [curve, setCurve] = React.useState<'ITIC' | 'SEMI' | 'I & II' | 'III'>('ITIC');
+    const [curve, setCurve] = React.useState<'ITIC' | 'SEMI' | 'I & II' | 'III' | 'NERC'>('ITIC');
 
     React.useEffect(() => {
         Promise.all([GetMagDurCurves(), GetMagDurPoints()]).then(data => {
@@ -218,6 +218,10 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
                 <div className="form-check form-check-inline">
                     <input className="form-check-input" type="radio" value={curve} checked={curve === 'III'} onChange={(evt) => setCurve('III')}/>
                     <label className="form-check-label">IEEE 1668 Recommended Type III</label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input className="form-check-input" type="radio" value={curve} checked={curve === 'NERC'} onChange={(evt) => setCurve('NERC')} />
+                    <label className="form-check-label">NERC PRC-024-2</label>
                 </div>
 
             </div>

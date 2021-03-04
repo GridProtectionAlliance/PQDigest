@@ -40,7 +40,10 @@ interface iCurve {
 }
 
 export interface iPoint {
-    ID:number,
+    ID: number,
+    StartTime: string,
+    MeterName: string,
+    EventType: string,
     PerUnitMagnitude: number,
     DurationSeconds: number
 }
@@ -142,7 +145,14 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
             .classed("yaxis", true)
             .attr("transform", `translate(${margin.left},0)`)
 
-        const yAxis = yg.call(d3.axisLeft(y).ticks(8).tickSize(-(svgWidth)));
+        let ticks = 10;
+        let format = '.1f';
+        if (curve === 'NERC') {
+            ticks = 20
+            format = '.2f';
+        }
+
+        const yAxis = yg.call(d3.axisLeft(y).ticks(ticks,format).tickSize(-(svgWidth)));
         yg.append('text').text('Per Unit Voltage').attr('transform', 'rotate(-90 0,0)').attr('x',-(svgHeight - margin.bottom)/2 + margin.top).attr('y', -margin.left*3/4).attr('fill', 'black').style('font-size', 'small');
 
         svg.selectAll('line').style("stroke", "lightgrey").style("stroke-opacity", 0.8).style("shape-rendering", "crispEdges").style("z-index", "0")
@@ -163,6 +173,14 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
             .attr('fill', 'none')
             .attr('d', (d) => lineFunc(data[d]));
 
+        // Define the div for the tooltip
+        d3.select(chart.current).selectAll('.tooltip').remove()
+        var tooltip = d3.select(chart.current).append("div")
+            .attr("class", "tooltip")
+            .style('background-color', 'darkgray')
+            .style("opacity", .9)
+            .attr('hidden', 'hidden');
+
         const circles = scatter.selectAll('g.points')
             .data([points])
             .enter()
@@ -176,7 +194,39 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
             .attr('fill', 'blue')
             .attr('cx', d => x(d.DurationSeconds))
             .attr('cy', d => y(d.PerUnitMagnitude))
-            .on('click', d => window.open(homePath + 'WaveformViewer?EventID=' + d.ID));
+            .on('click', d => {
+                tooltip.transition()
+                    .duration(500)
+                    .attr('hidden', 'hidden');
+                window.open(homePath + 'WaveformViewer?EventID=' + d.ID)
+            }).on("mouseover", function (d) {
+                //d3.select(this).attr('stroke', 'black');
+                tooltip.transition()
+                    .duration(200)
+                    .attr('hidden', null);
+
+                tooltip.style("left", (d3.event.offsetX - 150) + "px")
+                    .style("top", (d3.event.offsetY - 75) + "px")
+                    .html(`
+                    <table class=''>
+                    <tr><td>Meter</td><td>${d.MeterName}</td></tr>
+                    <tr><td>Start Time</td><td>${d.StartTime}</td></tr>
+                    <tr><td>Event Type</td><td>${d.EventType}</td></tr>
+                    <tr><td>Magnitude</td><td>${d.PerUnitMagnitude.toFixed(2)}</td></tr>
+                    <tr><td>Duration</td><td>${d.DurationSeconds.toFixed(2)}</td></tr>
+                    </table>   
+                `)
+                    ;
+            })
+            .on("mouseout", function (d) {
+                //d3.select(this).attr('stroke', null);
+                //if (timeout) clearTimeout(timeout);
+                //setTimeout(() => {
+                tooltip.transition()
+                    .duration(500)
+                    .attr('hidden', 'hidden');
+                //}, 500);
+            });
 
         let zoom = d3.zoom().on('zoom', function () {
             let transform = d3.event.transform;

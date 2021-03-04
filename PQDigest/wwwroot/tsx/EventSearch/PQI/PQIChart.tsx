@@ -62,7 +62,7 @@ const PQIChart = (props: { Width: number, Height: number,Points: Point[], Curve:
             .append('svg').attr('width', props.Width).attr('height', props.Height);
 
         let clip = svg.append("defs").append("svg:clipPath")
-            .attr("id", "clip")
+            .attr("id", "pqiclip")
             .append("svg:rect")
             .attr("width", svgWidth)
             .attr("height", svgHeight - margin.top)
@@ -70,7 +70,7 @@ const PQIChart = (props: { Width: number, Height: number,Points: Point[], Curve:
             .attr("y", margin.top);
 
         let scatter = svg.append('g')
-            .attr("clip-path", "url(#clip)")
+            .attr("clip-path", "url(#pqiclip)")
             .attr('id', 'chartdata');
 
 

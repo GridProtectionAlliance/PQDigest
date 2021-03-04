@@ -27,33 +27,15 @@ import EventSearchTrenDAP from './TrenDAP/EventSearchTrenDAP';
 import EventSearchPQI from './PQI/EventSearchPQI';
 
 const EventSearchPreview = (props: { EventID: number, Width: number, Height: number }) => {
-    const [control, setControl] = React.useState < 'Data' | 'PQI'>('Data');
-    return (<>
-        {props.EventID < 1 ? <span>No Event Selected ... </span> :
-            <>
-                {/*
-                    <select value={control} onChange={(evt) => setControl(evt.target.value as any)} className="form-control" style={{ width: 100, position: 'absolute', zIndex: 100, right: 6, top: 5 }}>
-                        <option>Data</option>
-                        <option>PQI</option>
-                    </select>
-                */}
-                {(control == 'Data' ? 
-                    <>
-                        <EventSearchOpenSEE EventID={props.EventID} Width={props.Width} Height={props.Height /3 - 1} />
-                        <EventSearchTrenDAP EventID={props.EventID} Width={props.Width} Height={props.Height / 3 - 1} />
-                        <EventSearchPQI EventID={props.EventID} Width={props.Width} Height={props.Height/3 - 1} />
-
-                    </>
-                    : null)}
-                {(control == 'PQI' ?
-                    <>
-                        <EventSearchPQI EventID={props.EventID} Width={props.Width} Height={props.Height} />
-                    </>
-                    : null)}
-
-            </>
-        }
-    </>);
+    if (props.EventID <= 0) return <span>No Event Selected ... </span>;
+    else
+    return (
+        <>
+            <EventSearchOpenSEE EventID={props.EventID} Width={props.Width} Height={props.Height / 3 - 1} />
+            <EventSearchTrenDAP EventID={props.EventID} Width={props.Width} Height={props.Height / 3 - 1} />            
+            <EventSearchPQI EventID={props.EventID} Width={props.Width} Height={props.Height/3 - 1} />
+        </>
+    );
 }
 
 export default EventSearchPreview;

@@ -22,12 +22,10 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { iPoint } from '../MagDurChart';
+import { OpenXDA } from '../global';
 import MagDurChart from '../MagDurChart';
 
-const EventSearchMagDur = (props: {Points: iPoint[]}) => {
-    const [magDurData, setMagDurData] = React.useState<iPoint[]>([]);
-
+const EventSearchMagDur = (props: {Points: OpenXDA.EventSearch[]}) => {
     return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points} OnSelect={(evt, point) => { }}/>
 }
 

@@ -25,6 +25,7 @@ import React from 'react';
 import { scaleLinear, line, extent, axisLeft, axisBottom,select } from 'd3';
 import _ from 'lodash';
 import { PQDigest } from '../global';
+import moment from 'moment';
 
 const WaveformViewerD3Chart = (props: {
     EventID: number,
@@ -158,9 +159,9 @@ const WaveformViewerD3Chart = (props: {
         .attr("transform", "translate(0," + (props.Height - props.Margin.Bottom) + ")")
         .call(axisBottom(x).ticks(10).tickFormat((value, index) => {
             if (index == 0)
-                return moment(value).format("HH:mm:ss.SSS")
+                return moment(value as number).format("HH:mm:ss.SSS")
             else
-                return moment(value).format("ss.SSS")
+                return moment(value as number).format("ss.SSS")
         }))
     svg.append("g")
         .classed("axis", true)
@@ -169,21 +170,22 @@ const WaveformViewerD3Chart = (props: {
 
     return (
         <svg ref={chart} width={props.Width} height={props.Height} onMouseOver={OnHover} onMouseDown={HandleChartAction} onMouseUp={StopDrag} style={{ fill: 'none'}}>
-                {/* Chart borders */}
-                <path  stroke='black' strokeWidth='0.5px' d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
-                <text fill="black" fontSize="small" transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>
-                {newPaths}
-                {comparePaths}
+            {/* Chart borders */}
+            <path  stroke='black' strokeWidth='0.5px' d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height - props.Margin.Bottom} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
+            {/*<text fill="black" fontSize="small" transform={`rotate(-90 0,0)`} y={15} x={-(props.Height + 35) / 2}>{props.Units}</text>*/}
+            <text fill="black" fontSize="small" y={props.Height - 15} x='10'>{props.Units}</text>
+            {newPaths}
+            {comparePaths}
 
-                {/*yTicks*/}
+            {/*yTicks*/}
 
-                <path stroke='black' d={`M ${props.Hover},${props.Margin.Top} V ${props.Height- props.Margin.Bottom}`} style={{ stroke: 'black', opacity: props.Hover < props.Margin.Left? 0: 1 }} strokeWidth={0.5}></path>
-                <path stroke='black' d={`M ${x(props.Click)},${props.Margin.Top} V ${props.Height - props.Margin.Bottom}`} style={{ stroke: 'red', opacity: x(props.Click) < props.Margin.Left ? 0 : 1 }} strokeWidth={1}></path>
+            <path stroke='black' d={`M ${props.Hover},${props.Margin.Top} V ${props.Height- props.Margin.Bottom}`} style={{ stroke: 'black', opacity: props.Hover < props.Margin.Left? 0: 1 }} strokeWidth={0.5}></path>
+            <path stroke='black' d={`M ${x(props.Click)},${props.Margin.Top} V ${props.Height - props.Margin.Bottom}`} style={{ stroke: 'red', opacity: x(props.Click) < props.Margin.Left ? 0 : 1 }} strokeWidth={1}></path>
 
-                <text fill="black" fontSize="small" x={props.Width / 2} y={props.Height - 5}>Time</text>
+            <text fill="black" fontSize="small" x={props.Width / 2} y={props.Height - 5}>Time</text>
 
-                <rect stroke='black' x={Math.min(xStart, xEnd)} y={props.Margin.Top} width={Math.abs(xEnd - xStart)} height={props.Height - props.Margin.Top - props.Margin.Bottom} style={{ stroke: 'grey', fill: 'grey', opacity: 0.5 }}></rect>
-            </svg>
+            <rect stroke='black' x={Math.min(xStart, xEnd)} y={props.Margin.Top} width={Math.abs(xEnd - xStart)} height={props.Height - props.Margin.Top - props.Margin.Bottom} style={{ stroke: 'grey', fill: 'grey', opacity: 0.5 }}></rect>
+        </svg>
     );
 }
 

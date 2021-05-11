@@ -31,13 +31,14 @@ import { ExportToCsv } from '../ExportCSV';
 
 import ESRIMap from './ESRIMap';
 import L from 'leaflet';
+import moment from 'moment';
 
 type ToleranceUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
 const Lightning = (props: {}) => {
     const history = createBrowserHistory();
 
     const qs = queryString.parse(location.search.substring(1));
-    const [date, setDate] = React.useState<string>(qs.date == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date)
+    const [date, setDate] = React.useState<string>(qs.date == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date as string)
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.units == undefined ? 'minute' : qs.units as ToleranceUnit)
     const [locations, setLocations] = React.useState<OpenXDA.Location[]>([]);

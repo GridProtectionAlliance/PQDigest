@@ -34,7 +34,7 @@ const UnbalanceLegend = (props: {
 }) => {
 
     const [all, setAll] = React.useState<boolean>(false);
-    const [v, setV] = React.useState<boolean>(true);
+    const [v, setV] = React.useState<boolean>(false);
     const [i, setI] = React.useState<boolean>(false);
     const [s0s1, setS0s1] = React.useState<boolean>(false);
     const [s2s1, setS2s1] = React.useState<boolean>(false);

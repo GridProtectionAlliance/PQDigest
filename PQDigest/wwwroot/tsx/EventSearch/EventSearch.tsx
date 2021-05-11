@@ -30,17 +30,20 @@ import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 import MagDurChart from '../MagDurChart';
+import moment from 'moment';
 
 const EventSearch = (props: {}) => {
     const history = createBrowserHistory();
 
     const qs = queryString.parse(location.search.substring(1));
     const [types, setTypes] = React.useState<OpenXDA.EventType[]>([])
-    const [startDate, setStartDate] = React.useState<string>(qs.startDate == undefined ? moment().subtract(30, 'days').format("YYYY-MM-DD") : qs.startDate)
-    const [endDate, setEndDate] = React.useState<string>(qs.endDate == undefined ? moment().format("YYYY-MM-DD") : qs.endDate)
+    const [startDate, setStartDate] = React.useState<string>(qs.startDate == undefined ? moment().subtract(30, 'days').format("YYYY-MM-DD") : qs.startDate as string)
+    const [endDate, setEndDate] = React.useState<string>(qs.endDate == undefined ? moment().format("YYYY-MM-DD") : qs.endDate as string)
     const [meters, setMeters] = React.useState<OpenXDA.Meter[]>([]);
     const [returnLimit, setReturnLimit] = React.useState<number>(qs.returnLimit == undefined ? 100: parseInt(qs.returnLimit as string));
     const [events, setEvents] = React.useState<OpenXDA.EventSearch[]>([]);
+    const [eventCounts, setEventCounts] = React.useState<number>(0);
+
     const [sortField, setSortField] = React.useState<keyof OpenXDA.EventSearch>('StartTime');
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [eventID, setEventID] = React.useState<number>(qs.eventID == undefined ? 0 : parseInt(qs.eventID as string));
@@ -88,14 +91,20 @@ const EventSearch = (props: {}) => {
         handle1.done((data: OpenXDA.EventSearch[]) => {
             setEvents(data);
         });
+        let handle2= GetEventSearchCount();
+        handle2.done((data: number) => {
+            setEventCounts(data);
+        });
 
 
         return function () {
             if (handle1.abort != undefined) handle1.abort();
+            if (handle2.abort != undefined) handle2.abort();
+
         }
 
 
-    }, [types, startDate, endDate, meters, returnLimit]);
+    }, [types, startDate, endDate, meters, returnLimit, sortField, ascending]);
 
     function GetTypes(): JQuery.jqXHR<OpenXDA.EventType[]> {
         return $.ajax({
@@ -129,6 +138,8 @@ const EventSearch = (props: {}) => {
                 StartDate: startDate,
                 EndDate: endDate,
                 Count: returnLimit,
+                SortField: sortField,
+                Ascending: ascending,
                 Meters: meters.filter(x => x.Selected).map(x => x.ID),
                 Types: types.filter(x => x.Selected).map(x => x.ID)
             }),
@@ -136,6 +147,28 @@ const EventSearch = (props: {}) => {
             async: true
         });
     }
+
+    function GetEventSearchCount(): JQuery.jqXHR<number> {
+        return $.ajax({
+            type: "POST",
+            url: `${homePath}api/OpenXDA/EventSearch/count`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            data: JSON.stringify({
+                StartDate: startDate,
+                EndDate: endDate,
+                Count: returnLimit,
+                SortField: sortField,
+                Ascending: ascending,
+                Meters: meters.filter(x => x.Selected).map(x => x.ID),
+                Types: types.filter(x => x.Selected).map(x => x.ID)
+            }),
+            cache: true,
+            async: true
+        });
+    }
+
+
 
     return (
         <div style={{ height: "100%", width: '100%' }}>
@@ -210,7 +243,7 @@ const EventSearch = (props: {}) => {
                 <div className="col" style={{ padding: '0px 2px 0px 0px', width: window.innerWidth / 2}}>
                     <div className="card">
                         <div className="card-header">
-                            Events
+                            Events (Showing { events?.length ?? 0} of { eventCounts})
                             <button className="btn btn-danger" style={{ position: 'absolute', top: 5, right: 120 }} onClick={() => setShowEventList(!showEventList)}>View as {(showEventList? 'Mag/Dur' : 'List')}</button>
                             <button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button>
                         </div>
@@ -234,15 +267,15 @@ const EventSearch = (props: {}) => {
                                     ascending={ascending}
                                     onSort={(d) => {
                                         if (d.col == sortField) {
-                                            let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
-                                            setEvents(ordered);
+                                            //let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
+                                            //setEvents(ordered);
                                             setAscending(!ascending);
                                         }
                                         else {
                                             setAscending(ascending);
                                             setSortField(d.col);
-                                            let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
-                                            setEvents(ordered);
+                                            //let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
+                                            //setEvents(ordered);
                                         }
                                     }}
                                     onClick={(data) => { setEventID(data.row.ID) }}

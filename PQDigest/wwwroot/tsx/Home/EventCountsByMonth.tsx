@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import moment from 'moment';
 
 import React from 'react';
 import { scaleOrdinal, scaleLinear, select, axisBottom, max, line } from 'd3';

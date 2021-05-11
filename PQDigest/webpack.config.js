@@ -48,9 +48,9 @@ module.exports = env => {
             jquery: 'jQuery',
             react: 'React',
             'react-dom': 'ReactDOM',
-            moment: 'moment',
+            //moment: 'moment',
             //ace: 'ace',
-            d3: 'd3',
+            //d3: 'd3',
             'react-router-dom': 'ReactRouterDOM',
             'leaflet': 'L',
             'esri-leaflet': {

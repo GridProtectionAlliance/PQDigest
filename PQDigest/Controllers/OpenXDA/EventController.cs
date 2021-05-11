@@ -38,6 +38,7 @@ using System.Net.Http;
 using Gemstone.Numeric.Random;
 using System.Security.Claims;
 using System.Data;
+using HIDS;
 
 namespace PQDigest.Controllers
 {
@@ -126,11 +127,38 @@ namespace PQDigest.Controllers
                 }
                 else if(dataType == "Trending")
                 {
-                    MovingAverageRandomNumberGenerator generator = new MovingAverageRandomNumberGenerator((type=="Voltage" ? 1234 : 4321), 1, new[] { 0.2}, 50, 2);
-                    DateTime start = new DateTime(evt.StartTime.Year, evt.StartTime.Month, evt.StartTime.Day, evt.StartTime.Hour,0,0).AddHours(-3);
-                    returnData.Add($"{(type == "Voltage" ? "V" : "I")}AN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
-                    returnData.Add($"{(type == "Voltage" ? "V" : "I")}BN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
-                    returnData.Add($"{(type == "Voltage" ? "V" : "I")}CN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
+                    DateTime start = new DateTime(evt.StartTime.Year, evt.StartTime.Month, evt.StartTime.Day, evt.StartTime.Hour, 0, 0).AddHours(-3);
+                    DateTime end = start.AddHours(6);
+                    IEnumerable<Channel> channels = new TableOperations<Channel>(connection).QueryRecordsWhere($"MeterID = {meter.ID} AND MeasurementTypeID = (SELECT ID FROM MeasurementType Where Name = '{type}') AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic Where Name = 'RMS') AND PhaseID IN (SELECT ID FROM Phase Where Name IN ('AN', 'BN', 'CN'))");
+                    
+                    using (API hids = new API())
+                    {
+
+                        string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "http://localhost:8086";
+                        string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
+                        string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
+                        string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
+
+                        hids.TokenID = tokenID;
+                        hids.PointBucket = pointBucket;
+                        hids.OrganizationID = orgID;
+                        hids.Connect(host);
+
+                        List<Point> points = hids.ReadPointsAsync((t) =>
+                        {
+                            t.FilterTags(channels.Select(c => c.ID.ToString("x8")));
+                            t.Range(start, end);
+                        }).ToListAsync().Result;
+
+                        foreach (Channel channel in channels) {
+                            channel.ConnectionFactory = () =>  new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
+                            returnData.Add($"{(type == "Voltage" ? "V" : "I")}{channel.Phase.Name}", points.Where(p => p.Tag == channel.ID.ToString("x8")).Select((p,index) => new[] { (p.Timestamp - epoch).TotalMilliseconds, p.Average }));
+                        }
+                    }
+                    //MovingAverageRandomNumberGenerator generator = new MovingAverageRandomNumberGenerator((type=="Voltage" ? 1234 : 4321), 1, new[] { 0.2}, 50, 2);
+                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}AN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
+                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}BN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
+                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}CN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
 
                 }
 

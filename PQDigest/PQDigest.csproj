@@ -27,12 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.56" />
-    <PackageReference Include="Gemstone.Data" Version="1.0.56" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.56" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.56" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.56" />
-    <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
+    <PackageReference Include="Gemstone.Common" Version="1.0.66" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.66" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.66" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.66" />
+    <PackageReference Include="Gemstone.Web" Version="1.0.66" />
+    <PackageReference Include="InfluxDB.Client" Version="1.18.0" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <!--PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" /-->
     <!--PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" /-->
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
@@ -43,6 +44,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
+    <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
   </ItemGroup>
 
 
@@ -51,6 +53,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="HIDS">
+      <HintPath>..\Dependencies\HIDS.dll</HintPath>
+    </Reference>
     <Reference Include="OpenXDA.NetCore">
       <HintPath>..\Dependencies\OpenXDA.NetCore.dll</HintPath>
     </Reference>
@@ -91,9 +96,6 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Update="wwwroot\tsx\Lightning\Lightning - Old.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Update="wwwroot\tsx\MagDurChart - Copy.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
   </ItemGroup>

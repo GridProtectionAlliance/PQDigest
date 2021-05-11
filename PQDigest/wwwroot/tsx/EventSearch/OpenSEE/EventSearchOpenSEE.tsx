@@ -25,7 +25,10 @@ import EventSearchPreviewD3Chart from './EventSearchPreviewD3Chart';
 import EventSearchPreviewD3ChartAxis from './EventSearchPreviewD3ChartAxis';
 
 export default function EventSearchOpenSEE(props: { EventID: number, Width: number, Height: number }) {
-    const margin = { Top: 0, Right: 20, Bottom: 0, Left: 35 };
+    const topmargin = { Top: 0, Right: 30, Bottom: 0, Left: 50 };
+    const bottommargin = { Top: 0, Right: 30, Bottom:0, Left: 50 };
+    const margin = { Top: 0, Right: 30, Bottom: 0, Left: 50 };
+
     //const svgWidth = props.Width - margin.left - margin.right;
     //const svgHeight = props.Height - margin.top - margin.bottom - 65;
 
@@ -33,8 +36,8 @@ export default function EventSearchOpenSEE(props: { EventID: number, Width: numb
         <div className="card">
             <div className="card-header"><a href={ homePath + 'WaveformViewer?EventID=' + props.EventID} target="_blank">View Waveform</a></div>
             <div className="card-body" style={{ height: props.Height - 50, padding: 0 }}>
-                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Time' Margin={margin} Height={props.Height / 3} Width={props.Width - 10}/>
-                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Time' Margin={margin} Width={props.Width - 10} Height={props.Height/3}/>
+                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Voltage' DataType='Time' Margin={topmargin} Height={(props.Height - 90) / 2} Width={props.Width}/>
+                <EventSearchPreviewD3Chart EventID={props.EventID} MeasurementType='Current' DataType='Time' Margin={margin} Width={props.Width} Height={(props.Height - 90) / 2}/>
                 <EventSearchPreviewD3ChartAxis EventID={props.EventID} Margin={margin} Width={props.Width - 10} Height={40} DataType='Time'/>
             </div>
         </div>

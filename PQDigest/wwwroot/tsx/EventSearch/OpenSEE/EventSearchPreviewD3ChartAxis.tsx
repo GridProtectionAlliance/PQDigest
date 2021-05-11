@@ -23,6 +23,7 @@
 
 import React from 'react';
 import { scaleLinear, select, axisBottom } from 'd3';
+import moment from 'moment';
 
 const EventSearchPreviewD3ChartAxis = (props: { EventID: number, Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number, DataType: 'Trending' | 'Time' }) => {
     //const margin = { top: 15, right: 20, bottom: 60, left: 40 };

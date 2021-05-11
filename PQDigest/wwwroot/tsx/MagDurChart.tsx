@@ -22,7 +22,8 @@
 //******************************************************************************************************
 
 import React from 'react';
-import * as d3 from 'd3';
+import { axisBottom, scaleLinear, scaleLog, format as d3Format, axisLeft, line, zoom as d3Zoom, D3ZoomEvent } from 'd3';
+import { select, selectAll } from 'd3-selection';
 import _ from 'lodash';
 import { OpenXDA } from './global';
 
@@ -88,8 +89,8 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
         const YHigh = [...new Set(data[Object.keys(data)[0]]?.map(d => d.YHigh) ?? [5])][0];
         const YLow = [...new Set(data[Object.keys(data)[0]]?.map(d => d.YLow) ?? [0])][0];
 
-        d3.select(chart.current).selectAll('svg').remove();
-        const svg = d3.select(chart.current)
+        select(chart.current).selectAll('svg').remove();
+        const svg = select(chart.current)
             .append('svg').attr('width', props.Width).attr('height', props.Height);
 
         let clip = svg.append("defs").append("svg:clipPath")
@@ -104,17 +105,17 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
             .attr("clip-path", "url(#clip)")
             .attr('id', 'chartdata');
 
-        let y = d3.scaleLinear().rangeRound([svgHeight, margin.top]).domain([YLow, YHigh]);
-        let x = d3.scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([XLow, XHigh]);
+        let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([YLow, YHigh]);
+        let x = scaleLog().rangeRound([margin.left, svgWidth + margin.left]).domain([XLow, XHigh]);
 
         svg.selectAll("g.xaxis").remove();
         const xg = svg.append("g")
             .classed("xaxis", true)
             .attr("transform", "translate(0," + (props.Height - margin.bottom - margin.top) + ")");
 
-        const xAxis = xg.call(d3.axisBottom(x).tickSize(-(svgHeight - margin.top)).tickFormat((value) => {
+        const xAxis = xg.call(axisBottom(x).tickSize(-(svgHeight - margin.top)).tickFormat((value) => {
             if (Math.log10(value as number) === Math.floor(Math.log10(value as number)))
-                return d3.format(".0s")(value)
+                return d3Format(".0s")(value)
             else return '';
         }))
         xg.append('text').text('Duration(s)').attr('x', (svgWidth - margin.right) / 2 + margin.left).attr('y', margin.bottom / 2).attr('fill', 'black').style('font-size', 'small');
@@ -131,14 +132,14 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
             format = '.2f';
         }
 
-        const yAxis = yg.call(d3.axisLeft(y).ticks(ticks, format).tickSize(-(svgWidth)));
+        const yAxis = yg.call(axisLeft(y).ticks(ticks, format).tickSize(-(svgWidth)));
         yg.append('text').text('Per Unit Voltage').attr('transform', 'rotate(-90 0,0)').attr('x', -(svgHeight - margin.bottom) / 2 + margin.top).attr('y', -margin.left * 3 / 4).attr('fill', 'black').style('font-size', 'small');
 
         svg.selectAll('line').style("stroke", "lightgrey").style("stroke-opacity", 0.8).style("shape-rendering", "crispEdges").style("z-index", "0")
 
 
 
-        const lineFunc = d3.line<iCurve>().x(xd => x(xd.DurationSeconds)).y(yd => y(yd.PerUnitMagnitude));
+        const lineFunc = line<iCurve>().x(xd => x(xd.DurationSeconds)).y(yd => y(yd.PerUnitMagnitude));
         const lines = scatter.selectAll('g.lines')
             .data([data])
             .enter()
@@ -153,12 +154,13 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
             .attr('d', (d) => lineFunc(data[d]));
 
         // Define the div for the tooltip
-        d3.select(chart.current).selectAll('.tooltip').remove()
-        var tooltip = d3.select(chart.current).append("div")
+        select(chart.current).selectAll('.tooltip').remove()
+        var tooltip = select(chart.current).append("div")
             .attr("class", "tooltip")
             .style('background-color', 'darkgray')
             .style("opacity", .9)
             .attr('hidden', 'hidden');
+
         const circles = scatter.selectAll('g.points')
             .data([props.Points])
             .enter()
@@ -172,20 +174,20 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
             .attr('fill', 'blue')
             .attr('cx', d => x(d.DurationSeconds))
             .attr('cy', d => y(d.PerUnitMagnitude))
-            .on('click', d => {
+            .on('click', (d) => {
                 tooltip.transition()
                     .duration(500)
                     .attr('hidden', 'hidden');
                 props.OnSelect(null, d)
             })
-            .on("mouseover", function (d) {
+            .on("mouseover", function(event, d ){
                 //d3.select(this).attr('stroke', 'black');
                 tooltip.transition()
                     .duration(200)
                     .attr('hidden', null);
 
-                tooltip.style("left", (d3.event.offsetX - 150) + "px")
-                    .style("top", (d3.event.offsetY - 75) + "px")
+                tooltip.style("left", (event.offsetX - 150) + "px")
+                    .style("top", (event.offsetY - 75) + "px")
                     .html(`
                     <table class=''>
                     <tr><td>Meter</td><td>${d.MeterName}</td></tr>
@@ -207,20 +209,20 @@ const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Eve
                 //}, 500);
             })            ;
 
-        let zoom = d3.zoom().on('zoom', function () {
-            let transform = d3.event.transform;
+        let zoom = d3Zoom().on('zoom', function (event: D3ZoomEvent<SVGElement, iCurve>, d) {
+            let transform = event.transform;
             let updatedX = transform.rescaleX(x);
             let updatedY = transform.rescaleY(y);
-            xAxis.call(d3.axisBottom(updatedX).tickSize(-(svgHeight - margin.top)).tickFormat((value) => {
+            xAxis.call(axisBottom(updatedX).tickSize(-(svgHeight - margin.top)).tickFormat((value) => {
                 if (Math.log10(value as number) === Math.floor(Math.log10(value as number)))
-                    return d3.format(".0s")(value as number)
+                    return d3Format(".0s")(value as number)
                 else return '';
             }));
-            yAxis.call(d3.axisLeft(updatedY).tickSize(-(svgWidth)));
+            yAxis.call(axisLeft(updatedY).tickSize(-(svgWidth)));
             svg.selectAll('line').style("stroke", "lightgrey").style("stroke-opacity", 0.8).style("shape-rendering", "crispEdges").style("z-index", "0")
 
             circles.attr('cx', d => updatedX(d.DurationSeconds)).attr('cy', d => updatedY(d.PerUnitMagnitude));
-            const upLineFunc = d3.line<iCurve>().x(xd => updatedX(xd.DurationSeconds)).y(yd => updatedY(yd.PerUnitMagnitude))
+            const upLineFunc = line<iCurve>().x(xd => updatedX(xd.DurationSeconds)).y(yd => updatedY(yd.PerUnitMagnitude))
             lines.attr('d', d => upLineFunc(data[d]));
         })
 

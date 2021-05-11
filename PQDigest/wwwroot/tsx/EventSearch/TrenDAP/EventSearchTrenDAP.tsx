@@ -26,7 +26,9 @@ import EventSearchPreviewD3Chart from '../OpenSEE/EventSearchPreviewD3Chart';
 import EventSearchPreviewD3ChartAxis from '../OpenSEE/EventSearchPreviewD3ChartAxis';
 
 export default function EventSearchTrenDAP(props: { EventID: number, Width: number, Height: number }) {
-    const margin = { Top: 0, Right: 20, Bottom: 0, Left: 35 };
+    const topmargin = { Top: 10, Right: 30, Bottom: 0, Left: 50 };
+    const bottommargin = { Top: 0, Right: 30, Bottom: 0, Left: 50 };
+    const margin = { Top: 0, Right: 30, Bottom: 0, Left: 50 };
     //const svgWidth = props.Width - margin.left - margin.right;
     //const svgHeight = props.Height - margin.top - margin.bottom - 65;
 

@@ -29,7 +29,8 @@ import proj4 from 'proj4';
 import 'proj4leaflet';
 import { Lightning, OpenXDA } from '../global';
 import L from 'leaflet';
-
+import moment from 'moment';
+import 'moment-timezone';
 
 const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[],Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void, SetStrike: (strike)=> void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
@@ -40,7 +41,7 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Str
 
     let time = moment(props.DateTime);
     let minutes = (time.minutes() - time.minutes() % 5).toString();
-    let timestring = time.utc().format('YYYY-MM-DDTHH') + ':' + (minutes.length == 1 ? `0${minutes}` : minutes);
+    let timestring = time.tz('America/Chicago').utc().format('YYYY-MM-DDTHH') + ':' + (minutes.length == 1 ? `0${minutes}` : minutes);
     let bm = leaflet.esri.basemapLayer(baseMap);
 
     return (

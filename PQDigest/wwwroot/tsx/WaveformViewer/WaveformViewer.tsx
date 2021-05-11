@@ -32,6 +32,7 @@ import BrowseEvents from './BrowseEvents';
 import Info from './Info';
 import ComparableEvents from './ComparableEvents';
 
+import moment from 'moment';
 
 const WaveformViewer = (props: { EventID: number }) => {
     const infoWidth = 300;
@@ -365,12 +366,12 @@ const WaveformViewer = (props: { EventID: number }) => {
 
 function GetUnits(type: PQDigest.Analtyic): string {
     if (type == 'Frequency') return 'Hz';
-    else if (type == 'Power') return 'W/VA/pf/VAR';
-    else if (type == 'RapidVoltageChange') return 'Volts';
-    else if (type == 'SpecifiedHarmonic') return 'Volts/Amps/Degrees';
-    else if (type == 'SymmetricalComponents') return 'Volts/Amps';
-    else if (type == 'THD') return 'Volts/Amps';
-    else if (type == 'Unbalance') return '';
+    else if (type == 'Power') return 'kW/kVA/kVAr';
+    else if (type == 'RapidVoltageChange') return 'V';
+    else if (type == 'SpecifiedHarmonic') return 'V/A/Degs';
+    else if (type == 'SymmetricalComponents') return 'kV';
+    else if (type == 'THD') return '%';
+    else if (type == 'Unbalance') return '%';
     else return '';
 }
 
@@ -387,7 +388,7 @@ function ShowPath(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string
     }
     else if (type == 'SymmetricalComponents' && label.indexOf('Voltage') >= 0) return true;
     else if (type == 'THD' && label.indexOf('V') >= 0) return true;
-    else if (type == 'Unbalance' && label.indexOf('Voltage') >= 0) return true;
+    else if (type == 'Unbalance' && label.indexOf('S2/S1 Voltage') >= 0) return true;
 
     return false;
 }

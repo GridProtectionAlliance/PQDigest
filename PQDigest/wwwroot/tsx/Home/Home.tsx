@@ -26,6 +26,7 @@ import EventCountsByMonth from '../Home/EventCountsByMonth';
 import EventCountTable from '../Home/EventCountTable';
 import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
+import moment from 'moment';
 
 const Home = (props: {}) => {
     const [mailTo, setMailTo] = React.useState<string>('');

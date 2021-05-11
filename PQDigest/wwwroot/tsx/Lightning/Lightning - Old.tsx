@@ -29,6 +29,7 @@ import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
+import moment from 'moment';
 
 import ESRIMap from './ESRIMap - Old';
 
@@ -37,7 +38,7 @@ const Lightning = (props: {}) => {
     const history = createBrowserHistory();
 
     const qs = queryString.parse(location.search.substring(1));
-    const [date, setDate] = React.useState<string>(qs.startDate == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date)
+    const [date, setDate] = React.useState<string>(qs.startDate == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date as string)
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.toleranceUnits == undefined ? 'minutes' : qs.toleranceUnits as ToleranceUnit)
     const [radius, setRadius] = React.useState<number>(qs.radius == undefined ? 20 : parseInt(qs.radius as string))
@@ -159,8 +160,8 @@ const Lightning = (props: {}) => {
 
     function GetTimeExtent(): string {
         let adjustedDate = date;
-        if (moment(date)._d.toTimeString().indexOf('Eastern'))
-            adjustedDate = moment(date).add(-1, 'hours').format("YYYY-MM-DDTHH:mm");
+        //if (moment(date)._d.toTimeString().indexOf('Eastern'))
+        //    adjustedDate = moment(date).add(-1, 'hours').format("YYYY-MM-DDTHH:mm");
         let startTime = moment(adjustedDate).add(-tolerance, toleranceUnits);
         let endTime = moment(adjustedDate).add(tolerance, toleranceUnits);
 

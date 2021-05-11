@@ -22,14 +22,25 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { scaleLinear, line, extent } from 'd3';
+import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format } from 'd3';
+import { select } from 'd3-selection';
+import moment from 'moment';
+
+interface XDADictionary {
+    VAN: [number, number][],
+    VBN: [number, number][],
+    VCN: [number, number][],
+    IAN: [number, number][],
+    IBN: [number, number][],
+    ICN: [number, number][],
+    ING: [number, number][],
+
+}
 
 const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number }) => {
-
-    const [paths, setPaths] = React.useState<Array<JSX.Element>>([]);
+    const ref = React.useRef(null);
 
     React.useEffect(() => {
-        setPaths([]);
         return GetData();
     }, [props.EventID]);
 
@@ -53,35 +64,65 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
     }
 
 
-    function DrawChart(data) {
+
+
+    function DrawChart(data: XDADictionary) {
+        select(ref.current).selectAll('svg').remove()
+        const svg = select(ref.current)
+            .append('svg')
+            .attr('width', props.Width)
+            .attr('height', props.Height)
 
         let x = scaleLinear().rangeRound([props.Margin.Left, props.Width - props.Margin.Right]);
         let y = scaleLinear().rangeRound([props.Height - props.Margin.Top, props.Margin.Bottom]);
 
-        let yextent = [0, 0];
-        let xextent = [9007199254740991, -9007199254740990];
-        Object.keys(data).forEach((key, index, keys) => {
-            let newyexent = extent(data[key], d => d[1]);
-            let newxexent = extent(data[key], d => d[0]);
+        if (props.DataType == 'Trending') {
+            let yextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[1]))))
+            let xextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[0]))))
+            y.domain(yextent);
+            x.domain(xextent);
+        }
+        else {
+            let yextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[1]))))
+            let xextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[0]))))
 
-            if (parseFloat(newyexent[0].toString()) < yextent[0]) yextent[0] = parseFloat(newyexent[0].toString())
-            if (parseFloat(newyexent[1].toString()) > yextent[1]) yextent[1] = parseFloat(newyexent[1].toString())
-            if (parseFloat(newxexent[0].toString()) < xextent[0]) xextent[0] = parseFloat(newxexent[0].toString())
-            if (parseFloat(newxexent[1].toString()) > xextent[1]) xextent[1] = parseFloat(newxexent[1].toString())
-        });
+            yextent = [1.20 * yextent[0], 1.20 * yextent[1]]
+            y.domain(yextent);
+            x.domain(xextent);
+        }
 
-        yextent = [1.20 * yextent[0], 1.20 * yextent[1]]
-        y.domain(yextent);
-        x.domain(xextent);
+        const xAxis = svg.append("g").classed('xaxis', true)
+            .attr("transform", "translate(0," + (props.Height - props.Margin.Bottom) + ")")
+            .call(axisBottom(x));
+
+
+        const yAxis = svg.append("g").classed('yaxis', true)
+            .attr("transform", `translate(${props.Margin.Left},0)`)
+            .call(axisLeft(y).ticks(Math.floor(props.Height / 50) + 1).tickFormat((value: number) => d3Format("~s")(value)));
+
+        const text = svg.append("g")
+            .classed('yaxis', true)
+            .append("text")
+            .text(props.MeasurementType == "Voltage" ? "Voltage" : "Current");
+        text.attr("transform", "rotate(-90) translate(-" + props.Height / 2 + "," + (props.Margin.Left / 3) + ")").style("text-anchor", "middle");
 
         let linefunc = line<[number, number]>().x(d => x(d[0])).y(d => y(d[1]));
 
-        let newPaths = [];
-        $.each(Object.keys(data), (index, key) => {
-            newPaths.push(<path key={key} fill='none' strokeLinejoin='round' strokeWidth='1.5' stroke={getColor(key)} d={linefunc(data[key])} />);
-        });
-        setPaths(newPaths);
+        svg.selectAll("g.line").remove();
+        svg.selectAll("g.line")
+            .data(Object.keys(data))
+            .enter()
+            .append("g")
+            .classed("line", true)
+            .append("path")
+            .attr("fill", "none")
+            .attr("stroke-width", 1.5)
+            .attr("stroke", (d: keyof XDADictionary) => getColor(d))
+            .attr("d", (d: keyof XDADictionary) => {
+                return linefunc(data[d]);
+            })
     }
+
 
     function getColor(label) {
         if (label.indexOf('VA') >= 0) return '#A30000';
@@ -103,19 +144,7 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
     }
 
 
-    return (
-        <div style={{ height: props.Height /*, margin: '0x', padding: '0px'*/ }}>
-            <svg width={props.Width} height={props.Height} style={{ fill: 'none'}}>
-                {/* Chart borders */}
-                <path stroke='black' d={`M ${props.Margin.Left} ${props.Margin.Top} H ${props.Width - props.Margin.Right} V ${props.Height} H ${props.Margin.Left} V ${props.Margin.Top}`} style={{ shapeRendering: 'crispEdges'}} />
-                <text fill="black" fontSize="small"  transform={`rotate(-90 0,0)`} y={props.Margin.Left - 15} x={-(props.Height + 35) / 2}>{props.MeasurementType == "Voltage" ? "Voltage" : "Amps"}</text>
-                <g>
-                    {paths}
-                </g>
-            </svg>
-
-        </div>
-    );
+    return <div ref={ref} style={{ height: props.Height, position: 'relative', top: 0 }}></div>;
 }
 
 export default EventSearchPreviewD3Chart;

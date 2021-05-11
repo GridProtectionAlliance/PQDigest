@@ -66,7 +66,7 @@ const SpecifiedHarmonicLegend = (props: {
                         setVMag(!vMag);
                     }}>V Mag</button>
                     <button type="button" className="btn btn-primary btn-sm" style={{ opacity: vAng ? 1 : 0.5 }} onClick={(evt) => {
-                        props.Paths.filter(x => x.Key.match(/V[ABC][ABC] Ang/g) != null && x.Show == vAng).forEach(x => props.CallBack(x))
+                        props.Paths.filter(x => x.Key.match(/V[ABC]N Ang/g) != null && x.Show == vAng).forEach(x => props.CallBack(x))
                         setVAng(!vAng);
                     }}>V Ang</button>
                     <button type="button" className="btn btn-primary btn-sm" style={{ opacity: iMag ? 1 : 0.5 }} onClick={(evt) => {
@@ -74,7 +74,7 @@ const SpecifiedHarmonicLegend = (props: {
                         setIMag(!iMag);
                     }}>I Mag</button>
                     <button type="button" className="btn btn-primary btn-sm" style={{ opacity: iAng ? 1 : 0.5 }} onClick={(evt) => {
-                        props.Paths.filter(x => x.Key.match(/I[ABC][ABC] Ang/g) != null && x.Show == iAng).forEach(x => props.CallBack(x))
+                        props.Paths.filter(x => x.Key.match(/I[ABC]N Ang/g) != null && x.Show == iAng).forEach(x => props.CallBack(x))
                         setIAng(!iAng);
                     }}>I Ang</button>
 

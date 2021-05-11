@@ -24,6 +24,7 @@
 
 import React from 'react';
 import { OpenXDA } from '../global';
+import moment from 'moment';
 
 const Info = (props: { EventID: number }) => {
     const [info, setInfo] = React.useState<OpenXDA.Event.Info>(null);

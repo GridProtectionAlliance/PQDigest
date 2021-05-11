@@ -24,6 +24,7 @@
 import React from 'react';
 import Table from '@gpa-gemstone/react-table';
 import _ from 'lodash';
+import moment from 'moment';
 
 interface Meter {
     ID: number,

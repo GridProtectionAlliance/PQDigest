@@ -57,7 +57,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                                 <a className={"nav-link " + (location.pathname == `${homePath}` ? "active" : "")} href={`${homePath}` }><span><img style={{ height: 36 }} src={`${homePath}Image/home.png`} /></span>Home</a>
                             </li>
                             <li className="nav-item">
-                                <button className={"nav-link " + (location.pathname == `${homePath}Trending` ? "active" : "")} onClick={() => window.location.href = homePath + "Trending"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src={`${homePath}Image/trending.png`} /></span>Trending</button>
+                                <button className={"nav-link " + (location.pathname == `${homePath}Trending` ? "active" : "")} onClick={() => window.location.href = homePath + "Trending"} style={{ border: 'none', backgroundColor: 'white' }}><span><img style={{ height: 36 }} src={`${homePath}Image/trending.png`} /></span>Trending</button>
                             </li>
                             <li className="nav-item">
                                 <a className={"nav-link " + (location.pathname == `${homePath}EventSearch` ? "active" : "")} href={`${homePath}EventSearch`}><span><img style={{ height: 36 }} src={`${homePath}Image/search.png`} /></span>Find Events</a>

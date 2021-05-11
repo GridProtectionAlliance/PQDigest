@@ -29,6 +29,7 @@ import proj4 from 'proj4';
 import 'proj4leaflet';
 import { OpenXDA } from '../global';
 import L from 'leaflet';
+import moment from 'moment';
 
 
 const ESRIMap: React.FunctionComponent<{ DateTime: string, Strikes: any, Lines: GeoJSON.FeatureCollection<GeoJSON.Polygon>, Buffers: GeoJSON.GeometryCollection, Width: number, Height: number }> = (props) => {

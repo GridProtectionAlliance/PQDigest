@@ -43,6 +43,7 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Gemstone.Data;
 
 namespace PQDigest
 {
@@ -60,6 +61,16 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options => {
+                options.AddPolicy(name: "AllowInfluxDB", builder => {
+                    using (AdoDataConnection connection = new AdoDataConnection(Configuration["OpenXDA:ConnectionString"], Configuration["OpenXDA:DataProviderString"]))
+                    {
+                        string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "http://localhost:8086";
+                        builder.WithOrigins(host);
+                    }
+                });
+            });
+
             IMvcBuilder builder = services.AddControllersWithViews( options => {
                 options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
             })

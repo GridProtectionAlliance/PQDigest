@@ -34,8 +34,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
 using Newtonsoft.Json;
+using OpenXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -94,6 +94,34 @@ namespace PQDigest.Controllers
                 return StatusCode(500, ex);
             }
         }
+
+        [HttpGet("Channels")]
+        public ActionResult GetChannels()
+        {
+            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            {
+                DateTime epoch = new DateTime(1970, 1, 1);
+                Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
+                string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
+                DataTable companyMeters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                if (companyMeters.Rows.Count == 0) return Ok(new DataTable());
+
+                IEnumerable<Meter> meters = new TableOperations<Meter>(connection).QueryRecordsWhere("ID IN (" + string.Join(",", companyMeters.Select().Select(row => row["OpenXDAMeterID"])) + ")");
+                DataTable channels = connection.RetrieveData($@"
+                    SELECT 
+	                    *, RIGHT('000000000' + FORMAT(ID,'X'),8) as Tag
+                    FROM 
+	                    Channel
+                    WHERE
+                        MeterID IN ({string.Join(",", meters.Select(m => m.ID))})
+                ");
+
+                return Ok(channels);
+            }
+
+        }
+
 
     }
 }

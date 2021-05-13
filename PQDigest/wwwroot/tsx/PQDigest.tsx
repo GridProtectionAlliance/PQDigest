@@ -66,7 +66,7 @@ const PQDigest: React.FunctionComponent = (props: {}) => {
                                 <button className={"nav-link " + (location.pathname == `${homePath}Lightning` ? "active" : "")} onClick={() => window.location.href = homePath + "Lightning"} style={{ border: 'none', backgroundColor: 'white' }} disabled={false}><span><img style={{ height: 36 }} src={`${homePath}Image/lightning.png`} /></span>Lightning</button>
                             </li>
                             <li className="nav-item">
-                                <button className={"nav-link " + (location.pathname == `${homePath}MeterAvailability` ? "active" : "")} onClick={() => window.location.href = homePath + "MeterAvailability"} style={{ border: 'none', backgroundColor: 'white' }} disabled={true}><span><img style={{ height: 36 }} src={`${homePath}Image/availability.png`} /></span>Meter Availability</button>
+                                <button className={"nav-link " + (location.pathname == `${homePath}MeterAvailability` ? "active" : "")} onClick={() => window.location.href = homePath + "MeterAvailability"} style={{ border: 'none', backgroundColor: 'white' }} disabled={false}><span><img style={{ height: 36 }} src={`${homePath}Image/availability.png`} /></span>Meter Availability</button>
                             </li>
                             {isAuthenticated?
                                 <li className="nav-item">

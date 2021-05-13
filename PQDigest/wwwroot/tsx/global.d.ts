@@ -28,6 +28,10 @@ declare global {
     var controllerViewPath: string;
     var userName: string;
     var isAuthenticated: boolean;
+    var host: string;
+    var token: string;
+    var org: string;
+    var bucket: string;
 
     interface String {
         countOccurrences: (chars: string) => number

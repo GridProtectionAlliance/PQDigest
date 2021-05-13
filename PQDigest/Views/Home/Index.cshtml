@@ -23,8 +23,8 @@
 @using System.Security.Claims
 @using Newtonsoft.Json
 @using Microsoft.Graph 
+@using Gemstone.Data
 @{
-    ViewData["Title"] = "PQDigest";
     Layout = "";
 
 #if DEBUG
@@ -42,15 +42,7 @@
         identity = User.Identity as ClaimsIdentity; // Azure AD V2 endpoint specific
     }
 
-    //object user = ViewBag.User;
-    @*string json = identity.Claims.FirstOrDefault(c => c.Type == "graph")?.Value ?? "{CompanyName: '', DisplayName: ''}";*@
     string graphjson = identity.Claims.FirstOrDefault(c => c.Type == "graph_json")?.Value  ?? "{}";
-    @*string extensions = identity.Claims.FirstOrDefault(c => c.Type == "graph_extensions")?.Value ?? "[]";*@
-
-    @*User user = JsonConvert.DeserializeObject<User>(json);
-    IUserExtensionsCollectionPage userExtensions = JsonConvert.DeserializeObject<IUserExtensionsCollectionPage>(extensions);
-    string companyName = user?.CompanyName ?? "";
-    string displayName = user?.DisplayName ?? "";*@
 }
 
 <!DOCTYPE html>
@@ -58,7 +50,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
+    <title>PQDigest</title>
     <link href="@Url.Content("~/@Gemstone/Content/bootstrap4.css")" rel="stylesheet">
     <link href="@Url.Content("~/@Gemstone/Content/font-awesome.css")" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" />
@@ -76,6 +68,11 @@
         var userName = graphJson.displayName;
         var isAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
         var companyName = graphJson.companyName;
+        var org = '@Html.Raw(ViewData["org"])';
+        var host = '@Html.Raw(ViewData["host"])';
+        var token = '@Html.Raw(ViewData["token"])';
+        var bucket = '@Html.Raw(ViewData["bucket"])';
+
         @*var userJson = @Html.Raw(JsonConvert.SerializeObject(json));
         var user = @Html.Raw(JsonConvert.SerializeObject(user));
         var extensionsJson = @Html.Raw(JsonConvert.SerializeObject(extensions));

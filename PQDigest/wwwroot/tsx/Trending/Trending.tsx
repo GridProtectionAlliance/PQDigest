@@ -39,6 +39,7 @@ type DateRange = '1 day' | '3 days' | '7 days' | '1 month' | '3 months' | '6 mon
 const DateRanges: DateRange[] = ['1 day', '3 days', '7 days', '1 month', '3 months', '6 months', 'Year to date', '1 year', 'custom'];
 const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss'
 const MomentDateFormat = 'YYYY-MM-DD';
+const MomentTimeZone = 'America/Chicago';
 const Trending = (props: {}) => {
 
     const history = createBrowserHistory();
@@ -221,7 +222,7 @@ const Trending = (props: {}) => {
                                     </select>
                                 </div>
 
-                                <div className='col-1'><ExportCSV Meter={meter} Channels={channels.filter(c => c.Selected).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} /></div>
+                                <div className='col-1' style={{paddingTop: 30}}><ExportCSV Meter={meter} Channels={channels.filter(c => c.Selected).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} /></div>
                             </div>
                         </div>
                     </div>
@@ -248,40 +249,63 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
     const margin = { top: 40, right: 0, bottom: 40, left: 50 };
     const ref = React.useRef(null);
     const [data, setData] = React.useState<object>({});
+    const [channels, setChannels] = React.useState<OpenXDA.Types.Channel[]>(props.Channels);
+    const [hoverData, setHoverData] = React.useState<object>({});
 
     React.useEffect(() => {
-        if(props.Channels.length > 0)
+        let channelsjson = JSON.stringify(channels);
+        let propsChannelsjson = JSON.stringify(props.Channels);
+        if (channelsjson != propsChannelsjson)
+            setChannels(props.Channels);
+    }, [props.Channels]);
+
+    React.useEffect(() => {
+        if (channels.length > 0)
             return GetData();
-    }, [props.Channels, props.StartDate, props.EndDate]);
+    }, [channels, props.StartDate, props.EndDate]);
+
 
     React.useEffect(() => {
         if (Object.keys(data).length > 0)
             return DrawChart(data);
     }, [data]);
 
-    //React.useEffect(() => {
-    //    if (props.Hover < margin.left) return;
-    //    else if (props.Hover > svgWidth - margin.right) return;
+    React.useEffect(() => {
+        if (props.Hover < margin.left) return;
+        else if (props.Hover > svgWidth - margin.right) return;
 
-    //    const svg = select(ref.current).select('svg');
-    //    svg.selectAll("g.hover-line").remove();
-    //    svg.append("g")
-    //        .classed("hover-line", true)
-    //        .append("path")
-    //        .attr("fill", "none")
-    //        .attr("stroke-width", 1.5)
-    //        .attr("stroke",'red')
-    //        .attr("d", `M ${props.Hover} ${svgHeight - margin.bottom} V ${margin.top}`)
+        const svg = select(ref.current).select('svg');
+        svg.selectAll("g.hover-line").remove();
+        svg.append("g")
+            .classed("hover-line", true)
+            .append("path")
+            .attr("fill", "none")
+            .attr("stroke-width", 1.5)
+            .attr("stroke",'red')
+            .attr("d", `M ${props.Hover} ${svgHeight - margin.bottom} V ${margin.top}`)
 
+        let x = scaleUtc().rangeRound([margin.left, svgWidth - margin.right]);
+        x.domain([moment.utc(props.StartDate, MomentDateTimeFormat), moment.utc(props.EndDate, MomentDateTimeFormat)]);
+        let ts = moment.utc(x.invert(props.Hover)).format(MomentDateTimeFormat);
 
+        let hovDict = {};
+        $.each(Object.keys(data), (i, key) => {
+            let length = data[key].Data.length;
+            let mult = (props.Hover - margin.left - margin.right) / (svgWidth - margin.left - margin.right);
+            let index = Math.floor(mult * length);
+            //console.log(ts, data[key].Data[index].TimeStamp);
 
-    //}, [props.Hover]);
+            hovDict[key] = data[key].Data[index].Value;
+        });
+        setHoverData(hovDict);
+
+    }, [props.Hover]);
 
 
     function GetData() {
         const query = `
             from(bucket: "${bucket}")
-            |> range(start: ${moment.tz(props.StartDate, 'America/Chicago').utc().format(MomentDateTimeFormat)}Z, stop: ${moment.tz(props.EndDate, 'America/Chicago').utc().format(MomentDateTimeFormat)}Z)
+            |> range(start: ${moment.tz(props.StartDate, MomentTimeZone).utc().format(MomentDateTimeFormat)}Z, stop: ${moment.tz(props.EndDate, MomentTimeZone).utc().format(MomentDateTimeFormat)}Z)
             |> filter(fn: (r) => ${props.Channels.map(c => ("000000000000000" + c.ID.toString(16)).substr(-8)).map(c => 'r.tag == "' + c + '"').join(' or ')})
         `;
 
@@ -308,7 +332,7 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
                 let row = rows[i].split(',');
                 if (row[tagIndex] == undefined || row[tagIndex] == "tag" || row[fieldIndex] == "flags" ) continue;
                 else if (dict.hasOwnProperty(row[tagIndex] + '-' + row[fieldIndex])) {
-                    dict[row[tagIndex] + '-' + row[fieldIndex]].Data.push({ TimeStamp: row[timeIndex], Value: parseFloat(row[valueIndex]) });
+                    dict[row[tagIndex] + '-' + row[fieldIndex]].Data.push({ TimeStamp: moment.utc(row[timeIndex]).tz(MomentTimeZone).format(MomentDateTimeFormat) + 'Z', Value: parseFloat(row[valueIndex]) });
 
                 }
                 else {
@@ -316,7 +340,7 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
                         Channel: props.Channels.find(c => ("000000000000000" + c.ID.toString(16)).substr(-8) == row[tagIndex]),
                         Field: row[fieldIndex],
                         Selected: true,
-                        Data: [{ TimeStamp: row[timeIndex], Value: parseFloat(row[valueIndex]) }],
+                        Data: [{ TimeStamp: moment.utc(row[timeIndex]).tz(MomentTimeZone).format(MomentDateTimeFormat) + 'Z', Value: parseFloat(row[valueIndex]) }],
                         Max: 0,
                         Min: 0,
                         Avg: 0,
@@ -325,6 +349,7 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
                 }
             }
 
+            let hovDict = {};
             $.each(Object.keys(dict), (i, key) => {
                 dict[key].Min = Math.min(...dict[key].Data.map(d => d.Value));
                 dict[key].Max = Math.max(...dict[key].Data.map(d => d.Value));
@@ -341,9 +366,10 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
 
                 dict[key].Outliers = dict[key].Data.filter(d => d.Value < lowerBound || d.Value > upperBound).length;
                 dict[key].DataPoints = dict[key].Data.length;
-
+                hovDict[key] = dict[key].Data[0].Value;
             });
             setData(dict);
+            setHoverData(hovDict);
         });
 
 
@@ -353,7 +379,7 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
     }
 
     function DrawChart(data: object) {
-        let x = scaleTime().rangeRound([margin.left, svgWidth - margin.right]);
+        let x = scaleUtc().rangeRound([margin.left, svgWidth - margin.right]);
         let y = scaleLinear().rangeRound([svgHeight - margin.top, margin.bottom]);
 
 
@@ -363,12 +389,12 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
             .attr('width', svgWidth)
             .attr('height', svgHeight)
             .style('user-select', 'none')
-            //.on('mouseover', (d: MouseEvent) => props.SetHover(d.offsetX))
+            .on('mousemove', (d: MouseEvent) => props.SetHover(d.offsetX))
             .on('mousedown', (d: MouseEvent) => OnXZoom(d, svg, x));
 
         let yextent = extent([].concat(...Object.keys(data).filter(key => data[key].Selected).map(key => data[key].Data.map(d => d.Value))));
         y.domain(yextent);
-        x.domain([moment(props.StartDate, MomentDateTimeFormat), moment(props.EndDate, MomentDateTimeFormat)]);
+        x.domain([moment.utc(props.StartDate, MomentDateTimeFormat), moment.utc(props.EndDate, MomentDateTimeFormat)]);
 
         const xAxis = svg.append("g").classed('xaxis', true)
             .attr("transform", "translate(0," + (svgHeight - margin.bottom) + ")")
@@ -503,8 +529,6 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
         svg.on('mouseup.brush', (e: MouseEvent) => {
             const min = Math.min(start, e.offsetX);
             const max = Math.max(start, e.offsetX);
-            //console.log(moment(scale.invert(min)).format('MM/DD/YYYY HH:mm:ss'));
-            //console.log(moment(scale.invert(max)).format('MM/DD/YYYY HH:mm:ss'));
             props.SetZoom(moment(scale.invert(min)).format(MomentDateTimeFormat), moment(scale.invert(max)).format(MomentDateTimeFormat));
             br.remove();
             svg.on('mousemove.brush', null);
@@ -542,7 +566,7 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
                                 <tr key={key}>
                                     <td>{data[key].Channel.Phase}-{getlabel(key)}</td>
                                     <td>{getLine(key, data[key])}</td>
-                                    <td></td>
+                                    <td>{formatText(hoverData[key])}</td>
                                     <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Min)}</td>
                                     <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Avg)}</td>
                                     <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Max)}</td>

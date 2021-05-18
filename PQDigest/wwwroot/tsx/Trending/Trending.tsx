@@ -24,49 +24,79 @@
 import React from 'react';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
 import _ from 'lodash';
-import Table from '@gpa-gemstone/react-table';
 import { MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 import moment from 'moment';
-import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format, scaleUtc } from 'd3';
+import 'moment-timezone';
+import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format, scaleUtc, scaleTime, brushX } from 'd3';
 import { select } from 'd3-selection';
+import stats from 'stats-lite';
+import ExportCSV from './ExportCSV';
 
 type DateRange = '1 day' | '3 days' | '7 days' | '1 month' | '3 months' | '6 months' | 'Year to date' | '1 year' | 'custom'
 const DateRanges: DateRange[] = ['1 day', '3 days', '7 days', '1 month', '3 months', '6 months', 'Year to date', '1 year', 'custom'];
-
+const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss'
+const MomentDateFormat = 'YYYY-MM-DD';
 const Trending = (props: {}) => {
 
     const history = createBrowserHistory();
 
-    const qs = queryString.parse(location.search.substring(1));
-    const [startDate, setStartDate] = React.useState<string>(qs.startDate == undefined ? moment().subtract(30, 'days').format("YYYY-MM-DD") : qs.startDate as string)
-    const [endDate, setEndDate] = React.useState<string>(qs.endDate == undefined ? moment().format("YYYY-MM-DD") : qs.endDate as string)
+    const qs = queryString.parse(history.location.search.substring(1));
+    const [dates, setDates] = React.useState<string[]>([qs.startDate == undefined ? moment().subtract(30, 'days').format(MomentDateTimeFormat) : qs.startDate as string, qs.endDate == undefined ? moment().format(MomentDateTimeFormat) : qs.endDate as string])
     const [meters, setMeters] = React.useState<OpenXDA.Types.Meter[]>([]);
     const [meter, setMeter] = React.useState<OpenXDA.Types.Meter>(undefined);
     const [channels, setChannels] = React.useState<{ Channel: OpenXDA.Types.Channel, Selected: boolean }[]>([]);
     const [dateRange, setDateRange] = React.useState<DateRange>(qs.dateRange == undefined ? '7 days' : qs.dateRange as DateRange);
+    const [showStats, setShowStats] = React.useState<'stats' | 'cp'>('stats');
+    const [aggregation, setAggregation] = React.useState<'none' | 'hour' | 'day'>(qs?.aggregation as any?? 'none');
+    const [hover, setHover] = React.useState<number>(0);
 
     React.useEffect(() => {
         let handle = GetMeters();
         handle.done((data: OpenXDA.Types.Meter[]) => setMeters(data));
 
+        history.listen(() => {
+            setDates([qs.startDate as string, qs.endDate as string])
+            console.log('listening');
+        });
+
         return function () {
             if (handle.abort != undefined) handle.abort();
+
+            history.listen = null;
         }
     }, []);
 
     React.useEffect(() => {
-        if (meters.length > 0 && meter == undefined) {
+        console.log('update')
+
+        return function () {
+        }
+    }, [history.location.search]);
+
+
+    React.useEffect(() => {
+        let meterID = qs.meterID;
+        if (meters.length == 0 || meter != undefined) return;
+        else if (meterID == undefined) {
             setMeter(meters[0]);
         }
+        else if (meterID != undefined) {
+            let index = meters.findIndex(m => m.ID.toString() == meterID);
+            if (index >= 0)
+                setMeter(meters[index]);
+            else
+                setMeter(meters[0]);
+        }
+
     },[meters]);
 
     React.useEffect(() => {
         if (meter != undefined) {
             let handle = GetChannels(meter.ID);
-            handle.done((data: OpenXDA.Types.Channel[]) => setChannels(data.map(d => ({ Channel: d, Selected: GetDefault(d)}))));
+            handle.done((data: OpenXDA.Types.Channel[]) => setChannels(data.map(d => ({ Channel: d, Selected: GetDefault(d) }))));
 
             return function () {
                 if (handle.abort != undefined) handle.abort();
@@ -75,8 +105,19 @@ const Trending = (props: {}) => {
     }, [meter]);
 
     React.useEffect(() => {
-        window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?${queryString.stringify({ startDate, endDate,dateRange })}`)
-    }, [startDate, endDate]);
+        let nqs = {
+            startDate: dates[0],
+            endDate: dates[1],
+            dateRange,
+        }
+
+        if (meter != undefined)
+            nqs['meterID'] = meter.ID;
+        else if (qs.meterID != undefined)
+            nqs['meterID'] = qs.meterID;
+
+        window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?${queryString.stringify(nqs)}`)
+    }, [dates, meter]);
 
     React.useEffect(() => {
         let ed = moment() as moment.Moment;
@@ -98,8 +139,7 @@ const Trending = (props: {}) => {
         else if (dateRange == 'Year to date')
             sd = moment().date(1).month('January');
         else return;
-        setStartDate(sd.format("YYYY-MM-DD"));
-        setEndDate(ed.format("YYYY-MM-DD"));
+        setDates([sd.format(MomentDateTimeFormat), ed.format(MomentDateTimeFormat)]);
 
     }, [dateRange])
 
@@ -132,92 +172,179 @@ const Trending = (props: {}) => {
 
     return (
         <div style={{ height: "100%", width: '100%' }}>
-            <div className="row" style={{ height: 75, margin: 5 }}>
+            <div className="row" style={{ height: 130, margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
                     <div className="card">
-                        <div className="card-body" style={{ height: 75 }}>
+                        <div className="card-body" style={{ height: 130 }}>
                             <div className="row">
                                 <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Meters</div>
-                                        <div className="col">
-                                            <select className='form-control' value={meter?.ID ?? 0} onChange={(evt) => setMeter(meters.find(m => m.ID.toString() === evt.target.value)) }>
-                                                {meters.map((m, i) => <option key={i} value={m.ID}>{m.Name }</option>)}
-                                             </select>
-                                        </div>
-                                    </div>
+                                    <label>Meter</label>
+                                    <select className='form-control' value={meter?.ID ?? 0} onChange={(evt) => setMeter(meters.find(m => m.ID.toString() === evt.target.value)) }>
+                                        {meters.map((m, i) => <option key={i} value={m.ID}>{m.Name }</option>)}
+                                    </select>
                                 </div>
                                 <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Channels</div>
-                                        <div className="col">
-                                            <MultiCheckBoxSelect Options={channels.map(t => Object.create({ Text: t.Channel.Name, Value: t.Channel.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
-                                                let newChannels = _.cloneDeep(channels);
-                                                $.each(options, (index, option) => {
-                                                    newChannels.find(type => type.Channel.ID == option.Value).Selected = !option.Selected
-                                                });
-                                                setChannels(newChannels)
-                                            }} />
-                                        </div>
-                                    </div>
+                                    <label>Channels</label>
+                                    <MultiCheckBoxSelect Options={channels.map(t => Object.create({ Text: t.Channel.Name, Value: t.Channel.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
+                                        let newChannels = _.cloneDeep(channels);
+                                        $.each(options, (index, option) => {
+                                            newChannels.find(type => type.Channel.ID == option.Value).Selected = !option.Selected
+                                        });
+                                        setChannels(newChannels)
+                                    }} />
                                 </div>
-                                <div className="col-6">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 110 }}>Date Range</div>
-                                        <div className="col">
-                                            <select className='form-control' value={dateRange} onChange={(evt) =>setDateRange(evt.target.value as DateRange)}>
-                                                {DateRanges.map((dr, i) => <option key={i} value={dr}>{dr}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="col">
-                                            <input className="form-control" value={startDate} type="date" onChange={e => setStartDate(e.target.value)} disabled={dateRange != 'custom' }/>
-                                        </div>
-                                        <div className="col-1">
-                                            <span>{'-'}</span>
-                                        </div>
+                                <div className="col-4">
+                                    <div className="pull-left" >Date Range</div>
+                                    <div style={{ position: 'relative', width: '100%', top: 32 }}>
+                                        <select className='form-control' style={{ width: 150, position: 'absolute', left: 0 }} value={dateRange} onChange={(evt) => setDateRange(evt.target.value as DateRange)}>
+                                            {DateRanges.map((dr, i) => <option key={i} value={dr}>{dr}</option>)}
+                                        </select>
 
-                                        <div className="col">
-                                            <input className="form-control" value={endDate} type="date" onChange={e => setEndDate(e.target.value)} disabled={dateRange != 'custom'}/>
-                                        </div>
-
+                                        <input style={{ width: 200, position: 'absolute', left: 150 }} className="form-control" value={moment(dates[0], MomentDateTimeFormat).format(MomentDateFormat)} type="date" onChange={e => setDates([e.target.value, dates[1]])} disabled={dateRange != 'custom' }/>
+                                        <input style={{ width: 200, position: 'absolute', left: 350 }} className="form-control" value={moment(dates[1], MomentDateTimeFormat).format(MomentDateFormat)} type="date" onChange={e => setDates([dates[0],e.target.value])} disabled={dateRange != 'custom'}/>
                                     </div>
+                                </div>{/*
+                                    <div className="col">
+                                        <label>Query Aggregation</label>
+                                        <select className='form-control' value={aggregation} onChange={(evt) => setAggregation(evt.target.value as any)}>
+                                            <option value='none'>None</option>
+                                            <option value='hourly'>Hourly</option>
+                                            <option value='daily'>Daily</option>
+                                        </select>
+                                    </div>*/}
+
+                                <div className='col-1'>
+                                    <label>Summary</label>
+                                    <select className='form-control' value={showStats} onChange={(evt) => setShowStats(evt.target.value as any)}>
+                                        <option value='stats'>Stats</option>
+                                        <option value='cp'>CP</option>
+                                    </select>
                                 </div>
-                                <div className='col-1'><button className='btn btn-primary'>Export CSV</button></div>
+
+                                <div className='col-1'><ExportCSV Meter={meter} Channels={channels.filter(c => c.Selected).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} /></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ maxHeight: "calc(100% - 80px)", overflowY: 'auto', margin: '5px 5px 5px 5px ' }}>
+            <div className="row" style={{ maxHeight: "calc(100% - 135px)", overflowY: 'auto', margin: '5px 5px 5px 5px ' }}>
                 <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
-                    {[...new Set(channels.filter(c => c.Selected).map(c => c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic))].map(k => <Chart key={k} Name={k} Channels={channels.filter(c => c.Selected && (c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic) == k).map(c => c.Channel)} StartDate={startDate} EndDate={endDate} />) }
+                    {[...new Set(channels.filter(c => c.Selected).map(c => c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic))].map(k => <Chart key={k} ShowStats={showStats} Name={k} Channels={channels.filter(c => c.Selected && (c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic) == k).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} Hover={hover} SetHover={setHover} SetZoom={(s, e) => {
+                        setDates([s,e]);
+                    }} />)}
                 </div> 
             </div>
         </div>
     )
 }
 
-const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDate: string, EndDate: string }) => {  
+interface ChartSeries {
+    Channel: OpenXDA.Types.Channel, Field: 'min' | 'max' | 'avg', Selected: boolean, Data: { TimeStamp: string, Value: number }[], Min: number, Max: number, Avg: number, StDev: number, CP99: number, CP95: number, CP50: number, CP05: number, CP01: number, Outliers: number, DataPoints: number
+}
+
+const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDate: string, EndDate: string, ShowStats: 'stats' | 'cp', Hover: number, SetHover: (hov: number) => void, SetZoom: (startDate: string, endDate: string) => void }) => {  
     const svgHeight = 300;
-    const svgWidth = window.innerWidth - 40;
-    const margin = { top: 40, right: 150, bottom: 40, left: 50 };
+    const svgWidth = window.innerWidth * 2 / 3;
+    const margin = { top: 40, right: 0, bottom: 40, left: 50 };
     const ref = React.useRef(null);
+    const [data, setData] = React.useState<object>({});
 
     React.useEffect(() => {
         if(props.Channels.length > 0)
             return GetData();
     }, [props.Channels, props.StartDate, props.EndDate]);
 
+    React.useEffect(() => {
+        if (Object.keys(data).length > 0)
+            return DrawChart(data);
+    }, [data]);
+
+    //React.useEffect(() => {
+    //    if (props.Hover < margin.left) return;
+    //    else if (props.Hover > svgWidth - margin.right) return;
+
+    //    const svg = select(ref.current).select('svg');
+    //    svg.selectAll("g.hover-line").remove();
+    //    svg.append("g")
+    //        .classed("hover-line", true)
+    //        .append("path")
+    //        .attr("fill", "none")
+    //        .attr("stroke-width", 1.5)
+    //        .attr("stroke",'red')
+    //        .attr("d", `M ${props.Hover} ${svgHeight - margin.bottom} V ${margin.top}`)
+
+
+
+    //}, [props.Hover]);
+
+
     function GetData() {
+        const query = `
+            from(bucket: "${bucket}")
+            |> range(start: ${moment.tz(props.StartDate, 'America/Chicago').utc().format(MomentDateTimeFormat)}Z, stop: ${moment.tz(props.EndDate, 'America/Chicago').utc().format(MomentDateTimeFormat)}Z)
+            |> filter(fn: (r) => ${props.Channels.map(c => ("000000000000000" + c.ID.toString(16)).substr(-8)).map(c => 'r.tag == "' + c + '"').join(' or ')})
+        `;
+
         let handle = $.ajax({
+            beforeSend: request => {
+                request.setRequestHeader('Authorization', `Token ${token}`);
+            },
             type: "POST",
-            url: `${homePath}api/HIDS`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            data: JSON.stringify({ Channels: props.Channels.map(c => c.ID), StartDate: props.StartDate, EndDate: props.EndDate}),
+            url: `${host}/api/v2/query?org=${org}`,
+            contentType: "application/json; encoding=utf-8",
+            data: JSON.stringify({ query, type: 'flux'}),
             cache: true,
             async: true
-        }).done(data => DrawChart(data));
+        }).done((data: string) => {
+            let rows = data.split('\r\n');
+            let i = 0;
+            let header = rows[i++].split(',');
+            let tagIndex = header.indexOf('tag');
+            let timeIndex = header.indexOf('_time');
+            let valueIndex = header.indexOf('_value');
+            let fieldIndex = header.indexOf('_field');
+            let dict = {};
+            for (; i < rows.length; i++) {
+                let row = rows[i].split(',');
+                if (row[tagIndex] == undefined || row[tagIndex] == "tag" || row[fieldIndex] == "flags" ) continue;
+                else if (dict.hasOwnProperty(row[tagIndex] + '-' + row[fieldIndex])) {
+                    dict[row[tagIndex] + '-' + row[fieldIndex]].Data.push({ TimeStamp: row[timeIndex], Value: parseFloat(row[valueIndex]) });
+
+                }
+                else {
+                    dict[row[tagIndex] + '-' + row[fieldIndex]] = {
+                        Channel: props.Channels.find(c => ("000000000000000" + c.ID.toString(16)).substr(-8) == row[tagIndex]),
+                        Field: row[fieldIndex],
+                        Selected: true,
+                        Data: [{ TimeStamp: row[timeIndex], Value: parseFloat(row[valueIndex]) }],
+                        Max: 0,
+                        Min: 0,
+                        Avg: 0,
+                        StDev: 0
+                    } as ChartSeries;
+                }
+            }
+
+            $.each(Object.keys(dict), (i, key) => {
+                dict[key].Min = Math.min(...dict[key].Data.map(d => d.Value));
+                dict[key].Max = Math.max(...dict[key].Data.map(d => d.Value));
+                dict[key].Avg = stats.mean(dict[key].Data.map(d => d.Value));
+                dict[key].StDev = stats.stdev(dict[key].Data.map(d => d.Value));
+                dict[key].CP99 = stats.percentile(dict[key].Data.map(d => d.Value),0.99);
+                dict[key].CP95 = stats.percentile(dict[key].Data.map(d => d.Value), 0.95);
+                dict[key].CP50 = stats.percentile(dict[key].Data.map(d => d.Value), 0.5);
+                dict[key].CP05 = stats.percentile(dict[key].Data.map(d => d.Value), 0.05);
+                dict[key].CP01 = stats.percentile(dict[key].Data.map(d => d.Value), 0.01);
+
+                let lowerBound = dict[key].Avg - 3 * dict[key].StDev;
+                let upperBound = dict[key].Avg + 3 * dict[key].StDev;
+
+                dict[key].Outliers = dict[key].Data.filter(d => d.Value < lowerBound || d.Value > upperBound).length;
+                dict[key].DataPoints = dict[key].Data.length;
+
+            });
+            setData(dict);
+        });
 
 
         return function () {
@@ -225,20 +352,23 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
         }
     }
 
-    function DrawChart(data) {
+    function DrawChart(data: object) {
+        let x = scaleTime().rangeRound([margin.left, svgWidth - margin.right]);
+        let y = scaleLinear().rangeRound([svgHeight - margin.top, margin.bottom]);
+
+
         select(ref.current).selectAll('svg').remove()
         const svg = select(ref.current)
             .append('svg')
             .attr('width', svgWidth)
             .attr('height', svgHeight)
+            .style('user-select', 'none')
+            //.on('mouseover', (d: MouseEvent) => props.SetHover(d.offsetX))
+            .on('mousedown', (d: MouseEvent) => OnXZoom(d, svg, x));
 
-        let x = scaleUtc().rangeRound([margin.left, svgWidth - margin.right]);
-        let y = scaleLinear().rangeRound([svgHeight - margin.top, margin.bottom]);
-
-        let yextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[1]))))
-        let xextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[0]))))
+        let yextent = extent([].concat(...Object.keys(data).filter(key => data[key].Selected).map(key => data[key].Data.map(d => d.Value))));
         y.domain(yextent);
-        x.domain(xextent);
+        x.domain([moment(props.StartDate, MomentDateTimeFormat), moment(props.EndDate, MomentDateTimeFormat)]);
 
         const xAxis = svg.append("g").classed('xaxis', true)
             .attr("transform", "translate(0," + (svgHeight - margin.bottom) + ")")
@@ -249,18 +379,11 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
             .attr("transform", `translate(${margin.left},0)`)
             .call(axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3Format("~s")(value)));
 
-        //const text = svg.append("g")
-        //    .classed('yaxis', true)
-        //    .append("text")
-        //    .text(props.MeasurementType == "Voltage" ? "Voltage" : "Amps");
-        //text.attr("transform", "rotate(-90) translate(-" + svgHeight / 2 + "," + (margin.left / 3) + ")").style("text-anchor", "middle");
-        let minfunc = line<[number, number,number,number]>().x(d => x(d[0])).y(d => y(d[1]));
-        let avgfunc = line<[number, number, number, number]>().x(d => x(d[0])).y(d => y(d[2]));
-        let maxfunc = line<[number, number, number, number]>().x(d => x(d[0])).y(d => y(d[3]));
+        let linefunc = line<{ TimeStamp:string, Value: number, Field: string }>().x(d => x(moment.utc(d.TimeStamp))).y(d => y(d.Value));
 
         svg.selectAll("g.min-line").remove();
         svg.selectAll("g.min-line")
-            .data(Object.keys(data))
+            .data(Object.keys(data).filter(key => data[key].Field == 'min' && data[key].Selected))
             .enter()
             .append("g")
             .classed("line", true)
@@ -268,29 +391,29 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
             .attr("fill", "none")
             .attr("stroke-width", 1.5)
             .attr("stroke-dasharray", 4)
-            .attr("stroke", (d: string) => getColor(d))
+            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
             .attr("d", (d: string) => {
-                return minfunc(data[d]);
+                return linefunc(data[d].Data);
             })
 
         svg.selectAll("g.avg-line").remove();
         svg.selectAll("g.avg-line")
-            .data(Object.keys(data))
+            .data(Object.keys(data).filter(key => data[key].Field == 'avg' && data[key].Selected))
             .enter()
             .append("g")
             .classed("line", true)
             .append("path")
             .attr("fill", "none")
             .attr("stroke-width", 1.5)
-            .attr("stroke", (d: string) => getColor(d))
+            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
             .attr("d", (d: string) => {
-                return avgfunc(data[d]);
+                return linefunc(data[d].Data);
             })
 
 
         svg.selectAll("g.max-line").remove();
         svg.selectAll("g.max-line")
-            .data(Object.keys(data))
+            .data(Object.keys(data).filter(key => data[key].Field == 'max' && data[key].Selected))
             .enter()
             .append("g")
             .classed("line", true)
@@ -298,28 +421,10 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
             .attr("fill", "none")
             .attr("stroke-width", 1.5)
             .attr("stroke-dasharray", (d) => 2)
-            .attr("stroke", (d: string) => getColor(d))
+            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
             .attr("d", (d: string) => {
-                return maxfunc(data[d]);
+                return linefunc(data[d].Data);
             })
-
-        // Add one dot in the legend for each name.
-        const legendrow = svg.selectAll("g.legend-row")
-            .data([].concat(...Object.keys(data).map(key => [key + '-Max', key + '-Avg', key + '-Min'])))
-            .enter()
-                .append("g")
-                .classed("legend-row", true)
-                .attr('transform', (d, i) => `translate(${svgWidth - 100},${i*25})`)
-
-            legendrow.append("line")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-                .attr("stroke-dasharray", (d) => getDashArray(d))
-            .attr("x0", 0)
-            .attr("x1", 20)
-            .attr("stroke", (d: string) => getColor(d))
-
-
     }
 
 
@@ -342,19 +447,118 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
         }
     }
 
+    function getlabel(label) {
+        if (label.toUpperCase().indexOf('MAX') >= 0) return 'Max';
+        else if (label.toUpperCase().indexOf('MIN') >= 0) return 'Min';
+        else return 'Avg';
+    }
+
     function getDashArray(label) {
         if (label.toUpperCase().indexOf('MAX') >= 0) return 2;
         else if (label.toUpperCase().indexOf('MIN') >= 0) return 4;
         else return null;
     }
 
+    function getLine(tag, measurement) {
+        let path = "M 0 17  C 10 0, 20 0, 25 10 S 32 25, 45 17";
+        if (measurement.Selected)
+            return <svg height={25} width={50} onClick={() => {
+                let newData = { ...data };
+                newData[tag].Selected = false;
+                setData(newData);
+            }}>
+                <path d={path} stroke={getColor(measurement.Channel.Phase)} strokeDasharray={getDashArray(measurement.Field)} strokeWidth={1.5} fill="transparent" />
+            </svg>;
+        else
+            return <svg height={25} width={50} onClick={() => {
+                let newData = { ...data };
+                newData[tag].Selected = true;
+                setData(newData);
 
+            }}>
+                <path d={path} stroke={getColor(measurement.Channel.Phase)} strokeDasharray={getDashArray(measurement.Field)} strokeWidth={1.5} fill="transparent" opacity={0.2}/>
+            </svg>;
+
+    }
+
+    function formatText(num: number) {
+        if (num >= 10) return num.toFixed(0);
+        else if (num >= 0) return num.toFixed(2);
+        else if (num >= 0.0001) return num.toFixed(4);
+        else if (num >= 0.000001) return num.toFixed(6);
+        else return num;
+
+    }
+
+    function OnXZoom(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
+        const start = evt.offsetX;
+        const brush = brushX()
+            .extent([[margin.left, margin.top + 0.5], [svgWidth - margin.right, svgHeight - margin.bottom + 0.5]])
+
+        const br = svg.append('g').call(brush)
+        br.call(brush.move, [start, start + 1]);
+        svg.on('mousemove.brush', (e: MouseEvent) => {
+            br.call(brush.move, [start, e.offsetX]);
+        })
+        svg.on('mouseup.brush', (e: MouseEvent) => {
+            const min = Math.min(start, e.offsetX);
+            const max = Math.max(start, e.offsetX);
+            //console.log(moment(scale.invert(min)).format('MM/DD/YYYY HH:mm:ss'));
+            //console.log(moment(scale.invert(max)).format('MM/DD/YYYY HH:mm:ss'));
+            props.SetZoom(moment(scale.invert(min)).format(MomentDateTimeFormat), moment(scale.invert(max)).format(MomentDateTimeFormat));
+            br.remove();
+            svg.on('mousemove.brush', null);
+            svg.on('mouseup.brush', null);
+        });
+    }
 
     return (
         <div className="card">
             <div className="card-header">{props.Name }</div>
-            <div className="card-body" style={{padding:0}}>
-                <div ref={ref} style={{ height: 300, position: 'relative', top: 0 }}></div>
+            <div className="card-body" style={{padding:0, position: 'relative'}}>
+                <div ref={ref} className='pull-left' style={{ height: 300, width: 'calc(100% - 400px)', position: 'absolute', top: 0, left: 0 }}></div>
+                <div className='pull-right' style={{ height: 300, maxHeight: 300, overflowY: 'auto', width: window.innerWidth / 3 - 75, position: 'relative', right: 0 }}>
+                    <table className='table'>
+                        <thead>
+                            <tr>
+                                <th>Phase</th>
+                                <th></th>
+                                <th>Hover</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Min</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Avg</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Max</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>StDev</th>
+                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP99</th>
+                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP95</th>
+                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP50</th>
+                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP05</th>
+                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP01</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Counts</th>
+                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Outliers</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.keys(data).map(key =>
+                                <tr key={key}>
+                                    <td>{data[key].Channel.Phase}-{getlabel(key)}</td>
+                                    <td>{getLine(key, data[key])}</td>
+                                    <td></td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Min)}</td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Avg)}</td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Max)}</td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].StDev)}</td>
+                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5}}>{formatText(data[key].CP99)}</td>
+                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP95)}</td>
+                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP50)}</td>
+                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP05)}</td>
+                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP01)}</td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{data[key].DataPoints}</td>
+                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{data[key].Outliers}</td>
+                                </tr>)}
+                       
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

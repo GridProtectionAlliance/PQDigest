@@ -37,12 +37,6 @@ declare global {
         countOccurrences: (chars: string) => number
     }
 
-    //namespace moment {
-    //    function utc(timestamp: string): any;
-    //}
-    //function moment(inp?: any, format?: any, strict?: boolean): any;
-    //function moment(inp?: any, format?: any, language?: string, strict?: boolean): any;
-
 }
 
 export namespace PQDigest {

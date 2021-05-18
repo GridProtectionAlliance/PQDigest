@@ -29,7 +29,7 @@ import moment from 'moment';
 import 'moment-timezone';
 import _ from 'lodash';
 
-interface Channel extends OpenXDA.Types.Channel { Tag: string, Data?: [] }
+interface Channel extends OpenXDA.Types.Channel { Tag: string, Data?: [], MeterID: number }
 interface Meter extends OpenXDA.Types.Meter { FirstTime: string, LastTime: string }
 
 const MeterAvailability = (props: {}) => {
@@ -81,7 +81,7 @@ const MeterAvailability = (props: {}) => {
 
         let points = await queryApi.collectRows<{ tag: string, _time_first: string, _time_last: string, }>(query);
         $.each(meters, (index, meter) => {
-            let channelIDs = channels.map(c => c.Tag);
+            let channelIDs = channels.filter(c => c.MeterID == meter.ID).map(c => c.Tag);
             let filtered = points.filter(p => channelIDs.indexOf(p.tag) >= 0);
             filtered.sort((a, b) => {
                 if (a._time_first < b._time_first) return 1;

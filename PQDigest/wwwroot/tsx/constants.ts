@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EventSearchPreview.tsx - Gbtc
+//  constants.ts - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,17 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/29/2020 - Billy Ernest
+//  06/15/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import React from 'react';
-import EventSearchOpenSEE from './OpenSEE/EventSearchOpenSEE';
-import EventSearchTrenDAP from './TrenDAP/EventSearchTrenDAP';
-import EventSearchPQI from './PQI/EventSearchPQI';
-import { OpenXDA } from '../global';
-
-const EventSearchPreview = (props: { Event: OpenXDA.EventSearch, Width: number, Height: number }) => {
-    if (props.Event ==  undefined) return <span>No Event Selected ... </span>;
-    else
-    return (
-        <>
-            <EventSearchOpenSEE Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />
-            <EventSearchTrenDAP Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />            
-            <EventSearchPQI EventID={props.Event.ID} Width={props.Width} Height={props.Height/3 - 1} />
-        </>
-    );
+namespace Constants {
+    export namespace Moment {
+        export const DateTimeFormat = 'YYYY-MM-DDTHH:mm:ss'
+        export const DateFormat = 'YYYY-MM-DD';
+        export const TimeZone = 'America/Chicago';
+    }
 }
 
-export default EventSearchPreview;
+export default Constants;

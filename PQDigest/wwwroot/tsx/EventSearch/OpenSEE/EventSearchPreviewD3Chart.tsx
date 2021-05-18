@@ -22,11 +22,17 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format } from 'd3';
+import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format, scaleUtc, scaleTime } from 'd3';
 import { select } from 'd3-selection';
 import moment from 'moment';
-
+import 'moment-timezone';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { OpenXDA as PQDigestXDA } from '../../global';
+import Constants from '../../constants';
 interface XDADictionary {
+    VAB: [number, number][],
+    VBC: [number, number][],
+    VCA: [number, number][],
     VAN: [number, number][],
     VBN: [number, number][],
     VCN: [number, number][],
@@ -37,17 +43,26 @@ interface XDADictionary {
 
 }
 
-const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number }) => {
+const EventSearchPreviewD3Chart = (props: { Event: PQDigestXDA.EventSearch, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number, Axis: boolean }) => {
     const ref = React.useRef(null);
 
     React.useEffect(() => {
-        return GetData();
-    }, [props.EventID]);
+        if (props.DataType == 'Trending') {
+            let handle = GetChannels().done(channels => GetData2(channels));
+            return () => {
+                if (handle.abort !== undefined) handle.abort();
+            }
+        }
+        else {
+            return GetData();
+        }
+       
+    }, [props.Event.ID]);
 
     function GetData() {
         let handle = $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.EventID}` +
+            url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.Event.ID}` +
                 `&pixels=${Math.floor(props.Width)}` +
                 `&type=${props.MeasurementType}` +
                 `&dataType=${props.DataType}`,
@@ -63,7 +78,72 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
         }
     }
 
+    function GetChannels(): JQuery.jqXHR<OpenXDA.Types.Channel[]> {
+        return $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Channel/${props.Event.MeterID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
 
+
+    function GetData2(channels: OpenXDA.Types.Channel[]) {
+        let startDate = moment.tz(props.Event.StartTime, Constants.Moment.TimeZone).utc().format(Constants.Moment.DateFormat);
+        let endDate = moment.tz(props.Event.StartTime, Constants.Moment.TimeZone).utc().add(1, 'day').format(Constants.Moment.DateFormat);
+
+        const query = `
+            from(bucket: "${bucket}")
+            |> range(start: ${startDate}, stop: ${endDate})
+            |> filter(fn: (r) => r._field == "avg")
+            |> filter(fn: (r) => ${channels.filter(c => c.MeasurementCharacteristic == 'RMS' && c.MeasurementType == props.MeasurementType && ['AN', 'BN', 'CN'].indexOf(c.Phase) >= 0).map(c => ("000000000000000" + c.ID.toString(16)).substr(-8)).map(c => 'r.tag == "' + c + '"').join(' or ')})
+        `;
+
+        let handle = $.ajax({
+            beforeSend: request => {
+                request.setRequestHeader('Authorization', `Token ${token}`);
+            },
+            type: "POST",
+            url: `${host}/api/v2/query?org=${org}`,
+            contentType: "application/json; encoding=utf-8",
+            data: JSON.stringify({ query, type: 'flux' }),
+            cache: true,
+            async: true
+        }).done((data: string) => {
+            let rows = data.split('\r\n');
+            let i = 0;
+            let header = rows[i++].split(',');
+            let tagIndex = header.indexOf('tag');
+            let timeIndex = header.indexOf('_time');
+            let valueIndex = header.indexOf('_value');
+            let fieldIndex = header.indexOf('_field');
+            let dict = {} as XDADictionary;
+            for (; i < rows.length; i++) {
+                let row = rows[i].split(',');
+                if (row[tagIndex] == undefined || row[tagIndex] == "tag" || row[fieldIndex] == "flags") continue;
+
+                let channel = channels.find(c => ("000000000000000" + c.ID.toString(16)).substr(-8) == row[tagIndex]);
+                let channelName = (props.MeasurementType == "Voltage" ? 'V' : 'I') + channel.Phase;
+                if (dict.hasOwnProperty(channelName)) {
+                    dict[channelName].push([moment(row[timeIndex]),parseFloat(row[valueIndex])]);
+
+                }
+                else {
+                    dict[channelName] = [[moment(row[timeIndex]), parseFloat(row[valueIndex])]];
+                }
+            }
+
+            DrawChart(dict);
+            
+        });
+
+
+        return function () {
+            if (handle.abort != undefined) handle.abort();
+        }
+    }
 
 
     function DrawChart(data: XDADictionary) {
@@ -73,8 +153,8 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
             .attr('width', props.Width)
             .attr('height', props.Height)
 
-        let x = scaleLinear().rangeRound([props.Margin.Left, props.Width - props.Margin.Right]);
-        let y = scaleLinear().rangeRound([props.Height - props.Margin.Top, props.Margin.Bottom]);
+        let x = scaleUtc().rangeRound([props.Margin.Left, props.Width - props.Margin.Right]);
+        let y = scaleLinear().rangeRound([props.Height - props.Margin.Bottom, props.Margin.Top]);
 
         if (props.DataType == 'Trending') {
             let yextent = extent([].concat(...Object.keys(data).map(key => data[key].map(d => d[1]))))
@@ -91,10 +171,18 @@ const EventSearchPreviewD3Chart = (props: { EventID: number, MeasurementType: 'C
             x.domain(xextent);
         }
 
-        const xAxis = svg.append("g").classed('xaxis', true)
-            .attr("transform", "translate(0," + (props.Height - props.Margin.Bottom) + ")")
-            .call(axisBottom(x));
+        if (props.Axis) {
+            const xAxis = axisBottom(x);
+            if (props.DataType == 'Time')
+                xAxis.tickFormat((tick) => {
+                    return moment(tick as number).format('mm:ss.SS')
+                })
 
+            svg.append("g").classed('xaxis', true)
+                .attr("transform", "translate(0," + (props.Height - props.Margin.Bottom) + ")")
+                .call(xAxis);
+
+        }
 
         const yAxis = svg.append("g").classed('yaxis', true)
             .attr("transform", `translate(${props.Margin.Left},0)`)

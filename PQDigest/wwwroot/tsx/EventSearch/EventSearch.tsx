@@ -292,7 +292,7 @@ const EventSearch = (props: {}) => {
                     <div className="card">
                         {/*<div className="card-header">Event Preview</div>*/}
                         <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>
-                            <EventSearchPreview EventID={eventID} Height={window.innerHeight - 226} Width={window.innerWidth / 2}/>
+                            <EventSearchPreview Event={events.find(e => e.ID == eventID)} Height={window.innerHeight - 226} Width={window.innerWidth / 2}/>
                         </div>
                     </div>
                 </div>

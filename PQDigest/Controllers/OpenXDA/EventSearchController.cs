@@ -94,7 +94,7 @@ namespace PQDigest.Controllers
 					Event.MeterID IN ({string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))})
 			)
 			SELECT
-				TOP (@top) Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds, Phase.Name as Phase
+				TOP (@top) Event.ID, Event.StartTime,Meter.ID as MeterID, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds, Phase.Name as Phase
 			FROM
 				Event INNER HASH JOIN
 				Meter ON Meter.ID = Event.MeterID INNER HASH JOIN 

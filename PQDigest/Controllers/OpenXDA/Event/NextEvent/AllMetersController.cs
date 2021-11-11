@@ -52,11 +52,10 @@ namespace PQDigest.Controllers.NextEvent
 
         [HttpGet, Route("{eventID:int}")]
         public ActionResult Get(int eventID) {
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 return Ok(connection.RetrieveData(@"
@@ -66,7 +65,7 @@ namespace PQDigest.Controllers.NextEvent
 	                    DATEDIFF(SECOND, e1.StartTime, e2.StartTime) as Difference
                     FROM
 	                    Event e1 JOIN
-	                    Event e2 ON e1.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))+ @") AND e2.ID != {0}
+	                    Event e2 ON e1.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"]))+ @") AND e2.ID != {0}
                     WHERE 
 	                    e1.ID = {0} AND e1.StartTime < e2.StartTime
                     ORDER BY

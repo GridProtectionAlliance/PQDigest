@@ -80,14 +80,13 @@ namespace PQDigest.Controllers
 //            };
 //            return Ok(returnobj);
 //#else
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddSeconds(-1);
                 DateTime start = end.AddMonths(-12).AddSeconds(1);
                 
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
 
@@ -108,7 +107,7 @@ namespace PQDigest.Controllers
 	                    WHERE
 		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') AND 
 		                    Event.StartTime BETWEEN @startDate AND @endDate AND
-                            Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+                            Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @")
 	                    GROUP BY
 		                    CONVERT(varchar(3), DATENAME(month,Cast(Event.StartTime as Date))), EventType.Name, Month(Event.StartTime), Year(Event.StartTime)
                     ),

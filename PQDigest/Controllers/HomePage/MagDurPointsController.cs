@@ -50,7 +50,6 @@ namespace PQDigest.Controllers
         }
 
         public ActionResult Get() {
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
 #if DEBUG 
@@ -63,7 +62,7 @@ namespace PQDigest.Controllers
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = sCConnection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
 
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
@@ -82,7 +81,7 @@ namespace PQDigest.Controllers
                     WHERE
 	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
 	                    (CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
-                        Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+                        Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @")
                     GROUP BY
 	                    EventID
                     ), WorstSeverityRecord as (
@@ -96,7 +95,7 @@ namespace PQDigest.Controllers
                     WHERE
 	                    PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
 	                    (CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
-                        Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+                        Event.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @")
                     )
                     SELECT
                        Event.ID, Event.StartTime, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds

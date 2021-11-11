@@ -58,11 +58,10 @@ namespace PQDigest.Controllers
         [HttpGet("Count")]
         public ActionResult GetCount()
         {
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 return Ok(connection.ExecuteScalar<int>(@"
@@ -72,7 +71,7 @@ namespace PQDigest.Controllers
 	                Event
                 WHERE
 	                StartTime BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND GETDATE() AND 
-	                MeterID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+	                MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @")
                       "));
             }
         }

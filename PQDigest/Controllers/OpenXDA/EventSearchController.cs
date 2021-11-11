@@ -77,7 +77,7 @@ namespace PQDigest.Controllers
 				WHERE
 					PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
 					(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
-					Event.MeterID IN ({string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))})
+					Event.MeterID IN ({string.Join(",", meters.Select().Select(row => row["MeterID"]))})
 				GROUP BY
 					EventID
 			), WorstSeverityRecord as (
@@ -91,7 +91,7 @@ namespace PQDigest.Controllers
 				WHERE
 					PhaseID <> (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
 					(CAST(Disturbance.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Disturbance.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND
-					Event.MeterID IN ({string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"]))})
+					Event.MeterID IN ({string.Join(",", meters.Select().Select(row => row["MeterID"]))})
 			)
 			SELECT
 				TOP (@top) Event.ID, Event.StartTime,Meter.ID as MeterID, Meter.Name as MeterName, EventType.Name as EventType, WorstSeverityRecord.PerUnitMagnitude, WorstSeverityRecord.DurationSeconds, Phase.Name as Phase
@@ -104,18 +104,17 @@ namespace PQDigest.Controllers
 			WHERE
 				(CAST(Event.StartTime as date) BETWEEN @StartDate AND @EndDate OR CAST(Event.EndTime as Date) BETWEEN @StartDate AND @EndDate) AND 
 				Event.EventTypeID IN ({(types.Length > 0 ? string.Join(",", types) : "0")}) AND
-				Event.MeterID IN ({(meters.Rows.Count > 0 ? string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) : "0")})
+				Event.MeterID IN ({(meters.Rows.Count > 0 ? string.Join(",", meters.Select().Select(row => row["MeterID"])) : "0")})
 			ORDER BY
 				{sortField} {(ascending ? "ASC" : "DESC")}
 
 		";
 
 		public ActionResult Post([FromBody] EventSearchPostData postData) {
-			using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
 			using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
 				string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-				DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+				DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
 				if (meters.Rows.Count == 0) return Ok(new DataTable());
 
 				return Ok(connection.RetrieveData(SQLQuery(postData.Types, meters, postData.Ascending, postData.SortField), postData.StartDate, postData.EndDate, postData.Count));
@@ -125,11 +124,10 @@ namespace PQDigest.Controllers
 		[HttpPost("count")]
 		public ActionResult PostCount([FromBody] EventSearchPostData postData)
 		{
-			using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
 			using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
 			{
 				string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-				DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+				DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
 				if (meters.Rows.Count == 0) return Ok(new DataTable());
 
 				DataTable table = connection.RetrieveData(SQLQuery(postData.Types, meters, postData.Ascending, postData.SortField), postData.StartDate, postData.EndDate, 10000000);
@@ -141,11 +139,10 @@ namespace PQDigest.Controllers
 		[HttpPost("csv")]
 		public ActionResult PostCSV([FromBody] EventSearchPostData postData)
 		{
-			using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
 			using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
 			{
 				string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-				DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+				DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
 				if (meters.Rows.Count == 0) return Ok(new DataTable());
 
 				DataTable table = connection.RetrieveData(SQLQuery(postData.Types, meters, postData.Ascending, postData.SortField), postData.StartDate, postData.EndDate, 10000000);

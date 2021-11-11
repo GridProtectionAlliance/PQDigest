@@ -56,11 +56,10 @@ namespace PQDigest.Controllers
         public IActionResult Get() {
             try
             {
-                using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
                 using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
                 {
                     string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                    DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                     if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                     return Ok(connection.RetrieveData(@"
@@ -69,7 +68,7 @@ namespace PQDigest.Controllers
                         FROM 
                             Location 
                         WHERE 
-                            ID IN  (SELECT LocationID FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + "))").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
+                            ID IN  (SELECT LocationID FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + "))").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
                 }
 
             }

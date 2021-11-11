@@ -55,14 +55,13 @@ namespace PQDigest.Controllers
         public IActionResult Get() {
             try
             {
-                using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
                 using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
                 {
                     string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                    DataTable meters = connection.RetrieveData("SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company as C WHERE C.CompanyID = {0})", orgId);
                     if (meters.Rows.Count == 0) return Ok(new DataTable());
 
-                    return Ok(connection.RetrieveData("SELECT * FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + ")").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
+                    return Ok(connection.RetrieveData("SELECT * FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + ")").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
                 }
 
             }
@@ -78,11 +77,11 @@ namespace PQDigest.Controllers
         {
             try
             {
-                using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
+                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
                 {
 
                     string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                    DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                     return Ok(meters.Rows.Count);
                 }
 
@@ -98,16 +97,15 @@ namespace PQDigest.Controllers
         [HttpGet("Channels")]
         public ActionResult GetChannels()
         {
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable companyMeters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable companyMeters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (companyMeters.Rows.Count == 0) return Ok(new DataTable());
 
-                IEnumerable<Meter> meters = new TableOperations<Meter>(connection).QueryRecordsWhere("ID IN (" + string.Join(",", companyMeters.Select().Select(row => row["OpenXDAMeterID"])) + ")");
+                IEnumerable<Meter> meters = new TableOperations<Meter>(connection).QueryRecordsWhere("ID IN (" + string.Join(",", companyMeters.Select().Select(row => row["MeterID"])) + ")");
                 DataTable channels = connection.RetrieveData($@"
                     SELECT 
 	                    *, RIGHT('000000000' + FORMAT(ID,'X'),8) as Tag

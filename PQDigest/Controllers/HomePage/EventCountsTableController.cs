@@ -84,14 +84,13 @@ namespace PQDigest.Controllers
 //            return Ok(returnobj);
 
 //#else
-            using (AdoDataConnection sCConnection = new AdoDataConnection(m_configuration["SystemCenter:ConnectionString"], m_configuration["SystemCenter:DataProviderString"]))
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
 
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT OpenXDAMeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 DataTable table = connection.RetrieveData(@"
@@ -110,7 +109,7 @@ namespace PQDigest.Controllers
 		                    Event ON Event.MeterID =  Meter.ID AND  Event.EventTypeID = EventType.ID AND Event.StartTime BETWEEN @startDate AND @endDAte
 	                    WHERE
 		                    EventType.Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault') AND
-                            Meter.ID IN (" + string.Join(",", meters.Select().Select(row => row["OpenXDAMeterID"])) + @")
+                            Meter.ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @")
 	                    GROUP BY
 		                    Meter.Name, EventType.Name, Meter.ID
                     )

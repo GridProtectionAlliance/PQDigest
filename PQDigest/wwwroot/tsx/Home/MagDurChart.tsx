@@ -196,7 +196,7 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
             .attr('fill', 'blue')
             .attr('cx', d => x(d.DurationSeconds))
             .attr('cy', d => y(d.PerUnitMagnitude))
-            .on('click', d => {
+            .on('click', (evt, d) => {
                 tooltip.transition()
                     .duration(500)
                     .attr('hidden', 'hidden');

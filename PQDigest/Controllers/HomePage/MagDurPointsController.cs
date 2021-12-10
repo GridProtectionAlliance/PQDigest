@@ -52,17 +52,17 @@ namespace PQDigest.Controllers
         public ActionResult Get() {
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-#if DEBUG 
-                NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.1);
-                IEnumerable<NormalRandomNumber> magRVs = magRandomGenerator.Next(100);
-                NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 0.1, 0.5);
-                IEnumerable<NormalRandomNumber> durRVs = durRandomGenerator.Next(100);
-                return Ok(magRVs.Zip(durRVs).Select(x => new { PerUnitMagnitude = x.First.Value, DurationSeconds = Math.Pow(10, x.Second.Value) }));
-#else
+//#if DEBUG 
+//                NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.1);
+//                IEnumerable<NormalRandomNumber> magRVs = magRandomGenerator.Next(100);
+//                NormalRandomNumberGenerator durRandomGenerator = new NormalRandomNumberGenerator(13345132, 0.1, 0.5);
+//                IEnumerable<NormalRandomNumber> durRVs = durRandomGenerator.Next(100);
+//                return Ok(magRVs.Zip(durRVs).Select(x => new { PerUnitMagnitude = x.First.Value, DurationSeconds = Math.Pow(10, x.Second.Value) }));
+//#else
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = sCConnection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
 
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
@@ -109,7 +109,7 @@ namespace PQDigest.Controllers
                 ", start, end);
 
                 return Ok(table);
-#endif
+//#endif
             }
         }
     }

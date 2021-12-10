@@ -28,14 +28,20 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 
+import Home from './Home/Home';
+import Trending from './Trending/Trending';
+import MeterAvailability from './MeterAvailability/MeterAvailability';
+import Lightning from './Lightning/Lightning';
+import EventSearch from './EventSearch/EventSearch';
+import WaveformViewer from './WaveformViewer/WaveformViewer';
 
 const PQDigest: React.FunctionComponent = (props: {}) => {
-    const Home = React.lazy(() => import(/* webpackChunkName: "Home" */ './Home/Home'));
-    const Trending = React.lazy(() => import(/* webpackChunkName: "Trending" */ './Trending/Trending'));
-    const MeterAvailability = React.lazy(() => import(/* webpackChunkName: "MeterAvailability" */ './MeterAvailability/MeterAvailability'));
-    const Lightning = React.lazy(() => import(/* webpackChunkName: "Lightning" */ './Lightning/Lightning'));
-    const EventSearch = React.lazy(() => import(/* webpackChunkName: "EventSearch" */ './EventSearch/EventSearch'));
-    const WaveformViewer = React.lazy(() => import(/* webpackChunkName: "WaveformViewer" */ './WaveformViewer/WaveformViewer'));
+    //const Home = React.lazy(() => import(/* webpackChunkName: "Home" */ './Home/Home'));
+    //const Trending = React.lazy(() => import(/* webpackChunkName: "Trending" */ './Trending/Trending'));
+    //const MeterAvailability = React.lazy(() => import(/* webpackChunkName: "MeterAvailability" */ './MeterAvailability/MeterAvailability'));
+    //const Lightning = React.lazy(() => import(/* webpackChunkName: "Lightning" */ './Lightning/Lightning'));
+    //const EventSearch = React.lazy(() => import(/* webpackChunkName: "EventSearch" */ './EventSearch/EventSearch'));
+    //const WaveformViewer = React.lazy(() => import(/* webpackChunkName: "WaveformViewer" */ './WaveformViewer/WaveformViewer'));
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
     React.useEffect(() => {

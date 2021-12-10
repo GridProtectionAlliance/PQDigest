@@ -49,7 +49,9 @@ namespace PQDigest.Controllers
         public ActionResult Get(int eventID) {
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
-                return Ok(connection.RetrieveData(@"
+				try
+				{
+					return Ok(connection.RetrieveData(@"
 					With WorstSeverityCode as (
 					SELECT 
 						EventID,
@@ -89,6 +91,11 @@ namespace PQDigest.Controllers
 					WHERE	
 						Event.ID = {0}
                 ", eventID));
+
+				}
+				catch (Exception ex) {
+					return StatusCode(500, ex);
+				}
             }
         }
     }

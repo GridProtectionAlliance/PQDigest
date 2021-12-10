@@ -117,15 +117,15 @@ const MeterAvailability = (props: {}) => {
             { key: 'LastTime', label: 'Last Data Logged (CST)', headerStyle: { width: '20%' }, rowStyle: { width: '20%' }, content: (item, key, style) => moment.utc(item.LastTime).tz('America/Chicago').format('MM/DD/YY HH:mm') },
             {
                 key: undefined, label: 'Difference/Status', headerStyle: { width: '10%' }, rowStyle: { width: '10%' }, content: (item, key, style) => {
-                    if (moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'hour') <= 48)
-                        return moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'hour') + ' Hours'
+                    if (moment.utc().diff(moment.utc(item.LastTime), 'hour') <= 48)
+                        return moment.utc().diff(moment.utc(item.LastTime), 'hour') + ' Hours'
 
                     style.backgroundColor = 'red';
-                    if (moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'days') <= 7)
-                        return moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'days') + ' Days - OOS'
-                    else if (moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'weeks') <= 52)
-                        return moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'weeks') + ' Weeks - OOS'
-                    else return moment.utc(item.LastTime).diff(moment.utc(item.FirstTime), 'years') + ' Years - OOS'
+                    if (moment.utc().diff(moment.utc(item.LastTime), 'days') <= 7)
+                        return moment.utc().diff(moment.utc(item.LastTime), 'days') + ' Days - OOS'
+                    else if (moment.utc().diff(moment.utc(item.LastTime), 'weeks') <= 52)
+                        return moment.utc().diff(moment.utc(item.LastTime), 'weeks') + ' Weeks - OOS'
+                    else return moment.utc().diff(moment.utc(item.LastTime), 'years') + ' Years - OOS'
 
 
 

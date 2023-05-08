@@ -21,29 +21,26 @@
 //
 //******************************************************************************************************
 
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using Gemstone.Data;
+using Gemstone.Web;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Gemstone.Web;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using Newtonsoft.Json.Serialization;
 using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Graph;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web.UI;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using Newtonsoft.Json;
-using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Gemstone.Data;
+using Newtonsoft.Json.Serialization;
 
 namespace PQDigest
 {
@@ -118,8 +115,8 @@ namespace PQDigest
                })
               .EnableTokenAcquisitionToCallDownstreamApi(options =>
                 {
-                      Configuration.Bind("AzureAd", options);
-                },Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
+                    Configuration.Bind("AzureAd", options);
+                }, Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
              )
             .AddInMemoryTokenCaches();
 
@@ -144,19 +141,20 @@ namespace PQDigest
                 app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-
             }
 
-            
+            app.UseForwardedHeaders(new ForwardedHeadersOptions()
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+            });
+
             app.UseStaticFiles(WebExtensions.StaticFileEmbeddedResources());
             app.UseStaticFiles();
 
             app.UseRouting();
 
-
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.UseEndpoints(endpoints =>
             {
@@ -170,7 +168,6 @@ namespace PQDigest
 
                 endpoints.MapControllers();
             });
-
         }
 
         public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, string json)

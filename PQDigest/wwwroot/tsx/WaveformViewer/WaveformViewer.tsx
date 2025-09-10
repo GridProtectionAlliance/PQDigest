@@ -21,23 +21,26 @@
 //
 //******************************************************************************************************
 
-import React from 'react';
-import { OpenXDA, PQDigest } from '../global';
-import WaveformViewerD3Chart from './WaveformViewerD3Chart';
-import Legend from './Legend';
+import { bisect } from 'd3';
 import _ from 'lodash';
-import { bisect, extent } from 'd3';
-import PolarChart from './PolarChart';
+import queryString from "querystring";
+import React from 'react';
+import { PQDigest } from '../global';
 import BrowseEvents from './BrowseEvents';
-import Info from './Info';
 import ComparableEvents from './ComparableEvents';
+import Info from './Info';
+import Legend from './Legend';
+import PolarChart from './PolarChart';
+import WaveformViewerD3Chart from './WaveformViewerD3Chart';
 
 import moment from 'moment';
 
-const WaveformViewer = (props: { EventID: number }) => {
+const WaveformViewer = () => {
     const infoWidth = 300;
     const pointsWidth = 500;
     const waveformWidth = window.innerWidth - infoWidth - pointsWidth - 10;
+
+    const [eventID, setEventID] = React.useState<number|undefined>(undefined);
 
     const [compareEventID, setCompareEventID] = React.useState<number>(0);
 
@@ -57,24 +60,31 @@ const WaveformViewer = (props: { EventID: number }) => {
     const [click, setClick] = React.useState<number>(-1);
     const [extents, setExtents] = React.useState<PQDigest.D3Extent>({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
 
-    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
+    const [_ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
+
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate(1));
+        window.addEventListener('resize', () => forceUpdate());
 
         return function cleanup() {
-            window.removeEventListener('resize', (evt) => { });
+            window.removeEventListener('resize', () => { });
         }
     }, []);
 
     React.useEffect(() => {
+        const query = queryString.parse(location.search);
+        setEventID(query['EventID'] != null ? parseInt(query['EventID'].toString()) : undefined);
+    }, []);
 
-        let handle1 = GetWaveformData('Current', props.EventID);
+    React.useEffect(() => {
+        if (eventID == null) return;
+
+        let handle1 = GetWaveformData('Current', eventID);
         handle1.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: GetKey('Current', key), Show: ShowPath('Current',key), Color: GetColor(key), Data: data[key] } });
             setCurrentData(returnData)
         });
 
-        let handle2 = GetWaveformData('Voltage', props.EventID);
+        let handle2 = GetWaveformData('Voltage', eventID);
         handle2.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: GetKey('Voltage', key), Show: ShowPath('Voltage',key), Color: GetColor(key), Data: data[key] } });
             setVoltageData(returnData)
@@ -86,10 +96,12 @@ const WaveformViewer = (props: { EventID: number }) => {
             if (handle2.abort != undefined) handle2.abort();
 
         }
-    }, [props.EventID]);
+    }, [eventID]);
 
     React.useEffect(() => {
-        let handle = GetAnalyticData(analytic, props.EventID);
+        if (eventID == null) return;
+
+        let handle = GetAnalyticData(analytic, eventID);
         handle.done(data => {
             let returnData = Object.keys(data).map(key => { return { Key: GetKey(analytic, key), Show: ShowPath(analytic,key), Color: GetColor(key), Data: data[key] } });
             setAnaltyicData(returnData)
@@ -98,7 +110,7 @@ const WaveformViewer = (props: { EventID: number }) => {
         return function () {
             if (handle.abort != undefined) handle.abort();
         }
-    }, [props.EventID, analytic, harmonic]);
+    }, [eventID, analytic, harmonic]);
 
     React.useEffect(() => {
         if (compareEventID == 0) {
@@ -175,9 +187,10 @@ const WaveformViewer = (props: { EventID: number }) => {
     }
 
     function HandleExportCSV() {
+        if (eventID == null) return;
 
         var req = new XMLHttpRequest();
-        req.open("GET", `${homePath}api/OpenXDA/Event/CSV/${props.EventID}`, true);
+        req.open("GET", `${homePath}api/OpenXDA/Event/CSV/${eventID}`, true);
         req.responseType = "blob";
         req.onload = function (event) {
             var blob = req.response;
@@ -191,6 +204,7 @@ const WaveformViewer = (props: { EventID: number }) => {
         req.send();
     }
 
+    if (eventID == null) return null;
 
     return (
         <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
@@ -198,19 +212,19 @@ const WaveformViewer = (props: { EventID: number }) => {
                 <div className="card">
                     <div className="card-header">Info</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 2 + 25, height: (window.innerHeight - 296) / 2 + 25, overflowY: 'hidden' }}>
-                        <Info EventID={props.EventID} />
+                        <Info EventID={eventID} />
                     </div>
                 </div>
                 <div className="card">
                     <div className="card-header">Browse Events</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 - 75, height: (window.innerHeight - 296) / 4 - 75, overflowY: 'hidden' }}>
-                        <BrowseEvents EventID={props.EventID}/>
+                        <BrowseEvents EventID={eventID}/>
                     </div>
                 </div>
                 <div className="card">
                     <div className="card-header">Compare</div>
                     <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 + 50, height: (window.innerHeight - 296) / 4 + 50, overflowY: 'hidden' }}>
-                        <ComparableEvents EventID={props.EventID} ComparableEventID={compareEventID} OnChange={(id) => setCompareEventID(id)} />
+                        <ComparableEvents EventID={eventID} ComparableEventID={compareEventID} OnChange={(id) => setCompareEventID(id)} />
                     </div>
                 </div>
             </div>
@@ -265,7 +279,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareVoltageData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={voltageData} CompareData={compareVoltageData} ChartAction={chartAction} Extent={extents} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                            <WaveformViewerD3Chart EventID={eventID} Data={voltageData} CompareData={compareVoltageData} ChartAction={chartAction} Extent={extents} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
                         <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
                             <Legend Type='Current' Paths={currentData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
@@ -281,7 +295,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareCurrentData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={currentData} CompareData={compareCurrentData} ChartAction={chartAction} Extent={extents} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                            <WaveformViewerD3Chart EventID={eventID} Data={currentData} CompareData={compareCurrentData} ChartAction={chartAction} Extent={extents} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
 
 
@@ -320,7 +334,7 @@ const WaveformViewer = (props: { EventID: number }) => {
                                 setCompareAnaltyicData(newPaths);
                             }} />
 
-                            <WaveformViewerD3Chart EventID={props.EventID} Data={analyticData} CompareData={compareAnaltyicData} ChartAction={chartAction} Extent={extents} Units={GetUnits(analytic)} DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                            <WaveformViewerD3Chart EventID={eventID} Data={analyticData} CompareData={compareAnaltyicData} ChartAction={chartAction} Extent={extents} Units={GetUnits(analytic)} DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
                         </div>
 
 

@@ -24,7 +24,7 @@ import React from 'react';
 import EventSearchPreview from '../EventSearch/EventSearchPreview';
 import { OpenXDA } from '../global';
 import _ from 'lodash';
-import Table from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
@@ -250,41 +250,61 @@ const EventSearch = (props: {}) => {
                         <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
                             {showEventList ?
                                 <Table<OpenXDA.EventSearch>
-                                    cols={[
-                                        { key: 'StartTime', label: 'Date', headerStyle: { width: '25%' }, rowStyle: { width: '25%' }, content: (item, key, style) => item[key] != undefined ? moment(item[key]).format('MM/DD/YYYY HH:mm:ss'):'' },
-                                        //{ key: 'StartTime', label: 'Time', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' }, content: (item, key, style) => moment(item[key]).format('HH:mm:ss') },
-                                        { key: 'MeterName', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                        { key: 'EventType', label: 'Type', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                        { key: 'Phase', label: 'Phase', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                        { key: 'PerUnitMagnitude', label: 'Mag (pu)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
-                                        { key: 'DurationSeconds', label: 'Dur (s)', headerStyle: { width: '12%' }, rowStyle: { width: '12%' }, content: (item, key, style) => item[key] != undefined ?(item[key] as number).toFixed(2):'' },
-                                        { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
-
-                                    ]}
-                                    tableClass="table table-hover"
-                                    data={events}
-                                    sortField={sortField}
-                                    ascending={ascending}
-                                    onSort={(d) => {
-                                        if (d.col == sortField) {
-                                            //let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
-                                            //setEvents(ordered);
+                                    Data={events}
+                                    SortKey={sortField}
+                                    Ascending={ascending}
+                                    OnSort={(d) => {
+                                        if (d.colField == sortField) {
                                             setAscending(!ascending);
                                         }
                                         else {
                                             setAscending(ascending);
-                                            setSortField(d.col);
-                                            //let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
-                                            //setEvents(ordered);
+                                            setSortField(d.colField);
                                         }
                                     }}
-                                    onClick={(data) => { setEventID(data.row.ID) }}
-                                    theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-                                    tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 340, width: '100%' }}
-                                    rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                    selected={(item) => item.ID == eventID}
-                                /> :
-                                <MagDurChart Height={(window.innerHeight) - 275} Width={window.innerWidth / 2 - 20} Points={events} OnSelect={(evt, point) => setEventID(point.ID)}/>}
+                                    OnClick={data => setEventID(data.row.ID)}
+                                    Selected={item => item.ID == eventID}
+                                    KeySelector={item => item.ID }
+                                >
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="StartTime"
+                                        Field="StartTime"
+                                        HeaderStyle={{ width: '25%' }}
+                                        RowStyle={{ width: '25%' }}
+                                        Content={row => row.item[row.key] != undefined ? moment(row.item[row.key]).format('MM/DD/YYYY HH:mm:ss') : '' }
+                                    >Date</Column>
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="MeterName"
+                                        Field="MeterName"
+                                    >Meter</Column>
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="EventType"
+                                        Field="EventType"
+                                        HeaderStyle={{ width: '12%' }}
+                                        RowStyle={{ width: '12%' }}
+                                    >Type</Column>
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="Phase"
+                                        Field="Phase"
+                                        HeaderStyle={{ width: '12%' }}
+                                        RowStyle={{ width: '12%' }}
+                                    >Phase</Column>
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="PerUnitMagnitude"
+                                        Field="PerUnitMagnitude"
+                                        HeaderStyle={{ width: '12%' }}
+                                        RowStyle={{ width: '12%' }}
+                                        Content={row => row.item[row.key] != undefined ? (row.item[row.key] as number).toFixed(2) : ''}
+                                    >Mag (pu)</Column>
+                                    <Column<OpenXDA.EventSearch>
+                                        Key="DurationSeconds"
+                                        Field="DurationSeconds"
+                                        HeaderStyle={{ width: '12%' }}
+                                        RowStyle={{ width: '12%' }}
+                                        Content={row => row.item[row.key] != undefined ? (row.item[row.key] as number).toFixed(2) : ''}
+                                    >Dur (s)</Column>
+                                </Table> :
+                                <MagDurChart Height={(window.innerHeight) - 275} Width={window.innerWidth / 2 - 20} Points={events} OnSelect={(_evt, point) => setEventID(point.ID)}/>}
                         </div>
                     </div>
                 </div>

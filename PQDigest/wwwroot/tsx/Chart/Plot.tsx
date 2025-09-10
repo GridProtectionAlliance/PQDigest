@@ -25,8 +25,6 @@ import { ResetZoom as yResetZoom, SelectYAxesReset, Drag as yDrag, Zoom as yZoom
 import { ResetZoom as xResetZoom, SelectXAxesReset, Drag as xDrag, Zoom as xZoom } from './Store/XAxisSlice';
 
 import React, { FunctionComponent } from 'react';
-import { Provider } from 'react-redux';
-import store from './Store/Store';
 
 import { ScaleLinear, ScaleLogarithmic, ScaleOrdinal, dispatch} from 'd3';
 import XAxis from './XAxis';
@@ -99,12 +97,10 @@ const Plot: FunctionComponent<Props> = (props) => {
 
     return (
         <PlotContext.Provider value={value}>
-            <Provider store={store}>
-                <div style={{ height: props.Height, width: props.Width, position: 'relative' }}>
-                    <ResetButton />
-                    <Graph {...props}/>
-                </div>
-            </Provider>
+            <div style={{ height: props.Height, width: props.Width, position: 'relative' }}>
+                <ResetButton />
+                <Graph {...props}/>
+            </div>
         </PlotContext.Provider>
     )
 }

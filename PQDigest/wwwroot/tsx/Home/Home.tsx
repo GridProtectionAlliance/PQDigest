@@ -94,13 +94,13 @@ const Home = (props: {}) => {
 
 
     return (
-        <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
-            <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
-                <div className="card">
+        <div className="row h-100" style={{ margin: '5px 5px 5px 5px '}}>
+            <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="card h-50">
                     <div className="card-header">
                         Welcome, { userName}
                     </div>
-                    <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
+                    <div className="card-body" style={{ height: (window.innerHeight - 41) / 2 - 52 }}>
                         <br />
                         <p>So far this month there have been {eventCount} events recorded from your {numberMeters} power quality meters.</p>
                         <br />
@@ -109,33 +109,32 @@ const Home = (props: {}) => {
                         <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
                     </div>
                 </div>
-
-            <div className="card">
-                <div className="card-header">
-                    Magnitude Duration - Last 30 Days
+                <div className="card h-50">
+                    <div className="card-header">
+                        Magnitude Duration - Last 30 Days
+                    </div>
+                    <div className="card-body" style={{ padding: 0 }}>
+                        <MagDurChart Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 70} />
+                    </div>
                 </div>
-                <div className="card-body" style={{ padding: 0 }}>
-                    <MagDurChart Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
-                </div>
-            </div>
 
             </div>
-            <div className="col" style={{ padding: '0px 0px 0px 3px' }}>
-                <div className="card">
+            <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
+                <div className="card h-50">
                     <div className="card-header">
                         Historical Event Counts 
                   </div>
                     <div className="card-body" style={{ padding: 0 }}>
-                        <EventCountsByMonth Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 53}  />
+                        <EventCountsByMonth Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 53}  />
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card h-50">
                     <div className="card-header">
                         Meter Activity - Last 30 Days
                   </div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 127) / 2 - 70, overflowY: 'hidden'}}>
-                        <EventCountTable Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
+                    <div className="card-body" style={{ padding: 0, flexDirection: 'column', display: 'flex', overflowY: 'hidden'}}>
+                        <EventCountTable />
                     </div>
                 </div>
 

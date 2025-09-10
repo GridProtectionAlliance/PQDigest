@@ -20,10 +20,9 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import { max, scaleLinear } from 'd3';
 import moment from 'moment';
-
 import React from 'react';
-import { scaleOrdinal, scaleLinear, select, axisBottom, max, line } from 'd3';
 interface iData {
     Year: number,
     Month: string,
@@ -39,41 +38,30 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
     let svgWidth = props.Width - margin.left - margin.right;
     let svgHeight = props.Height - margin.top - margin.bottom;
 
-    const [totalPath, setTotalPath] = React.useState<string>('');
     const [paths, setPaths] = React.useState<Array<JSX.Element>>([]);
-    const [hidden, setHidden] = React.useState<boolean>(false);
     const [axisPaths, setAxisPaths] = React.useState<Array<JSX.Element>>([]);
     const [axisTicks, setAxisTicks] = React.useState<Array<JSX.Element>>([]);
     const [yaxisTicks, setYAxisTicks] = React.useState<Array<JSX.Element>>([]);
 
     React.useEffect(() => {
-        //setHidden(true);
         setPaths([]);
-        return GetData();
-    }, []);
 
-    function GetData() {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "GET",
             url: `${homePath}api/EventCountsByMonth`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
             async: true
-        });
-
-        handle.done((data: Array<iData>) => DrawChart(data));
+        }).done((data: Array<iData>) => DrawChart(data));
 
 
-        return function () {
-            if (handle.abort != undefined) handle.abort();
+        return () => {
+            if (handle?.abort != null) handle.abort();
         }
-    }
+    }, []);
 
     function DrawChart(data: Array<iData>) {
-
-        //let series = data[Object.keys(data)[0]];
-        //let x = scaleOrdinal().rangeRound([margin.left, svgWidth + margin.left]).domain(data.map(x => x.month));
         let y = scaleLinear().rangeRound([svgHeight, margin.top]).domain([0, max(data.map(x => x.Total))]);
 
         let yticks = [];
@@ -105,9 +93,6 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
         });
 
         setAxisPaths(labels);
-
-        let linefunc = line<iData>().x(d => margin.left + (svgWidth * ((data.map(datum => datum.Month).indexOf(d.Month) + 0.5)) / 12)).y(d => y(d.Total));
-        setTotalPath(linefunc(data));
 
         let boxes = data.map((x, index) => {
             return (
@@ -142,7 +127,7 @@ const EventCountsByMonth = (props: { Width: number, Height: number }) => {
     }
 
     return (
-        <div style={{ height: props.Height, width: props.Width, textAlign: 'center' }} hidden={hidden}>
+        <div style={{ height: props.Height, width: props.Width, textAlign: 'center' }}>
 
             <svg width={props.Width} height={props.Height} style={{fill: 'none',shapeRendering: 'crispEdges'}}>
 

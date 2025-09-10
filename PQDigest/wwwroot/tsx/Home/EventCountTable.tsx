@@ -43,11 +43,7 @@ const EventCountTable = () => {
     const [ascending, setAscending] = React.useState<boolean>(true);
 
     React.useEffect(() => {
-        return GetData();
-    }, []);
-
-    function GetData() {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "GET",
             url: `${homePath}api/EventCountsTable`,
             contentType: "application/json; charset=utf-8",
@@ -56,12 +52,10 @@ const EventCountTable = () => {
             async: true
         }).done((data: Array<Meter>) => setData(data));
 
-
         return function () {
-            if (handle.abort != undefined) handle.abort();
+            if (handle?.abort != null) handle.abort();
         }
-    }
-
+    }, []);
 
     return (
         <Table<Meter>
@@ -70,15 +64,15 @@ const EventCountTable = () => {
             Ascending={ascending}
             OnSort={(d) => {
                 if (d.colField == sortField) {
-                    let ordered = _.orderBy(data, [sortField], [(!ascending ? 'asc' : 'desc')]);
+                    const ordered = _.orderBy(data, [sortField], [(!ascending ? 'asc' : 'desc')]);
                     setData(ordered);
                     setAscending(!ascending);
                 }
                 else {
+                    const ordered = _.orderBy(data, [d.colField], [(ascending ? 'asc' : 'desc')]);
+                    setData(ordered);
                     setAscending(ascending);
                     setSortField(d.colField);
-                    let ordered = _.orderBy(data, [d.colField], [(ascending ? 'asc' : 'desc')]);
-                    setData(ordered);
                 }
             }}
             OnClick={(data) => { window.open(`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100&meters=${btoa(data.row.ID.toString())}`) }}

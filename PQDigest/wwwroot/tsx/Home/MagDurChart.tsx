@@ -55,7 +55,6 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
 
     const margin = { top: 15, right: 20, bottom: 60, left: 40 };
     const svgWidth = props.Width - margin.left - margin.right;
-    const svgHeight = props.Height - margin.top - margin.bottom;
     const chart = React.useRef(null);
     const [magDurCurveData, setMagDurCurveData] = React.useState<iCurve[]>([]);
     const [magDurData, setMagDurData] = React.useState<iPoint[]>([]);
@@ -96,7 +95,7 @@ const MagDurChart = (props: { Width: number, Height: number }) => {
         }).done(d => res(d)));
     }
 
-    function resetZoom(evt) {
+    function resetZoom() {
         Initialize(magDurCurveData, magDurData);
     }
 

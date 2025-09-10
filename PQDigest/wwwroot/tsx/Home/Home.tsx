@@ -28,7 +28,7 @@ import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
 import moment from 'moment';
 
-const Home = (props: {}) => {
+const Home = () => {
     const [mailTo, setMailTo] = React.useState<string>('');
     const [numberMeters, setNumberMeters] = React.useState<number>(0);
     const [eventCount, setEventCount] = React.useState<number>(0);
@@ -49,49 +49,12 @@ const Home = (props: {}) => {
             setEventCount(data);
         });
 
-
         return function () {
             if (handle.abort != undefined) handle.abort();
             if (handle2.abort != undefined) handle2.abort();
             if (handle3.abort != undefined) handle3.abort();
-
         }
     }, []);
-
-    function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/Setting/Email.Mailto`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetMeterCount(): JQuery.jqXHR<number> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter/Count`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetEventCount(): JQuery.jqXHR<number> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Count`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-
 
     return (
         <div className="row h-100" style={{ margin: '5px 5px 5px 5px '}}>
@@ -141,6 +104,39 @@ const Home = (props: {}) => {
             </div>
         </div>
     )
+}
+
+function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/Setting/Email.Mailto`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetMeterCount(): JQuery.jqXHR<number> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/OpenXDA/Meter/Count`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetEventCount(): JQuery.jqXHR<number> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/OpenXDA/Event/Count`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
 }
 
 export default Home;

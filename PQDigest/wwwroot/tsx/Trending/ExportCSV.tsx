@@ -119,8 +119,8 @@ const ExportCSV = (props: { Meter: OpenXDA.Types.Meter, Channels: OpenXDA.Types.
         }
 
         let blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
-        if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, fileName);
+        if (navigator?.['msSaveBlob'] != null) { // IE 10+
+            navigator['msSaveBlob'](blob, fileName);
         } else {
             let link = document.createElement("a");
             if (link.download !== undefined) { // feature detection

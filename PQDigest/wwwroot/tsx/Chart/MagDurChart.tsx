@@ -23,12 +23,7 @@
 
 import React from 'react';
 import _ from 'lodash';
-//import Plot from './Plot';
-//import XAxis from './XAxis';
-//import YAxis from './YAxis';
-//import Series from './Series';
-//import Legend from './Legend';
-import { Plot, XAxis, YAxis, Series, Legend } from '@gpa-gemstone/react-graph';
+import { Plot, Line, Circle } from '@gpa-gemstone/react-graph';
 
 interface iData {
     ID: number,
@@ -100,28 +95,44 @@ const MagDurChart = (props: { Width: number, Height: number, Points?: Point[], O
         });
     }
 
-
-
-    function xAxisText(value: number): string {
-        if (value < 0.0000001) return (value * 1000000000).toFixed(0) + 'n';
-        if (value < 0.001) return (value * 1000000).toFixed(0) + 'µ';
-        if (value > 1000 && value < 1000000) return (value / 1000).toFixed(0) + 'k';
-        if (value > 100000) return (value / 1000000).toFixed(0) + 'M';
-        if (value < 1) return value.toPrecision(1).toString()
-        return value.toString()
-    }
-
     return (
-        <Plot Height={props.Height} Width={props.Width} Zoom={true} Drag={true} Margin={{ top: 15, right: 20, bottom: 60, left: 50 }}>
-            <XAxis Label='Duration' Unit='s' Type='Log' Grid={true} TickFormatter={xAxisText}>
-                <YAxis Label='Magnitude' Unit='pu' Grid={true} Type='Linear' Range={[0,2.5]}>
-                    <Series<Point> Color='blue' XField='DurationSeconds' YField='PerUnitMagnitude' Label='Events' Data={points} Type='points'/>
-                    {curves.map(mdc => <Series<iData> key={mdc.Name} Label={mdc.Name} XField='DurationSeconds' YField='PerUnitMagnitude' Type='line' Color={mdc.Color} ShowInitially={mdc.Visible} Data={mdc.Data} />)}
-                </YAxis>
-            </XAxis>
-            <Legend Position='bottomleft' Layout='horizontal'/>
+        <Plot height={props.Height} width={props.Width} showBorder={false}
+            defaultTdomain={[0.00001, 1000]}
+            defaultYdomain={[0, 5]}
+            Tmax={1000}
+            Tmin={0.00001}
+            Ymax={9999}
+            Ymin={0}
+            legend={'bottom'}
+            Tlabel={'Duration (s)'}
+            Ylabel={'Magnitude (pu)'}
+            showMouse={false}
+            showGrid={true}
+            yDomain={'Manual'}
+            zoom={true} pan={false}
+            useMetricFactors={false} XAxisType={'log'}
+        >
+            {
+                points.map((p) =>
+                    <Circle
+                        data={[p['DurationSeconds'], p['PerUnitMagnitude']]}
+                        color={'blue'}
+                        radius={5}
+                    />
+            )}
+            {
+                curves.map(mdc =>
+                    <Line
+                        key={mdc.Name}
+                        legend={mdc.Name}
+                        showPoints={false}
+                        color={mdc.Color}
+                        lineStyle={'long-dash'}
+                        data={mdc.Data}
+                    />
+            )}
         </Plot>
-    )
+    );
 }
 
 export default MagDurChart;

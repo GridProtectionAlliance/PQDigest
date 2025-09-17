@@ -25,14 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FaultData.DataAnalysis;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
 using PQDigest.Models;
 using System.Net.Http;
 using Gemstone.Numeric.Random;
@@ -69,7 +67,7 @@ namespace PQDigest.Controllers
                 DateTime epoch = new DateTime(1970, 1, 1);                
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
 
-                    
+                /* ToDo: fix hids
                 using (API hids = new API())
                 {
 
@@ -95,6 +93,7 @@ namespace PQDigest.Controllers
                         returnData.Add($"{channel.Phase.Name}", points.Where(p => p.Tag == channel.ID.ToString("x8")).Select((p,index) => new[] { (p.Timestamp - epoch).TotalMilliseconds, p.Minimum, p.Average, p.Maximum }));
                     }
                 }
+                */
 
                 return Ok(returnData);
             }

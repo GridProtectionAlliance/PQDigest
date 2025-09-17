@@ -24,7 +24,6 @@
 using Gemstone.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
 using PQDigest.Models;
 using System.Net.Http;
 using Gemstone.Numeric.Random;

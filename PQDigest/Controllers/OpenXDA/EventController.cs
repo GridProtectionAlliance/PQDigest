@@ -23,22 +23,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
 using FaultData.DataAnalysis;
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
-using PQDigest.Models;
-using System.Net.Http;
-using Gemstone.Numeric.Random;
-using System.Security.Claims;
-using System.Data;
-using HIDS;
+using openXDA.Model;
 
 namespace PQDigest.Controllers
 {
@@ -130,6 +124,7 @@ namespace PQDigest.Controllers
                     DateTime end = start.AddHours(6);
                     IEnumerable<Channel> channels = new TableOperations<Channel>(connection).QueryRecordsWhere($"MeterID = {meter.ID} AND MeasurementTypeID = (SELECT ID FROM MeasurementType Where Name = '{type}') AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic Where Name = 'RMS') AND PhaseID IN (SELECT ID FROM Phase Where Name IN ('AN', 'BN', 'CN'))");
                     
+                    /* todo: fix hids
                     using (API hids = new API())
                     {
 
@@ -153,7 +148,9 @@ namespace PQDigest.Controllers
                             channel.ConnectionFactory = () =>  new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
                             returnData.Add($"{(type == "Voltage" ? "V" : "I")}{channel.Phase.Name}", points.Where(p => p.Tag == channel.ID.ToString("x8")).Select((p,index) => new[] { (p.Timestamp - epoch).TotalMilliseconds, p.Average }));
                         }
-                    }
+                    } */
+
+
                     //MovingAverageRandomNumberGenerator generator = new MovingAverageRandomNumberGenerator((type=="Voltage" ? 1234 : 4321), 1, new[] { 0.2}, 50, 2);
                     //returnData.Add($"{(type == "Voltage" ? "V" : "I")}AN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
                     //returnData.Add($"{(type == "Voltage" ? "V" : "I")}BN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));

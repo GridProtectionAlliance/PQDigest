@@ -7,6 +7,7 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using openXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers

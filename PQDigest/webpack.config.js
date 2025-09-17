@@ -1,5 +1,7 @@
 ﻿"use strict";
 const path = require("path");
+var webpack = require('webpack');
+
 module.exports = env => {
     if (process.env.NODE_ENV == undefined) process.env.NODE_ENV = 'development';
     return {
@@ -45,12 +47,6 @@ module.exports = env => {
             ]
         },
         externals: {
-            jquery: 'jQuery',
-            'leaflet': 'L',
-            'esri-leaflet': {
-                root: ['L', 'esri']
-            }
-
         },
         optimization: {
             //splitChunks: {
@@ -61,5 +57,11 @@ module.exports = env => {
             //    sourceMap: true
             //})],
         },
+        plugins: [
+            new webpack.ProvidePlugin({
+                $: "jquery",
+                "window.jQuery": "jquery",
+            })
+        ]
     }
 };

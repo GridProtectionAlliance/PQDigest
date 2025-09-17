@@ -50,6 +50,7 @@ namespace PQDigest
         {
             Configuration = configuration;
             Env = env;
+            DatabaseConnectionFactory.ReloadConfiguration(configuration);
         }
 
         public IWebHostEnvironment Env { get; set; }
@@ -60,7 +61,7 @@ namespace PQDigest
         {
             services.AddCors(options => {
                 options.AddPolicy(name: "AllowInfluxDB", builder => {
-                    using (AdoDataConnection connection = new AdoDataConnection(Configuration["OpenXDA:ConnectionString"], Configuration["OpenXDA:DataProviderString"]))
+                    using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
                     {
                         string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "http://localhost:8086";
                         builder.WithOrigins(host);

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <TypeScriptToolsVersion>4.1</TypeScriptToolsVersion>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <UserSecretsId>6bd34b1d-6a95-4b2a-a0aa-52dfebd881d7</UserSecretsId>
@@ -27,30 +27,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.66" />
-    <PackageReference Include="Gemstone.Data" Version="1.0.66" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.66" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.66" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.66" />
+    <PackageReference Include="Gemstone.Common" Version="1.0.141" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.141" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.141" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.141" />
+    <PackageReference Include="Gemstone.Web" Version="1.0.141" />
     <PackageReference Include="InfluxDB.Client" Version="1.18.0" />
-    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="InfluxDB.Client" Version="4.18.0" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <!--PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" /-->
     <!--PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" /-->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.5" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Graph" Version="3.21.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="1.4.0" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.4.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
-    <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.32" />
+    <PackageReference Include="Microsoft.Graph" Version="5.92.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="3.14.1" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.14.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.2.2" />
+    <PackageReference Include="System.Security.Permissions" Version="9.0.9" />
   </ItemGroup>
 
 
   <ItemGroup>
     <Folder Include="Views\Shared\" />
   </ItemGroup>
+
 
   <ItemGroup>
     <Reference Include="HIDS">

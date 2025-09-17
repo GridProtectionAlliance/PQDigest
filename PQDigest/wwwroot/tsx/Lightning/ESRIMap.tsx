@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 import React from 'react';
-import leaflet from 'leaflet';
-import { MapContainer, CircleMarker, TileLayer, WMSTileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { basemapLayer, Basemaps } from 'esri-leaflet';
+import { MapContainer, CircleMarker, TileLayer, WMSTileLayer, useMapEvents } from 'react-leaflet';
 import 'proj4leaflet';
 import { Lightning, OpenXDA } from '../global';
 import moment from 'moment';
@@ -34,12 +34,12 @@ type bounds = [[number, number], [number, number]];
 
 const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[], Width: number, Height: number, Bounds: bounds, SetBounds: (bounds: bounds) => void, SetStrike: (strike)=> void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
-    const [baseMap, setBaseMap] = React.useState<leaflet.esri.Basemaps>('Streets');
+    const [baseMap, setBaseMap] = React.useState<Basemaps>('Streets');
 
     let time = moment(props.DateTime);
     let minutes = (time.minutes() - time.minutes() % 5).toString();
     let timestring = time.tz('America/Chicago').utc().format('YYYY-MM-DDTHH') + ':' + (minutes.length == 1 ? `0${minutes}` : minutes);
-    let bm = leaflet.esri.basemapLayer(baseMap);
+    let bm = basemapLayer(baseMap);
 
     return (
         <div className="card">
@@ -49,7 +49,7 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Str
                         <input type="checkbox" className="form-check-input" value="" checked={radar} onChange={() => setRadar(!radar)}/>Show Radar
                   </label>
                 </div>
-                <select className="form-control" style={{width: 200, position: 'absolute', right: 5, top: 5}}  value={baseMap} onChange={(evt) => setBaseMap(evt.target.value as leaflet.esri.Basemaps)}>
+                <select className="form-control" style={{width: 200, position: 'absolute', right: 5, top: 5}}  value={baseMap} onChange={(evt) => setBaseMap(evt.target.value as Basemaps)}>
                     <option value='Streets'>Streets</option>
                     <option value='Topographic'>Topographic</option>
                     <option value='NationalGeographic'>NationalGeographic</option>

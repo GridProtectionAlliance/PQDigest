@@ -25,7 +25,7 @@ using FaultData.DataAnalysis;
 using Gemstone.Data;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
+using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,11 +57,8 @@ namespace PQDigest
                     DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
                     {
                         task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-                        using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
-                        {
-                            List<byte[]> data = ChannelData.DataFromEvent(eventID, connection);
-                            return ToDataGroup(meter, data);
-                        }
+                        List<byte[]> data = ChannelData.DataFromEvent(eventID, () => DatabaseConnectionFactory.CreateDbConnection("OpenXDA"));
+                        return ToDataGroup(meter, data);
                     });
                     return dataGroup;
                 }

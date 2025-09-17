@@ -23,7 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="EventWidgets\Controller\**" />
+    <Content Remove="EventWidgets\Controller\**" />
     <Content Remove="wwwroot\tsx\**" />
+    <EmbeddedResource Remove="EventWidgets\Controller\**" />
+    <None Remove="EventWidgets\Controller\**" />
   </ItemGroup>
 
   <ItemGroup>

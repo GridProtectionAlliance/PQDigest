@@ -24,14 +24,19 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using FaultData.DataAnalysis;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using HIDS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
 namespace PQDigest.Controllers
@@ -72,7 +77,7 @@ namespace PQDigest.Controllers
 
 
         [HttpGet("Data")]
-        public ActionResult GetData(int eventId, string type, string dataType, int pixels, string startDate, string endDate)
+        public ActionResult GetData(int eventId, string type, string dataType)
         {
             using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
             {
@@ -118,49 +123,88 @@ namespace PQDigest.Controllers
                     }
 
                 }
-                else if(dataType == "Trending")
-                {
-                    DateTime start = new DateTime(evt.StartTime.Year, evt.StartTime.Month, evt.StartTime.Day, evt.StartTime.Hour, 0, 0).AddHours(-3);
-                    DateTime end = start.AddHours(6);
-                    IEnumerable<Channel> channels = new TableOperations<Channel>(connection).QueryRecordsWhere($"MeterID = {meter.ID} AND MeasurementTypeID = (SELECT ID FROM MeasurementType Where Name = '{type}') AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic Where Name = 'RMS') AND PhaseID IN (SELECT ID FROM Phase Where Name IN ('AN', 'BN', 'CN'))");
-                    
-                    /* todo: fix hids
-                    using (API hids = new API())
-                    {
-
-                        string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "http://localhost:8086";
-                        string tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'") ?? "";
-                        string pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'") ?? "point_bucket";
-                        string orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'") ?? "gpa";
-
-                        hids.TokenID = tokenID;
-                        hids.PointBucket = pointBucket;
-                        hids.OrganizationID = orgID;
-                        hids.Connect(host);
-
-                        List<Point> points = hids.ReadPointsAsync((t) =>
-                        {
-                            t.FilterTags(channels.Select(c => c.ID.ToString("x8")));
-                            t.Range(start, end);
-                        }).ToListAsync().Result;
-
-                        foreach (Channel channel in channels) {
-                            channel.ConnectionFactory = () =>  new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
-                            returnData.Add($"{(type == "Voltage" ? "V" : "I")}{channel.Phase.Name}", points.Where(p => p.Tag == channel.ID.ToString("x8")).Select((p,index) => new[] { (p.Timestamp - epoch).TotalMilliseconds, p.Average }));
-                        }
-                    } */
-
-
-                    //MovingAverageRandomNumberGenerator generator = new MovingAverageRandomNumberGenerator((type=="Voltage" ? 1234 : 4321), 1, new[] { 0.2}, 50, 2);
-                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}AN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
-                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}BN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
-                    //returnData.Add($"{(type == "Voltage" ? "V" : "I")}CN", generator.Next(36).Select((rv, index) => new[] { (start - epoch).TotalMilliseconds + index * 600000, rv.Value }));
-
-                }
+                else throw new NotImplementedException("Endpoint moved to QueryHids/ByEvent");
 
                 return Ok(returnData);
             }
-
         }
+        
+        [HttpPost("QueryHids/ByEvent")]
+        public IActionResult QueryPoints([FromBody] JObject data, CancellationToken token)
+        {
+            DateTime evtStart;
+            DateTime evtEnd;
+            IEnumerable<Channel> channels;
+            int eventID = data["EventID"].ToObject<int>();
+            string type = data["MeasurementType"].ToObject<string>();
+
+
+            using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
+            {
+                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
+                evtStart = new DateTime(evt.StartTime.Year, evt.StartTime.Month, evt.StartTime.Day, evt.StartTime.Hour, 0, 0).AddHours(-3);
+                evtEnd = evtStart.AddHours(6);
+                channels = new TableOperations<Channel>(connection).QueryRecordsWhere(
+                    @"MeterID = {0}  
+                    AND MeasurementTypeID = (SELECT ID FROM MeasurementType Where Name = {1})
+                    AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic Where Name = 'RMS')
+                    AND PhaseID IN (SELECT ID FROM Phase Where Name IN ('AN', 'BN', 'CN'))", evt.MeterID, type);
+                if (!channels.Any()) return Ok("");
+            }
+
+            void BuildQuery(IQueryBuilder builder)
+            {
+                if (channels.Any())
+                {
+                    IEnumerable<string> tags = channels
+                        .Select(channel => ToTag(channel.ID));
+
+                    builder.FilterTags(tags);
+                }
+                builder.Range(API.FormatTimestamp(evtStart), API.FormatTimestamp(evtEnd));
+            }
+            Stream pointStream = PointStream.QueryPoints(CreateHIDSConnectionAsync, BuildQuery);
+
+
+            return new FileStreamResult(pointStream, "text/plain");
+        }
+
+        // These functions also exist in XDA, would it be worth migrating them to net standard 2.1 such that they may be resued instead of rewritten?
+        private async Task<API> CreateHIDSConnectionAsync()
+        {
+            string host;
+            string tokenID;
+            string pointBucket;
+            string orgID;
+            using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
+            {
+                host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'");
+                tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'");
+                pointBucket = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'");
+                orgID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'");
+            }
+
+            API hids = new API();
+            if (string.IsNullOrEmpty(host))
+                throw new ArgumentException("Unable to configure connection to HIDS: Host not specified.");
+
+            if (!string.IsNullOrEmpty(tokenID))
+                hids.TokenID = tokenID;
+
+            if (!string.IsNullOrEmpty(pointBucket))
+                hids.PointBucket = pointBucket;
+
+            if (!string.IsNullOrEmpty(orgID))
+                hids.OrganizationID = orgID;
+
+            await hids.ConnectAsync(host);
+            return hids;
+        }
+
+        public static string ToTag(int channelID) =>
+            channelID.ToString("x8");
+
+        public static int ToChannelID(string tag) =>
+            Convert.ToInt32(tag, 16);
     }
 }

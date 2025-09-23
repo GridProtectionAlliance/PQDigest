@@ -57,25 +57,89 @@ interface IProps {
     Axis: boolean
 }
 
-const EventSearchPreviewD3Chart = (props: { Event: PQDigestXDA.EventSearch, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number, Axis: boolean }) => {
+interface IPQData {
+    Tag: string,
+    Minimum: number,
+    Maximum: number,
+    Average: number,
+    QualityFlags: number,
+    Timestamp: string
+}
+const hidsDateTimeFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
+
 const EventSearchPreviewD3Chart = (props: IProps) => {
     const ref = React.useRef(null);
 
     React.useEffect(() => {
-        if (props.DataType == 'Trending') {
-            let handle = GetChannels().done(channels => GetData2(channels));
-            return () => {
-                if (handle.abort !== undefined) handle.abort();
-            }
-        }
-        else {
-            return GetData();
-        }
-       
-    }, [props.Event.ID]);
+        if (props.DataType !== "Trending") return;
 
-    function GetData() {
-        let handle = $.ajax({
+        // todo: maybe pass relevant channels into data handle? would require daisy chaining these but would avoid an extra lookup serverside...
+        const channelHandle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Channel/${props.Event.MeterID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+        const dataHandle = $.ajax({
+            type: "POST",
+            url: `${homePath}api/OpenXDA/Event/QueryHids/ByEvent`,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                EventID: props.Event.ID,
+                MeasurementType: props.MeasurementType
+            }),
+            dataType: 'text',
+            cache: false,
+            async: true
+        });
+
+        Promise.all([channelHandle, dataHandle]).then(allResults => {
+            const [channels, data]: [OpenXDA.Types.Channel[], string] = allResults;
+            const newPoints: string[] = data.split("\n");
+            const organizedData = {};
+
+            newPoints.forEach(jsonPoint => {
+                let point: IPQData = undefined;
+                try {
+                    if (jsonPoint !== "") point = JSON.parse(jsonPoint);
+                }
+                catch {
+                    console.error("Failed to parse point: " + jsonPoint);
+                }
+                if (point !== undefined) {
+                    const timeStamp = moment(point.Timestamp, hidsDateTimeFormat);
+                    // Todo: Handle alternate Series Types
+                    if (organizedData.hasOwnProperty(point.Tag)) {
+                        organizedData[point.Tag].push([timeStamp, point.Average]);
+                    } else {
+                        organizedData[point.Tag] = [[timeStamp, point.Average]];
+                    }
+                }
+            });
+            // This is to rename keys in here to match old code without doing a lookup every point parsed...
+            const keys = Object.keys(organizedData);
+            keys.forEach(key => {
+                const channel = channels.find(channel => channel.ID === Number("0x" + key));
+                const channelName = (props.MeasurementType == "Voltage" ? 'V' : 'I') + channel.Phase;
+                organizedData[channelName] = organizedData[key];
+                delete organizedData[key];
+            });
+
+            DrawChart(organizedData as XDADictionary);
+        });
+
+        return () => {
+            if (channelHandle?.abort != null) channelHandle.abort();
+            if (dataHandle?.abort != null) dataHandle.abort();
+        }
+    }, [props.Event.ID, props.DataType]);
+
+    React.useEffect(() => {
+        if (props.DataType !== 'Time') return;
+
+        const handle = $.ajax({
             type: "GET",
             url: `${homePath}api/OpenXDA/Event/Data?eventId=${props.Event.ID}` +
                 `&pixels=${Math.floor(props.Width)}` +
@@ -87,22 +151,10 @@ const EventSearchPreviewD3Chart = (props: IProps) => {
             async: true
         }).done(data => DrawChart(data));
 
-
         return function () {
-            if (handle.abort != undefined) handle.abort();
+            if (handle?.abort != null) handle.abort();
         }
-    }
-
-    function GetChannels(): JQuery.jqXHR<OpenXDA.Types.Channel[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Channel/${props.Event.MeterID}`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
+    }, [props.Event.ID, props.DataType]);
 
 
     function GetData2(channels: OpenXDA.Types.Channel[]) {

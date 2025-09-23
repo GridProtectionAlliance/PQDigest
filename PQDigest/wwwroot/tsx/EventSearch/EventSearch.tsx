@@ -25,22 +25,33 @@ import EventSearchPreview from '../EventSearch/EventSearchPreview';
 import { OpenXDA } from '../global';
 import _ from 'lodash';
 import { Table, Column } from '@gpa-gemstone/react-table';
-import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
+import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
 import MagDurChart from '../MagDurChart';
 import moment from 'moment';
 
+
+interface EventFilter {
+    ReturnLimit: number,
+    StartDate: string,
+    EndDate: string
+}
+
+const momentFormat = "YYYY-MM-DD";
+
 const EventSearch = (props: {}) => {
     const history = createBrowserHistory();
-
     const qs = queryString.parse(location.search.substring(1));
+    const [eventFilter, setEventFilter] = React.useState<EventFilter>(() => ({
+        ReturnLimit: qs.returnLimit == undefined ? 100 : parseInt(qs.returnLimit as string),
+        EndDate: qs.endDate == undefined ? moment().format(momentFormat) : qs.endDate as string,
+        StartDate: qs.startDate == undefined ? moment().subtract(30, 'days').format(momentFormat) : qs.startDate as string
+    }));
+
     const [types, setTypes] = React.useState<OpenXDA.EventType[]>([])
-    const [startDate, setStartDate] = React.useState<string>(qs.startDate == undefined ? moment().subtract(30, 'days').format("YYYY-MM-DD") : qs.startDate as string)
-    const [endDate, setEndDate] = React.useState<string>(qs.endDate == undefined ? moment().format("YYYY-MM-DD") : qs.endDate as string)
     const [meters, setMeters] = React.useState<OpenXDA.Meter[]>([]);
-    const [returnLimit, setReturnLimit] = React.useState<number>(qs.returnLimit == undefined ? 100: parseInt(qs.returnLimit as string));
     const [events, setEvents] = React.useState<OpenXDA.EventSearch[]>([]);
     const [eventCounts, setEventCounts] = React.useState<number>(0);
 
@@ -85,7 +96,7 @@ const EventSearch = (props: {}) => {
         
         if (meters.length == 0 || types.length == 0) return;
 
-        history.push({ pathname: homePath + 'EventSearch', search: `?eventID=${eventID}&startDate=${startDate}&endDate=${endDate}&returnLimit=${returnLimit}&types=${btoa(types.filter(x => x.Selected).map(x => x.ID).toString())}&meters=${btoa(meters.filter(x => x.Selected).map(x => x.ID).toString())}`})
+        history.push({ pathname: homePath + 'EventSearch', search: `?eventID=${eventID}&startDate=${eventFilter.StartDate}&endDate=${eventFilter.EndDate}&returnLimit=${eventFilter.ReturnLimit}&types=${btoa(types.filter(x => x.Selected).map(x => x.ID).toString())}&meters=${btoa(meters.filter(x => x.Selected).map(x => x.ID).toString())}`})
 
         let handle1 = GetEventSearch();
         handle1.done((data: OpenXDA.EventSearch[]) => {
@@ -104,7 +115,7 @@ const EventSearch = (props: {}) => {
         }
 
 
-    }, [types, startDate, endDate, meters, returnLimit, sortField, ascending]);
+    }, [types, eventFilter, meters, sortField, ascending]);
 
     function GetTypes(): JQuery.jqXHR<OpenXDA.EventType[]> {
         return $.ajax({
@@ -135,9 +146,9 @@ const EventSearch = (props: {}) => {
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             data: JSON.stringify({
-                StartDate: startDate,
-                EndDate: endDate,
-                Count: returnLimit,
+                StartDate: eventFilter.StartDate,
+                EndDate: eventFilter.EndDate,
+                Count: eventFilter.ReturnLimit,
                 SortField: sortField,
                 Ascending: ascending,
                 Meters: meters.filter(x => x.Selected).map(x => x.ID),
@@ -155,9 +166,9 @@ const EventSearch = (props: {}) => {
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             data: JSON.stringify({
-                StartDate: startDate,
-                EndDate: endDate,
-                Count: returnLimit,
+                StartDate: eventFilter.StartDate,
+                EndDate: eventFilter.EndDate,
+                Count: eventFilter.ReturnLimit,
                 SortField: sortField,
                 Ascending: ascending,
                 Meters: meters.filter(x => x.Selected).map(x => x.ID),
@@ -168,86 +179,68 @@ const EventSearch = (props: {}) => {
         });
     }
 
-
-
     return (
-        <div style={{ height: "100%", width: '100%' }}>
-            <div className="row" style={{ height: 75, margin: 5 }}>
+        <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div className="row" style={{ margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
                     <div className="card">
-                        <div className="card-body" style={{height: 75}}>
+                        <div className="card-body" style={{height: '145px'}}>
                             <div className="row">
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{border: '0px', width: 100}}>Return #</div>
-                                        <div className="col">
-                                            <select value={returnLimit} className="form-control" onChange={e => setReturnLimit(parseInt(e.target.value))}>
-                                                <option>100</option>
-                                                <option>250</option>
-                                                <option>500</option>
-                                                <option>1000</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                                <div className="col-2">
+                                    <Select<EventFilter>
+                                        Options={[{ Label: "100", Value: 100 }, { Label: "250", Value: 250 }, { Label: "500", Value: 500 }, { Label: "1000", Value: 1000 }]}
+                                        Setter={setEventFilter}
+                                        Field='ReturnLimit'
+                                        Label="Return #"
+                                        Record={eventFilter}
+                                    />
                                 </div>
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Meters</div>
-                                        <div className="col">
-                                            <MultiCheckBoxSelect Options={meters.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
-                                                let newMeters = _.cloneDeep(meters);
-                                                $.each(options, (index, option) => {
-                                                    newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
-                                                });
-                                                setMeters(newMeters)
-                                            }} />
-                                        </div>
-                                    </div>
+                                <div className="col-2">
+                                    <MultiCheckBoxSelect Label="Meters" Options={meters.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                                        let newMeters = _.cloneDeep(meters);
+                                        $.each(options, (index, option) => {
+                                            newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
+                                        });
+                                        setMeters(newMeters)
+                                    }} />
                                 </div>
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Type</div>
-                                        <div className="col">
-                                            <MultiCheckBoxSelect Options={types.map(t => Object.create({ Text: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
-                                                let newTypes = _.cloneDeep(types);
-                                                $.each(options, (index, option) => {
-                                                    newTypes.find(type => type.ID == option.Value).Selected = !option.Selected
-                                                });
-                                                setTypes(newTypes)
-                                            }} />
-                                        </div>
-                                    </div>
+                                <div className="col-2">
+                                    <MultiCheckBoxSelect Label="Type" Options={types.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                                        let newTypes = _.cloneDeep(types);
+                                        $.each(options, (index, option) => {
+                                            newTypes.find(type => type.ID == option.Value).Selected = !option.Selected
+                                        });
+                                        setTypes(newTypes)
+                                    }} />
                                 </div>
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>Start Date</div>
-                                        <div className="col">
-                                            <input className="form-control" value={startDate} type="date" onChange={e => setStartDate(e.target.value)}/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col">
-                                    <div className="row">
-                                        <div className="form-control text-right" style={{ border: '0px', width: 100 }}>End Date</div>
-                                        <div className="col">
-                                            <input className="form-control" value={endDate} type="date" onChange={e => setEndDate(e.target.value)}/>
-                                        </div>
-                                    </div>
+                                <div className="col-6">
+                                    <DateRangePicker<EventFilter>
+                                        FromField="StartDate"
+                                        ToField="EndDate"
+                                        Label="Date Range"
+                                        Type="date"
+                                        Valid={() => eventFilter.StartDate != null && eventFilter.EndDate != null &&
+                                            moment(eventFilter.StartDate, momentFormat) <= moment(eventFilter.EndDate, momentFormat)}
+                                        Feedback="Date range is required, and start may not be after end."
+                                        Record={eventFilter}
+                                        Format={momentFormat}
+                                        Setter={setEventFilter}
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ height: "calc(100% - 80px)", margin: '5px 5px 5px 5px ' }}>
-                <div className="col" style={{ padding: '0px 2px 0px 0px', width: window.innerWidth / 2}}>
-                    <div className="card">
+            <div className="row" style={{ flex: 1, margin: '5px 5px 5px 5px', overflow: 'hidden' }}>
+                <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
+                    <div className="card h-100" style={{ display: 'flex', flexDirection: "column"}}>
                         <div className="card-header">
                             Events (Showing { events?.length ?? 0} of { eventCounts})
                             <button className="btn btn-danger" style={{ position: 'absolute', top: 5, right: 120 }} onClick={() => setShowEventList(!showEventList)}>View as {(showEventList? 'Mag/Dur' : 'List')}</button>
                             <button className="btn btn-primary" style={{ position: 'absolute', top: 5, right: 5 }} onClick={() => ExportToCsv(events, 'EventSearch.csv')}>Export CSV</button>
                         </div>
-                        <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
+                        <div className="card-body p-0" style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
                             {showEventList ?
                                 <Table<OpenXDA.EventSearch>
                                     Data={events}
@@ -308,10 +301,10 @@ const EventSearch = (props: {}) => {
                         </div>
                     </div>
                 </div>
-                <div className="col" style={{ padding: '0px 0px 0px 3px', width: window.innerWidth/2 }}>
-                    <div className="card">
+                <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
+                    <div className="card h-100">
                         {/*<div className="card-header">Event Preview</div>*/}
-                        <div className="card-body" style={{ height: (window.innerHeight) - 226, padding: 0 }}>
+                        <div className="card-body" style={{ padding: 0 }}>
                             <EventSearchPreview Event={events.find(e => e.ID == eventID)} Height={window.innerHeight - 226} Width={window.innerWidth / 2}/>
                         </div>
                     </div>

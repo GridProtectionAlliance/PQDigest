@@ -39,11 +39,26 @@ interface XDADictionary {
     IAN: [number, number][],
     IBN: [number, number][],
     ICN: [number, number][],
-    ING: [number, number][],
+    ING: [number, number][]
+}
 
+interface IProps {
+    Event: PQDigestXDA.EventSearch,
+    MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent',
+    DataType: 'Time' | 'Trending',
+    Margin: {
+        Left: number,
+        Right: number,
+        Top: number,
+        Bottom: number
+    },
+    Width: number,
+    Height: number,
+    Axis: boolean
 }
 
 const EventSearchPreviewD3Chart = (props: { Event: PQDigestXDA.EventSearch, MeasurementType: 'Current' | 'Voltage' | 'TripCoilCurrent', DataType: 'Time' | 'Statistic' | 'Trending', Margin: { Left: number, Right: number, Top: number, Bottom: number }, Width: number, Height: number, Axis: boolean }) => {
+const EventSearchPreviewD3Chart = (props: IProps) => {
     const ref = React.useRef(null);
 
     React.useEffect(() => {

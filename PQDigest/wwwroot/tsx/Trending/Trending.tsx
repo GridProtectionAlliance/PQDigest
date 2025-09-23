@@ -65,7 +65,6 @@ const Trending = () => {
             return meters[index];
         else
             return meters[0];
-
     }, [meters, trendFilter?.MeterID]);
 
     React.useEffect(() => {
@@ -133,12 +132,12 @@ const Trending = () => {
 
     return (
         <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div className="row" style={{ height: 130, margin: 5 }}>
+            <div className="row" style={{ margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
                     <div className="card">
-                        <div className="card-body" style={{ height: 130 }}>
+                        <div className="card-body" style={{ height: '145px' }}>
                             <div className="row">
-                                <div className="col">
+                                <div className="col-2">
                                     <Select<TrendingFilter>
                                         Options={meters.map(m => ({ Label: m.Name, Value: m.ID }))}
                                         Setter={setTrendFilter}
@@ -147,7 +146,7 @@ const Trending = () => {
                                         Record={trendFilter}
                                     />
                                 </div>
-                                <div className="col">
+                                <div className="col-2">
                                     <MultiCheckBoxSelect Label="Channels" Options={channels.map(t => ({ Label: t.Channel.Name, Value: t.Channel.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                         let newChannels = _.cloneDeep(channels);
                                         $.each(options, (_index, option) => {
@@ -156,15 +155,16 @@ const Trending = () => {
                                         setChannels(newChannels)
                                     }} />
                                 </div>
-                                <div className="col-4">
+                                <div className="col-6">
                                     <DateRangePicker<TrendingFilter>
                                         FromField="StartDate"
                                         ToField="EndDate"
                                         Label="Date Range"
                                         Type="date"
-                                        Valid={() => true}
+                                        Valid={() => trendFilter.StartDate != null && trendFilter.EndDate != null &&
+                                            moment(trendFilter.StartDate, MomentDateTimeFormat) <= moment(trendFilter.EndDate, MomentDateTimeFormat)}
+                                        Feedback="Date range is required, and start may not be after end."
                                         Record={trendFilter}
-                                        Field={"ShowStats"}
                                         Format={MomentDateTimeFormat}
                                         Setter={setTrendFilter}
                                     />

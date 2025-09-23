@@ -37,13 +37,13 @@ const PQDigest: React.FunctionComponent = () => {
     return (
         <Application
             HomePath={homePath}
-            DefaultPath={""}
+            DefaultPath={"Home"}
             Logo={`${homePath}Image/PQDigest.png`}
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
             SidebarUI={<>&copy; 2020 - PQDigest</>}
             AllowCollapsed={false}
         >
-            <Page Name={''} Label={'Home'} Icon={<img style={{ maxHeight: 36 }} src={`${homePath}Image/home.png`} />}>
+            <Page Name={'Home'} Label={'Home'} Icon={<img style={{ maxHeight: 36 }} src={`${homePath}Image/home.png`} />}>
                 <Home />
             </Page>
             <Page Name={'Trending'} Label={'Trending'} Icon={<img style={{ height: 36 }} src={`${homePath}Image/trending.png`} />}>

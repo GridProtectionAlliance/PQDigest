@@ -95,11 +95,11 @@ namespace PQDigest
 
             public void LoadSettings()
             {
-                ConnectionString = m_configuration[ConnStringSettingName];
+                ConnectionString = m_configuration[$"{SettingsCategory}:{ConnStringSettingName}"];
                 if (ConnectionString is null)
                     throw new ArgumentNullException($"Could not retrieve setting {ConnStringSettingName} of category {SettingsCategory} for db connection...");
 
-                DataProviderString = m_configuration[DataStringSettingName];
+                DataProviderString = m_configuration[$"{SettingsCategory}:{DataStringSettingName}"];
                 if (DataProviderString is null)
                     throw new ArgumentNullException($"Could not retrieve setting {DataStringSettingName} of category {SettingsCategory} for db connection...");
             }

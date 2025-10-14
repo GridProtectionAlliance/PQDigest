@@ -26,13 +26,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
+using Gemstone.Data;
+using Gemstone.Diagnostics;
+using Gemstone.Threading;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
 using PQDigest.Models;
-using Serilog;
 
 namespace PQDigest
 {
@@ -46,22 +51,53 @@ namespace PQDigest
 
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(Configuration)
-            .CreateLogger();
-
             try
             {
-                Log.Information("Testing ...");
+                ShutdownHandler.Initialize();
+
+                Settings settings = new()
+                {
+                    INIFile = ConfigurationOperation.ReadWrite,
+                    SQLite = ConfigurationOperation.Disabled
+                };
+
+                DefineSettings(settings);
+
+                // Bind settings to configuration sources
+                settings.Bind(new ConfigurationBuilder()
+                    .ConfigureGemstoneDefaults(settings)
+                    .AddCommandLine(args, settings.SwitchMappings));
+
+                HostApplicationBuilderSettings appSettings = new()
+                {
+                    Args = args,
+                    ApplicationName = nameof(PQDigest),
+                    DisableDefaults = true,
+                };
+
                 CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Host terminated unexpectedly");
+
+                #if DEBUG
+                    Settings.Save(forceSave: true);
+                #else
+                    Settings.Save();
+                #endif
             }
             finally
             {
-                Log.CloseAndFlush();
+                ShutdownHandler.InitiateSafeShutdown();
+            }
+        }
+
+        /// <summary>
+        /// Establishes default settings for the config file.
+        /// </summary>
+        public static void DefineSettings(Settings settings)
+        {
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
+            {
+                DiagnosticsLogger.DefineSettings(settings);
+                AdoDataConnection.DefineSettings(settings);
             }
         }
 
@@ -76,6 +112,29 @@ namespace PQDigest
                     // load settings from config file
                     services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
                 })
-                .UseSerilog();
+                .ConfigureLogging(builder =>
+                {
+                    builder.ClearProviders();
+                    builder.SetMinimumLevel(LogLevel.Information);
+
+                    builder.AddFilter("Microsoft", LogLevel.Warning);
+                    builder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error);
+                    builder.AddFilter<DebugLoggerProvider>("", LogLevel.Debug);
+                    builder.AddFilter<DiagnosticsLoggerProvider>("", LogLevel.Trace);
+
+                    builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Error);
+                    builder.AddDebug();
+
+                    // Add Gemstone diagnostics logging
+                    builder.AddGemstoneDiagnostics();
+
+                    #if RELEASE
+                    if (OperatingSystem.IsWindows())
+                    {
+                        builder.AddFilter<EventLogLoggerProvider>("Application", LogLevel.Warning);
+                        builder.AddEventLog();
+                    }
+                    #endif
+                });
     }
 }

@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -57,7 +58,7 @@ namespace PQDigest
                     DataGroup dataGroup = m_memoryCache.GetOrCreate(target, task =>
                     {
                         task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-                        List<byte[]> data = ChannelData.DataFromEvent(eventID, () => DatabaseConnectionFactory.CreateDbConnection("OpenXDA"));
+                        List<byte[]> data = ChannelData.DataFromEvent(eventID, () => new AdoDataConnection(Settings.Default));
                         return ToDataGroup(meter, data);
                     });
                     return dataGroup;
@@ -87,7 +88,7 @@ namespace PQDigest
             VICycleDataGroup viCycleDataGroup = m_memoryCache.GetOrCreate(target, task =>
             {
                 task.SlidingExpiration = TimeSpan.FromMinutes(10.0D);
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
                 {
                     DataGroup dataGroup = QueryDataGroup(eventID, meter);
                     double freq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;

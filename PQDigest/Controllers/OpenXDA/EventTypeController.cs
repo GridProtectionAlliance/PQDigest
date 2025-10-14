@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -45,8 +46,9 @@ namespace PQDigest.Controllers
             m_configuration = configuration;
         }
 
-        public ActionResult Get() {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public ActionResult Get()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 return Ok(connection.RetrieveData("SELECT * FROM EventType WHERE Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault')"));
             }

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -56,7 +57,7 @@ namespace PQDigest.Controllers
             try
             {
                 // todo: there is no view that matches typescript channels, so we do a custom query here. Should we create such a view?
-                using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
+                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
                 {
                     return Ok(connection.RetrieveData(@"
                         SELECT 

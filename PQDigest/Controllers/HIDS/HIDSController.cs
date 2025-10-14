@@ -23,20 +23,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Numeric.Random;
+using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using PQDigest.Models;
-using System.Net.Http;
-using Gemstone.Numeric.Random;
-using System.Security.Claims;
-using System.Data;
-using HIDS;
 
 namespace PQDigest.Controllers
 {
@@ -62,7 +63,7 @@ namespace PQDigest.Controllers
         [HttpPost("")]
         public ActionResult Post([FromBody] PostData postData)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);                
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();

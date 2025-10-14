@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -53,8 +54,9 @@ namespace PQDigest.Controllers
         }
 
         [HttpGet, Route("{eventID:int}")]
-        public FileStreamResult Get(int eventID) {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public FileStreamResult Get(int eventID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);
 

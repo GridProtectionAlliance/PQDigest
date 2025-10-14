@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -47,8 +48,9 @@ namespace PQDigest.Controllers.PreviousEvent
         }
 
         [HttpGet, Route("{eventID:int}")]
-        public ActionResult Get(int eventID) {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public ActionResult Get(int eventID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
 
                 DataTable table = connection.RetrieveData(@"

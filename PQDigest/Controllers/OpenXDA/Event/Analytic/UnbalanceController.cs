@@ -27,6 +27,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using MathNet.Numerics.Statistics;
@@ -57,7 +58,7 @@ namespace PQDigest.Controllers
         [HttpGet, Route("{eventID:int}/{pixels:int}")]
         public ActionResult Get(int eventID, int pixels)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);

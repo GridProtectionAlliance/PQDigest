@@ -21,11 +21,12 @@
 //
 //******************************************************************************************************
 
+using System.IO;
+using System.Net;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.IO;
-using System.Net;
 
 namespace PQDigest.Controllers
 {
@@ -47,8 +48,9 @@ namespace PQDigest.Controllers
         }
 
         [HttpPost("")]
-        public ActionResult Post([FromBody] PostData postData) {
-            using (AdoDataConnection xdaConnection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public ActionResult Post([FromBody] PostData postData)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
 #if DEBUG
                 return Ok("{\"displayFieldName\":\"DATASOURCE\",\"fieldAliases\":{\"AMPLITUDE\":\"AMPLITUDE\",\"LONGITUDE\":\"LONGITUDE\",\"LATITUDE\":\"LATITUDE\",\"DISPLAYTIME\":\"DISPLAYTIME\"},\"geometryType\":\"esriGeometryPoint\",\"spatialReference\":{\"wkid\":102100,\"latestWkid\":3857},\"fields\":[{\"name\":\"AMPLITUDE\",\"type\":\"esriFieldTypeDouble\",\"alias\":\"AMPLITUDE\"},{\"name\":\"LONGITUDE\",\"type\":\"esriFieldTypeDouble\",\"alias\":\"LONGITUDE\"},{\"name\":\"LATITUDE\",\"type\":\"esriFieldTypeDouble\",\"alias\":\"LATITUDE\"},{\"name\":\"DISPLAYTIME\",\"type\":\"esriFieldTypeString\",\"alias\":\"DISPLAYTIME\",\"length\":54}],\"features\":[{\"attributes\":{\"AMPLITUDE\":-10.135999999999999,\"LONGITUDE\":-85.042429999999996,\"LATITUDE\":35.083509999999997,\"DISPLAYTIME\":\"07/19/2020 13:50:21.633\"},\"geometry\":{\"x\":-9466880.0033999998,\"y\":4175235.6185000017}}]}");

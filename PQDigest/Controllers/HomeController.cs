@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,7 +55,7 @@ namespace PQDigest.Controllers
 
         public IActionResult Index()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(_configuration["OpenXDA:ConnectionString"], _configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 ViewData["org"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'");
                 ViewData["host"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'");

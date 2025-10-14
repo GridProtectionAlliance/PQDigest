@@ -23,19 +23,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Numeric.Random;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using PQDigest.Models;
-using System.Net.Http;
-using Gemstone.Numeric.Random;
-using System.Data;
 
 namespace PQDigest.Controllers
 {
@@ -109,9 +110,9 @@ namespace PQDigest.Controllers
         [HttpGet("Distrubances/{eventID:int}")]
         public ActionResult GetDistrubances(int eventID)
         {
-            using (AdoDataConnection xdaConnection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-                DataTable distrubances = xdaConnection.RetrieveData(@"
+                DataTable distrubances = connection.RetrieveData(@"
                     select * from Disturbance where eventid = {0} AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND PerUnitMagnitude <= 1
                 ", eventID);
 

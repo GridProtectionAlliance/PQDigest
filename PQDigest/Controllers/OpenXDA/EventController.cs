@@ -30,6 +30,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using HIDS;
@@ -57,7 +58,7 @@ namespace PQDigest.Controllers
         [HttpGet("Count")]
         public ActionResult GetCount()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
                 DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
@@ -79,7 +80,7 @@ namespace PQDigest.Controllers
         [HttpGet("Data")]
         public ActionResult GetData(int eventId, string type, string dataType)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);
 
@@ -139,7 +140,7 @@ namespace PQDigest.Controllers
             string type = data["MeasurementType"].ToObject<string>();
 
 
-            using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 evtStart = new DateTime(evt.StartTime.Year, evt.StartTime.Month, evt.StartTime.Day, evt.StartTime.Hour, 0, 0).AddHours(-3);
@@ -176,7 +177,7 @@ namespace PQDigest.Controllers
             string tokenID;
             string pointBucket;
             string orgID;
-            using (AdoDataConnection connection = DatabaseConnectionFactory.CreateDbConnection("OpenXDA"))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'");
                 tokenID = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'");

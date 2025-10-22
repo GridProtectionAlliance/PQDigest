@@ -9,6 +9,7 @@
     <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>false</RunAnalyzers>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	<DefineConstants>$(DefineConstants);IS_GEMSTONE</DefineConstants>
   </PropertyGroup>
 
 

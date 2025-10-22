@@ -76,60 +76,6 @@ namespace PQDigest.Controllers
             }
         }
 
-
-        [HttpGet("Data")]
-        public ActionResult GetData(int eventId, string type, string dataType)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-            {
-                DateTime epoch = new DateTime(1970, 1, 1);
-
-                Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventId);
-                if (evt == null) return BadRequest("Must provide a valid EventID");
-                Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
-
-                int calcCycle = connection.ExecuteScalar<int?>("SELECT CalculationCycle FROM FaultSummary WHERE EventID = {0} AND IsSelectedAlgorithm = 1", evt.ID) ?? -1;
-                double systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0;
-                
-                Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
-                DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);
-                if (dataType == "Time")
-                {
-                    DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventId, meter); ;
-                    bool hasVoltLN = dataGroup.DataSeries.Select(x => x.SeriesInfo.Channel.Phase.Name).Where(x => x.Contains("N")).Any();
-                    foreach (var series in dataGroup.DataSeries)
-                    {
-                        List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
-                        if (type == "Voltage")
-                        {
-                            if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && series.SeriesInfo.Channel.Phase.Name.Contains("N"))
-                            {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, data);
-                            }
-                            else if (series.SeriesInfo.Channel.MeasurementType.Name == "Voltage" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous" && !hasVoltLN)
-                            {
-                                returnData.Add("V" + series.SeriesInfo.Channel.Phase.Name, data);
-                            }
-
-                        }
-                        else
-                        {
-                            if (series.SeriesInfo.Channel.MeasurementType.Name == "Current" && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
-                            {
-                                returnData.Add("I" + series.SeriesInfo.Channel.Phase.Name, data);
-                            }
-                        }
-
-                    }
-
-                }
-                else throw new NotImplementedException("Endpoint moved to QueryHids/ByEvent");
-
-                return Ok(returnData);
-            }
-        }
-        
         [HttpPost("QueryHids/ByEvent")]
         public IActionResult QueryPoints([FromBody] JObject data, CancellationToken token)
         {

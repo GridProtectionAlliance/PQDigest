@@ -15,7 +15,7 @@
     "moduleResolution": "Node",
     "skipLibCheck": true
   },
-  "include": [ "wwwroot/tsx", "wwwroot/ts"],
+  "include": [ "wwwroot/tsx", "wwwroot/ts", "EventWidgets/**/*" ],
   "exclude": [
     "node_modules"
   ]

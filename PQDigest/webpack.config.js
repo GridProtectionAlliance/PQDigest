@@ -6,10 +6,10 @@ module.exports = env => {
     if (process.env.NODE_ENV == undefined) process.env.NODE_ENV = 'development';
     return {
         mode: process.env.NODE_ENV,
-        context: path.resolve(__dirname, 'wwwroot'),
+        context: path.resolve(__dirname),
         cache: true,
         entry: {
-            PQDigest: "./tsx/PQDigest.tsx"
+            PQDigest: "./wwwroot/tsx/PQDigest.tsx"
         },
         output: {
             path: path.resolve(__dirname, 'wwwroot', 'js'),
@@ -28,7 +28,14 @@ module.exports = env => {
         module: {
             rules: [
                 // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
-                { test: /\.tsx?$/, use: [{ loader: 'ts-loader' }] },
+                {
+                    test: /\.tsx?$/,
+                    include: [
+                        path.resolve(__dirname, "wwwroot"),
+                        path.resolve(__dirname, "EventWidgets")
+                    ],
+                    use: [{ loader: "ts-loader" }]
+                },
                 {
                     test: /\.css$/,
                     include: path.resolve(__dirname, 'wwwroot', "Content"),
@@ -46,17 +53,8 @@ module.exports = env => {
                 }
             ]
         },
-        externals: {
-        },
-        optimization: {
-            //splitChunks: {
-            //    chunks: 'all',
-            //}
-            //minimizer: [new UglifyJsPlugin({
-            //    test: /\.js(\?.*)?$/i,
-            //    sourceMap: true
-            //})],
-        },
+        externals: { },
+        optimization: { },
         plugins: [
             new webpack.ProvidePlugin({
                 $: "jquery",

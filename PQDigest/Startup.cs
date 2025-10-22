@@ -43,6 +43,8 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using openXDA.APIAuthentication;
+using PQDigest.Controllers;
 
 namespace PQDigest
 {
@@ -60,6 +62,8 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IAPICredentialRetriever, XDAAPICredentialRetriever>();
+
             IMvcBuilder builder = services.AddControllersWithViews( options => {
                 options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
             }).AddNewtonsoftJson(options =>
@@ -117,6 +121,7 @@ namespace PQDigest
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddMicrosoftIdentityUI();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -29,6 +29,7 @@ using System.Data;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -67,24 +68,24 @@ namespace PQDigest.Controllers
 
         public ActionResult Get() {
 
-//#if DEBUG
-//            List<TableData> returnobj = new List<TableData>() {
-//               new TableData(){ ID=37, Name = "Meter 1", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
-//               new TableData(){ ID=38, Name = "Meter 2", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
-//               new TableData(){ ID=39, Name = "Meter 3", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
-//               new TableData(){ ID=47, Name = "Meter 4", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
-//               new TableData(){ ID=49, Name = "Meter 5", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
-//               new TableData(){ ID=50, Name = "Meter 6", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
-//               new TableData(){ ID=52, Name = "Meter 7", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
-//               new TableData(){ ID=53, Name = "Meter 8", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
-//               new TableData(){ ID=56, Name = "Meter 9", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
-//            };
+            //#if DEBUG
+            //            List<TableData> returnobj = new List<TableData>() {
+            //               new TableData(){ ID=37, Name = "Meter 1", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
+            //               new TableData(){ ID=38, Name = "Meter 2", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
+            //               new TableData(){ ID=39, Name = "Meter 3", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
+            //               new TableData(){ ID=47, Name = "Meter 4", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
+            //               new TableData(){ ID=49, Name = "Meter 5", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
+            //               new TableData(){ ID=50, Name = "Meter 6", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
+            //               new TableData(){ ID=52, Name = "Meter 7", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
+            //               new TableData(){ ID=53, Name = "Meter 8", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
+            //               new TableData(){ ID=56, Name = "Meter 9", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
+            //            };
 
 
-//            return Ok(returnobj);
+            //            return Ok(returnobj);
 
-//#else
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            //#else
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1).AddSeconds(-1);
                 DateTime start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(-30);

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +36,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OpenXDA.Model;
+using openXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -55,7 +56,7 @@ namespace PQDigest.Controllers
         public IActionResult Get() {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
                 {
                     string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
                     DataTable meters = connection.RetrieveData("SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company as C WHERE C.CompanyID = {0})", orgId);
@@ -77,7 +78,7 @@ namespace PQDigest.Controllers
         {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
                 {
 
                     string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
@@ -97,7 +98,7 @@ namespace PQDigest.Controllers
         [HttpGet("Channels")]
         public ActionResult GetChannels()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();

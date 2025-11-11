@@ -22,27 +22,24 @@
 //******************************************************************************************************
 
 import React from 'react';
-import leaflet from 'leaflet';
-import { Map, CircleMarker, TileLayer, WMSTileLayer, GeoJSON } from 'react-leaflet';
-import { BasemapLayer } from 'esri-leaflet';
-import proj4 from 'proj4';
+import { basemapLayer, Basemaps } from 'esri-leaflet';
+import { MapContainer, CircleMarker, TileLayer, WMSTileLayer, useMapEvents } from 'react-leaflet';
 import 'proj4leaflet';
 import { Lightning, OpenXDA } from '../global';
-import L from 'leaflet';
 import moment from 'moment';
 import 'moment-timezone';
+import _ from 'lodash';
 
-const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[],Width: number, Height: number, Bounds: [[number,number],[number,number]], SetBounds: (bounds) => void, SetStrike: (strike)=> void }> = (props) => {
+type bounds = [[number, number], [number, number]];
+
+const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[], Width: number, Height: number, Bounds: bounds, SetBounds: (bounds: bounds) => void, SetStrike: (strike)=> void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
-    const [baseMap, setBaseMap] = React.useState<leaflet.esri.Basemaps>('Streets');
-
-    let bounds: any = [[34, -87], [36, -85]];
-
+    const [baseMap, setBaseMap] = React.useState<Basemaps>('Streets');
 
     let time = moment(props.DateTime);
     let minutes = (time.minutes() - time.minutes() % 5).toString();
     let timestring = time.tz('America/Chicago').utc().format('YYYY-MM-DDTHH') + ':' + (minutes.length == 1 ? `0${minutes}` : minutes);
-    let bm = leaflet.esri.basemapLayer(baseMap);
+    let bm = basemapLayer(baseMap);
 
     return (
         <div className="card">
@@ -52,7 +49,7 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Str
                         <input type="checkbox" className="form-check-input" value="" checked={radar} onChange={() => setRadar(!radar)}/>Show Radar
                   </label>
                 </div>
-                <select className="form-control" style={{width: 200, position: 'absolute', right: 5, top: 5}}  value={baseMap} onChange={(evt) => setBaseMap(evt.target.value as leaflet.esri.Basemaps)}>
+                <select className="form-control" style={{width: 200, position: 'absolute', right: 5, top: 5}}  value={baseMap} onChange={(evt) => setBaseMap(evt.target.value as Basemaps)}>
                     <option value='Streets'>Streets</option>
                     <option value='Topographic'>Topographic</option>
                     <option value='NationalGeographic'>NationalGeographic</option>
@@ -71,12 +68,8 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Str
             </div>
             <div className="card-body" style={{ padding: 0}}>
 
-                <Map bounds={props.Bounds} style={{ height: props.Height - 50, width: props.Width - 12 }} onMoveEnd={(evt) => {
-                    let bounds = evt.target.getBounds();
-                    let newBounds = [[bounds._southWest.lat, bounds._southWest.lng], [bounds._northEast.lat, bounds._northEast.lng]];
-                    if (newBounds !== props.Bounds)
-                        props.SetBounds(newBounds);
-                }}>
+                <MapContainer bounds={props.Bounds} style={{ height: props.Height - 50, width: props.Width - 12 }}>
+                    <MapBoundSetter Bounds={props.Bounds} SetBounds={props.SetBounds} />
                     <TileLayer
                         url={bm['_url']}
                         attribution={bm.options.attribution}
@@ -97,21 +90,37 @@ const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Str
                         <CircleMarker
                             key={index}
                             center={[s.Latitude, s.Longitude]}
-                            style={{ cursor: 'pointer' }}
+                            //style={{ cursor: 'pointer' }}
                             radius={(props.Strike?.DisplayTime == s.DisplayTime && s.Amplitude == props.Strike?.Amplitude && s.Latitude == props.Strike?.Latitude && s.Longitude == props.Strike?.Longitude ? 5 : 3)}
                             color={(props.Strike?.DisplayTime == s.DisplayTime && s.Amplitude == props.Strike?.Amplitude && s.Latitude == props.Strike?.Latitude && s.Longitude == props.Strike?.Longitude ? 'black' : 'red')}
-                            weight="1"
+                            weight={1}
                             fillColor="red"
-                            fillOpacity="1"
-                            onClick={() => props.SetStrike(s)}
+                            fillOpacity={1}
+                            eventHandlers={{
+                                click: () => props.SetStrike(s)
+                            }}
                         />)
                     }
                     {/*props.Locations.map((s, index) => <CircleMarker key={index} center={[s.Latitude, s.Longitude]} style={{display: 'none'} }/>)*/}
 
-                </Map>
+                </MapContainer>
             </div>
         </div>
         );
+}
+
+const MapBoundSetter: React.FunctionComponent<{ Bounds: bounds, SetBounds: (bounds: bounds) => void }> = (props) => {
+    const map = useMapEvents({
+        moveend: () => {
+            const newBoundsRaw = map.getBounds();
+            const southWest = newBoundsRaw.getSouthWest();
+            const northEast = newBoundsRaw.getNorthEast();
+            const newBounds: bounds = [[southWest.lat, southWest.lng], [northEast.lat, northEast.lng]];
+            if (!_.isEqual(newBounds, props.Bounds))
+                props.SetBounds(newBounds);
+        }
+    });
+    return null;
 }
 
  export default ESRIMap;

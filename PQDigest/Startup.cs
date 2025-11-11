@@ -26,6 +26,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Web;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -37,6 +38,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Newtonsoft.Json.Linq;
@@ -58,21 +60,9 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => {
-                options.AddPolicy(name: "AllowInfluxDB", builder => {
-                    using (AdoDataConnection connection = new AdoDataConnection(Configuration["OpenXDA:ConnectionString"], Configuration["OpenXDA:DataProviderString"]))
-                    {
-                        string host = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'") ?? "http://localhost:8086";
-                        builder.WithOrigins(host);
-                    }
-                });
-            });
-
             IMvcBuilder builder = services.AddControllersWithViews( options => {
                 options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
-            })
-             
-            .AddNewtonsoftJson(options =>
+            }).AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();

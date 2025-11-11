@@ -23,18 +23,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
+using Gemstone.Numeric.Random;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using PQDigest.Models;
-using Gemstone.Numeric.Random;
-using System.Data;
-using System.Security.Claims;
 using Microsoft.Graph;
 using Newtonsoft.Json;
+using PQDigest.Models;
 
 namespace PQDigest.Controllers
 {
@@ -49,8 +50,9 @@ namespace PQDigest.Controllers
             m_configuration = configuration;
         }
 
-        public ActionResult Get() {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public ActionResult Get()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
 //#if DEBUG 
 //                NormalRandomNumberGenerator magRandomGenerator = new NormalRandomNumberGenerator(142343, 1, 0.1);

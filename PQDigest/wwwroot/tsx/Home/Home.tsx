@@ -28,7 +28,7 @@ import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
 import moment from 'moment';
 
-const Home = (props: {}) => {
+const Home = () => {
     const [mailTo, setMailTo] = React.useState<string>('');
     const [numberMeters, setNumberMeters] = React.useState<number>(0);
     const [eventCount, setEventCount] = React.useState<number>(0);
@@ -49,58 +49,21 @@ const Home = (props: {}) => {
             setEventCount(data);
         });
 
-
         return function () {
             if (handle.abort != undefined) handle.abort();
             if (handle2.abort != undefined) handle2.abort();
             if (handle3.abort != undefined) handle3.abort();
-
         }
     }, []);
 
-    function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/Setting/Email.Mailto`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetMeterCount(): JQuery.jqXHR<number> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter/Count`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetEventCount(): JQuery.jqXHR<number> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Count`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-
-
     return (
-        <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
-            <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
-                <div className="card">
+        <div className="row h-100" style={{ margin: '5px 5px 5px 5px '}}>
+            <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="card h-50">
                     <div className="card-header">
                         Welcome, { userName}
                     </div>
-                    <div className="card-body" style={{ height: (window.innerHeight - 127) / 2 - 52 }}>
+                    <div className="card-body" style={{ height: (window.innerHeight - 41) / 2 - 52 }}>
                         <br />
                         <p>So far this month there have been {eventCount} events recorded from your {numberMeters} power quality meters.</p>
                         <br />
@@ -109,39 +72,71 @@ const Home = (props: {}) => {
                         <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
                     </div>
                 </div>
-
-            <div className="card">
-                <div className="card-header">
-                    Magnitude Duration - Last 30 Days
+                <div className="card h-50">
+                    <div className="card-header">
+                        Magnitude Duration - Last 30 Days
+                    </div>
+                    <div className="card-body" style={{ padding: 0 }}>
+                        <MagDurChart Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 70} />
+                    </div>
                 </div>
-                <div className="card-body" style={{ padding: 0 }}>
-                    <MagDurChart Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
-                </div>
-            </div>
 
             </div>
-            <div className="col" style={{ padding: '0px 0px 0px 3px' }}>
-                <div className="card">
+            <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
+                <div className="card h-50">
                     <div className="card-header">
                         Historical Event Counts 
                   </div>
                     <div className="card-body" style={{ padding: 0 }}>
-                        <EventCountsByMonth Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 53}  />
+                        <EventCountsByMonth Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 53}  />
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card h-50">
                     <div className="card-header">
                         Meter Activity - Last 30 Days
                   </div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 127) / 2 - 70, overflowY: 'hidden'}}>
-                        <EventCountTable Width={window.innerWidth / 2 - 20} Height={(window.innerHeight - 127) / 2 - 70} />
+                    <div className="card-body" style={{ padding: 0, flexDirection: 'column', display: 'flex', overflowY: 'hidden'}}>
+                        <EventCountTable />
                     </div>
                 </div>
 
             </div>
         </div>
     )
+}
+
+function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/Setting/Email.Mailto`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetMeterCount(): JQuery.jqXHR<number> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/OpenXDA/Meter/Count`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetEventCount(): JQuery.jqXHR<number> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/OpenXDA/Event/Count`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
 }
 
 export default Home;

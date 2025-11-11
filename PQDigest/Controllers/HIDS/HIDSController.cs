@@ -23,22 +23,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Numeric.Random;
+using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
 using PQDigest.Models;
-using System.Net.Http;
-using Gemstone.Numeric.Random;
-using System.Security.Claims;
-using System.Data;
-using HIDS;
 
 namespace PQDigest.Controllers
 {
@@ -64,12 +63,12 @@ namespace PQDigest.Controllers
         [HttpPost("")]
         public ActionResult Post([FromBody] PostData postData)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime epoch = new DateTime(1970, 1, 1);                
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
 
-                    
+                /* ToDo: fix hids
                 using (API hids = new API())
                 {
 
@@ -95,6 +94,7 @@ namespace PQDigest.Controllers
                         returnData.Add($"{channel.Phase.Name}", points.Where(p => p.Tag == channel.ID.ToString("x8")).Select((p,index) => new[] { (p.Timestamp - epoch).TotalMilliseconds, p.Minimum, p.Average, p.Maximum }));
                     }
                 }
+                */
 
                 return Ok(returnData);
             }

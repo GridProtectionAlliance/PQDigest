@@ -52,8 +52,8 @@ export function ExportToCsv<T>(data: T[], filename: string) {
     }
 
     var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
-    if (navigator.msSaveBlob) { // IE 10+
-        navigator.msSaveBlob(blob, filename);
+    if (navigator?.['msSaveBlob'] != null) { // IE 10+
+        navigator['msSaveBlob'](blob, filename);
     } else {
         var link = document.createElement("a");
         if (link.download !== undefined) { // feature detection

@@ -28,8 +28,8 @@ import EventSearchPQI from './PQI/EventSearchPQI';
 import { OpenXDA } from '../global';
 
 const EventSearchPreview = (props: { Event: OpenXDA.EventSearch, Width: number, Height: number }) => {
-    if (props.Event ==  undefined) return <span>No Event Selected ... </span>;
-    else
+    if (props.Event == undefined) return <span>No Event Selected ... </span>;
+
     return (
         <>
             <EventSearchOpenSEE Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />

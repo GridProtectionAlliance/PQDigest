@@ -22,9 +22,9 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { PQDigest, OpenXDA, Lightning } from '../global';
+import { OpenXDA, Lightning } from '../global';
 import _ from 'lodash';
-import Table from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
 import { ExportToCsv } from '../ExportCSV';
@@ -187,25 +187,37 @@ const Lightning = (props: {}) => {
                         </div>
                         <div className="card-body" style={{ height: (window.innerHeight) - 275, padding: 0 }}>
                             <Table<Lightning.Strike>
-                                cols={[
-                                    { key: 'DisplayTime', label: 'Time (CST)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                                    { key: 'Amplitude', label: 'Amplitude (kA)', headerStyle: { width: '25%' }, rowStyle: { width: '25%' } },
-                                    { key: 'Latitude', label: 'Lat', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                    { key: 'Longitude', label: 'Lon', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-                                    { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
-
-                                ]}
-                                tableClass="table table-hover"
-                                data={strikes}
-                                sortField={"DisplayTime"}
-                                ascending={true}
-                                onSort={null}
-                                onClick={(data) => setStrike(data.row)}
-                                theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-                                tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight - 340, width: '100%' }}
-                                rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                selected={(data) => data.DisplayTime == strike?.DisplayTime && data.Amplitude == strike?.Amplitude && data.Latitude == strike?.Latitude && data.Longitude == strike?.Longitude}
-                                />
+                                Data={strikes}
+                                SortKey={"DisplayTime"}
+                                Ascending={true}
+                                OnSort={null}
+                                OnClick={(data) => setStrike(data.row)}
+                                Selected={(data) => data.DisplayTime == strike?.DisplayTime && data.Amplitude == strike?.Amplitude && data.Latitude == strike?.Latitude && data.Longitude == strike?.Longitude}
+                                KeySelector={(_, index) => index /* If we add sorting here, we will need to change this key selector. */ }
+                            >
+                                <Column<Lightning.Strike>
+                                    Key="DisplayTime"
+                                    Field="DisplayTime"
+                                >Time (CST)</Column>
+                                <Column<Lightning.Strike>
+                                    Key="Amplitude"
+                                    Field="Amplitude"
+                                    HeaderStyle={{ width: '25%' }}
+                                    RowStyle={{ width: '25%' }}
+                                >Amplitude (kA)</Column>
+                                <Column<Lightning.Strike>
+                                    Key="Latitude"
+                                    Field="Latitude"
+                                    HeaderStyle={{ width: '12%' }}
+                                    RowStyle={{ width: '12%' }}
+                                >Lat</Column>
+                                <Column<Lightning.Strike>
+                                    Key="Longitude"
+                                    Field="Longitude"
+                                    HeaderStyle={{ width: '12%' }}
+                                    RowStyle={{ width: '12%' }}
+                                >Lon</Column>
+                            </Table>
                         </div>
                     </div>
                 </div>

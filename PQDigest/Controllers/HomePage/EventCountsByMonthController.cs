@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -63,24 +64,24 @@ namespace PQDigest.Controllers
             m_memoryCache = memoryCache;
         }
         public ActionResult Get() {
-//#if DEBUG
-//            List<Data> returnobj = new List<Data>() {
-//               new Data(){ Year=2019, Month = "May", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
-//               new Data(){ Year=2019,Month = "Jun", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
-//               new Data(){ Year=2019,Month = "Jul", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
-//               new Data(){ Year=2019,Month = "Aug", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
-//               new Data(){ Year=2019,Month = "Sep", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
-//               new Data(){ Year=2019,Month = "Oct", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
-//               new Data(){ Year=2019,Month = "Nov", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
-//               new Data(){ Year=2019,Month = "Dec", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
-//               new Data(){ Year=2020,Month = "Jan", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
-//               new Data(){ Year=2020,Month = "Feb", Sag = 8, Swell = 0, Transient = 7, Interruption = 0, Fault = 1, Total = 16 },
-//               new Data(){ Year=2020,Month = "Mar", Sag = 10, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 19 },
-//               new Data(){ Year=2020,Month = "Apr", Sag = 9, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 21 }
-//            };
-//            return Ok(returnobj);
-//#else
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+            //#if DEBUG
+            //            List<Data> returnobj = new List<Data>() {
+            //               new Data(){ Year=2019, Month = "May", Sag = 10, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 22 },
+            //               new Data(){ Year=2019,Month = "Jun", Sag = 9, Swell = 1, Transient = 8, Interruption = 0, Fault = 2, Total = 20 },
+            //               new Data(){ Year=2019,Month = "Jul", Sag = 8, Swell = 1, Transient = 6, Interruption = 0, Fault = 0, Total = 15 },
+            //               new Data(){ Year=2019,Month = "Aug", Sag = 9, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 18 },
+            //               new Data(){ Year=2019,Month = "Sep", Sag = 10, Swell = 2, Transient = 6, Interruption = 1, Fault = 0, Total = 19 },
+            //               new Data(){ Year=2019,Month = "Oct", Sag = 11, Swell = 3, Transient = 5, Interruption = 0, Fault = 0, Total = 19 },
+            //               new Data(){ Year=2019,Month = "Nov", Sag = 12, Swell = 1, Transient = 4, Interruption = 0, Fault = 0, Total = 17 },
+            //               new Data(){ Year=2019,Month = "Dec", Sag = 11, Swell = 1, Transient = 5, Interruption = 0, Fault = 2, Total = 19 },
+            //               new Data(){ Year=2020,Month = "Jan", Sag = 10, Swell = 0, Transient = 6, Interruption = 0, Fault = 3, Total = 19 },
+            //               new Data(){ Year=2020,Month = "Feb", Sag = 8, Swell = 0, Transient = 7, Interruption = 0, Fault = 1, Total = 16 },
+            //               new Data(){ Year=2020,Month = "Mar", Sag = 10, Swell = 1, Transient = 7, Interruption = 0, Fault = 1, Total = 19 },
+            //               new Data(){ Year=2020,Month = "Apr", Sag = 9, Swell = 2, Transient = 8, Interruption = 1, Fault = 1, Total = 21 }
+            //            };
+            //            return Ok(returnobj);
+            //#else
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 DateTime end = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1).AddSeconds(-1);
                 DateTime start = end.AddMonths(-12).AddSeconds(1);

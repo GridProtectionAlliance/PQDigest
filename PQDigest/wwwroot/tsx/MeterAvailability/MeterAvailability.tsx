@@ -24,7 +24,7 @@
 import React from 'react';
 import { InfluxDB } from '@influxdata/influxdb-client';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
-import Table from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import moment from 'moment';
 import 'moment-timezone';
 import _ from 'lodash';
@@ -109,55 +109,64 @@ const MeterAvailability = (props: {}) => {
     }, [sortField, ascending]);
 
 
-    return <Table<Meter>
-        cols={[
-            { key: 'ID', label: 'ID', headerStyle: { width: '10%' }, rowStyle: { width: '10%' } },
-            { key: 'Name', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-            { key: 'FirstTime', label: 'First Data Logged (CST)', headerStyle: { width: '20%' }, rowStyle: { width: '20%' }, content: (item, key, style) => moment.utc(item.FirstTime).tz('America/Chicago').format('MM/DD/YY HH:mm') },
-            { key: 'LastTime', label: 'Last Data Logged (CST)', headerStyle: { width: '20%' }, rowStyle: { width: '20%' }, content: (item, key, style) => moment.utc(item.LastTime).tz('America/Chicago').format('MM/DD/YY HH:mm') },
-            {
-                key: undefined, label: 'Difference/Status', headerStyle: { width: '10%' }, rowStyle: { width: '10%' }, content: (item, key, style) => {
-                    if (moment.utc().diff(moment.utc(item.LastTime), 'hour') <= 48)
-                        return moment.utc().diff(moment.utc(item.LastTime), 'hour') + ' Hours'
-
-                    style.backgroundColor = 'red';
-                    if (moment.utc().diff(moment.utc(item.LastTime), 'days') <= 7)
-                        return moment.utc().diff(moment.utc(item.LastTime), 'days') + ' Days - OOS'
-                    else if (moment.utc().diff(moment.utc(item.LastTime), 'weeks') <= 52)
-                        return moment.utc().diff(moment.utc(item.LastTime), 'weeks') + ' Weeks - OOS'
-                    else return moment.utc().diff(moment.utc(item.LastTime), 'years') + ' Years - OOS'
-
-
-
+    return (
+        <Table<Meter>
+            Data={data}
+            SortKey={sortField}
+            Ascending={ascending}
+            OnSort={(d) => {
+                if (d.colField == sortField) {
+                    setAscending(!ascending);
                 }
-            },
-            { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
+                else {
+                    setAscending(ascending);
+                    setSortField(d.colField);
+                }
+            }}
+            KeySelector={item => item.ID}
+        >
+            <Column<Meter>
+                Key="ID"
+                Field="ID"
+                HeaderStyle={{ width: '10%' }}
+                RowStyle={{ width: '10%' }}
+            >ID</Column>
+            <Column<Meter>
+                Key="Name"
+                Field="Name"
+            >Meter</Column>
+            <Column<Meter>
+                Key="FirstTime"
+                Field="FirstTime"
+                HeaderStyle={{ width: '20%' }}
+                RowStyle={{ width: '20%' }}
+                Content={row => moment.utc(row.item.FirstTime).tz('America/Chicago').format('MM/DD/YY HH:mm')}
+            >First Data Logged (CST)</Column>
+            <Column<Meter>
+                Key="LastTime"
+                Field="LastTime"
+                HeaderStyle={{ width: '20%' }}
+                RowStyle={{ width: '20%' }}
+                Content={row => moment.utc(row.item.LastTime).tz('America/Chicago').format('MM/DD/YY HH:mm')}
+            >Last Data Logged (CST)</Column>
+            <Column<Meter>
+                Key="Diff"
+                AllowSort={false}
+                HeaderStyle={{ width: '10%' }}
+                RowStyle={{ width: '10%' }}
+                Content={row => {
+                    if (moment.utc().diff(moment.utc(row.item.LastTime), 'hour') <= 48)
+                        return moment.utc().diff(moment.utc(row.item.LastTime), 'hour') + ' Hours';
 
-        ]}
-        tableClass="table table-hover"
-        data={data}
-        sortField={sortField}
-        ascending={ascending}
-        onSort={(d) => {
-            if (d.col == sortField) {
-                //let ordered = _.orderBy(events, [sortField], [(!ascending ? 'asc' : 'desc')]);
-                //setEvents(ordered);
-                setAscending(!ascending);
-            }
-            else {
-                setAscending(ascending);
-                setSortField(d.col);
-                //let ordered = _.orderBy(events, [d.col], [(ascending ? 'asc' : 'desc')]);
-                //setEvents(ordered);
-            }
-        }}
-        onClick={(data) => { }}
-        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: innerHeight -200, width: '100%' }}
-        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-        selected={(item) =>false}
-        
-        />
+                    row.style.backgroundColor = 'red';
+                    if (moment.utc().diff(moment.utc(row.item.LastTime), 'days') <= 7)
+                        return moment.utc().diff(moment.utc(row.item.LastTime), 'days') + ' Days - OOS';
+                    else if (moment.utc().diff(moment.utc(row.item.LastTime), 'weeks') <= 52)
+                        return moment.utc().diff(moment.utc(row.item.LastTime), 'weeks') + ' Weeks - OOS';
+                    else return moment.utc().diff(moment.utc(row.item.LastTime), 'years') + ' Years - OOS';
+                }}
+            >Difference/Status</Column>
+        </Table>);
 }
 
 export default MeterAvailability;

@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import React from 'react';
-import Table from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import _ from 'lodash';
 import moment from 'moment';
 
@@ -35,20 +35,15 @@ interface Meter {
     Interruption: number,
     Transient: number,
     Fault: number
-
 }
 
-const EventCountTable = (props: { Width: number, Height: number}) => {
+const EventCountTable = () => {
     const [data, setData] = React.useState<Array<Meter>>([]);
     const [sortField, setSortField] = React.useState<keyof Meter>('Name');
     const [ascending, setAscending] = React.useState<boolean>(true);
 
     React.useEffect(() => {
-        return GetData();
-    }, []);
-
-    function GetData() {
-        let handle = $.ajax({
+        const handle = $.ajax({
             type: "GET",
             url: `${homePath}api/EventCountsTable`,
             contentType: "application/json; charset=utf-8",
@@ -57,50 +52,73 @@ const EventCountTable = (props: { Width: number, Height: number}) => {
             async: true
         }).done((data: Array<Meter>) => setData(data));
 
-
         return function () {
-            if (handle.abort != undefined) handle.abort();
+            if (handle?.abort != null) handle.abort();
         }
-    }
+    }, []);
 
-
-    return <Table<Meter>
-        cols={[
-            { key: 'Name', label: 'Meter', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-            { key: 'Total', label: 'Total', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: 'Sag', label: 'Sag', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: 'Swell', label: 'Swell', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: 'Interruption', label: 'Int', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: 'Transient', label: 'Trans', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: 'Fault', label: 'Fault', headerStyle: { width: '12%' }, rowStyle: { width: '12%' } },
-            { key: null, label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
-
-        ]}
-        tableClass="table table-hover"
-        data={data}
-        sortField={sortField}
-        ascending={ascending}
-        onSort={(d) => {
-            if (d.col == sortField) {
-                let ordered = _.orderBy(data, [sortField], [(!ascending ? 'asc' : 'desc')]);
-                setData(ordered);
-                setAscending(!ascending);
-            }
-            else {
-                setAscending(ascending);
-                setSortField(d.col);
-                let ordered = _.orderBy(data, [d.col], [(ascending ? 'asc' : 'desc')]);
-                setData(ordered);
-            }
-        }}
-        onClick={(data) => { window.open(`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100&meters=${btoa(data.row.ID.toString())}`)}}
-        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 60 }}
-        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: props.Height - 60, width: '100%' }}
-        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-        selected={(item) => false}
-    />
-;
-
+    return (
+        <Table<Meter>
+            Data={data}
+            SortKey={sortField}
+            Ascending={ascending}
+            OnSort={(d) => {
+                if (d.colField == sortField) {
+                    const ordered = _.orderBy(data, [sortField], [(!ascending ? 'asc' : 'desc')]);
+                    setData(ordered);
+                    setAscending(!ascending);
+                }
+                else {
+                    const ordered = _.orderBy(data, [d.colField], [(ascending ? 'asc' : 'desc')]);
+                    setData(ordered);
+                    setAscending(ascending);
+                    setSortField(d.colField);
+                }
+            }}
+            OnClick={(data) => { window.open(`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100&meters=${btoa(data.row.ID.toString())}`) }}
+            KeySelector={item => item.ID }
+        >
+            <Column<Meter>
+                Key="Name"
+                Field="Name"
+            >Meter</Column>
+            <Column<Meter>
+                Key="Total"
+                Field="Total"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Total</Column>
+            <Column<Meter>
+                Key="Sag"
+                Field="Sag"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Sag</Column>
+            <Column<Meter>
+                Key="Swell"
+                Field="Swell"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Swell</Column>
+            <Column<Meter>
+                Key="Interruption"
+                Field="Interruption"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Int.</Column>
+            <Column<Meter>
+                Key="Transient"
+                Field="Transient"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Trans.</Column>
+            <Column<Meter>
+                Key="Fault"
+                Field="Fault"
+                HeaderStyle={{ width: '12%' }}
+                RowStyle={{ width: '12%' }}
+            >Fault</Column>
+        </Table>);
 }
 
 export default EventCountTable;

@@ -21,78 +21,73 @@
 //
 //******************************************************************************************************
 
-import React from 'react';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
+import { axisBottom, axisLeft, brushX, format as d3Format, extent, line, scaleLinear, scaleUtc } from 'd3';
+import { select } from 'd3-selection';
+import { createBrowserHistory } from "history";
 import _ from 'lodash';
-import { MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
-import queryString from "querystring";
-import { createBrowserHistory } from "history"
-import { ExportToCsv } from '../ExportCSV';
 import moment from 'moment';
 import 'moment-timezone';
-import { scaleLinear, line, extent, axisBottom, axisLeft, format as d3Format, scaleUtc, scaleTime, brushX } from 'd3';
-import { select } from 'd3-selection';
+import queryString from "querystring";
+import React from 'react';
 import stats from 'stats-lite';
 import ExportCSV from './ExportCSV';
 
-type DateRange = '1 day' | '3 days' | '7 days' | '1 month' | '3 months' | '6 months' | 'Year to date' | '1 year' | 'custom'
-const DateRanges: DateRange[] = ['1 day', '3 days', '7 days', '1 month', '3 months', '6 months', 'Year to date', '1 year', 'custom'];
-const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss'
-const MomentDateFormat = 'YYYY-MM-DD';
+const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss';
 const MomentTimeZone = 'America/Chicago';
-const Trending = (props: {}) => {
 
+interface TrendingFilter {
+    ShowStats: 'stats' | 'cp',
+    StartDate: string,
+    EndDate: string,
+    MeterID?: number
+}
+
+const Trending = () => {
     const history = createBrowserHistory();
-
     const qs = queryString.parse(history.location.search.substring(1));
-    const [dates, setDates] = React.useState<string[]>([qs.startDate == undefined ? moment().subtract(30, 'days').format(MomentDateTimeFormat) : qs.startDate as string, qs.endDate == undefined ? moment().format(MomentDateTimeFormat) : qs.endDate as string])
+
     const [meters, setMeters] = React.useState<OpenXDA.Types.Meter[]>([]);
-    const [meter, setMeter] = React.useState<OpenXDA.Types.Meter>(undefined);
     const [channels, setChannels] = React.useState<{ Channel: OpenXDA.Types.Channel, Selected: boolean }[]>([]);
-    const [dateRange, setDateRange] = React.useState<DateRange>(qs.dateRange == undefined ? '7 days' : qs.dateRange as DateRange);
-    const [showStats, setShowStats] = React.useState<'stats' | 'cp'>('stats');
-    const [aggregation, setAggregation] = React.useState<'none' | 'hour' | 'day'>(qs?.aggregation as any?? 'none');
+    const [trendFilter, setTrendFilter] = React.useState<TrendingFilter>(() => ({
+        ShowStats: 'stats',
+        StartDate: qs.startDate == undefined ? moment().subtract(30, 'days').format(MomentDateTimeFormat) : qs.startDate as string,
+        EndDate: qs.endDate == undefined ? moment().format(MomentDateTimeFormat) : qs.endDate as string
+    }));
     const [hover, setHover] = React.useState<number>(0);
 
+    const meter = React.useMemo(() => {
+        if (meters.length == 0 || trendFilter?.MeterID == null) return;
+
+        let index = meters.findIndex(m => m.ID === trendFilter.MeterID);
+        if (index >= 0)
+            return meters[index];
+        else
+            return meters[0];
+    }, [meters, trendFilter?.MeterID]);
+
     React.useEffect(() => {
-        let handle = GetMeters();
+        let handle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/OpenXDA/Meter`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
         handle.done((data: OpenXDA.Types.Meter[]) => setMeters(data));
 
         history.listen(() => {
-            setDates([qs.startDate as string, qs.endDate as string])
+            setTrendFilter(filter => ({ ...filter, StartDate: qs.startDate as string, EndDate: qs.endDate as string }))
             console.log('listening');
         });
 
         return function () {
-            if (handle.abort != undefined) handle.abort();
-
+            if (handle?.abort != null) handle.abort();
             history.listen = null;
         }
     }, []);
-
-    React.useEffect(() => {
-        console.log('update')
-
-        return function () {
-        }
-    }, [history.location.search]);
-
-
-    React.useEffect(() => {
-        let meterID = qs.meterID;
-        if (meters.length == 0 || meter != undefined) return;
-        else if (meterID == undefined) {
-            setMeter(meters[0]);
-        }
-        else if (meterID != undefined) {
-            let index = meters.findIndex(m => m.ID.toString() == meterID);
-            if (index >= 0)
-                setMeter(meters[index]);
-            else
-                setMeter(meters[0]);
-        }
-
-    },[meters]);
 
     React.useEffect(() => {
         if (meter != undefined) {
@@ -107,53 +102,17 @@ const Trending = (props: {}) => {
 
     React.useEffect(() => {
         let nqs = {
-            startDate: dates[0],
-            endDate: dates[1],
-            dateRange,
+            startDate: trendFilter.StartDate,
+            endDate: trendFilter.EndDate
         }
 
-        if (meter != undefined)
+        if (trendFilter?.MeterID != null)
             nqs['meterID'] = meter.ID;
         else if (qs.meterID != undefined)
             nqs['meterID'] = qs.meterID;
 
         window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?${queryString.stringify(nqs)}`)
-    }, [dates, meter]);
-
-    React.useEffect(() => {
-        let ed = moment() as moment.Moment;
-        let sd = ed;
-        if (dateRange == '1 day')
-            sd = moment().subtract(1, 'days');
-        else if (dateRange == '3 days')
-            sd = moment().subtract(3, 'days');
-        else if (dateRange == '7 days')
-            sd = moment().subtract(7, 'days');
-        else if (dateRange == '1 month')
-            sd = moment().subtract(1, 'months');
-        else if (dateRange == '3 months')
-            sd = moment().subtract(3, 'months');
-        else if (dateRange == '6 months')
-            sd = moment().subtract(6, 'months');
-        else if (dateRange == '1 year')
-            sd = moment().subtract(1, 'year');
-        else if (dateRange == 'Year to date')
-            sd = moment().date(1).month('January');
-        else return;
-        setDates([sd.format(MomentDateTimeFormat), ed.format(MomentDateTimeFormat)]);
-
-    }, [dateRange])
-
-    function GetMeters(): JQuery.jqXHR<OpenXDA.Types.Meter[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
+    }, [trendFilter.StartDate, trendFilter.EndDate, meter]);
 
     function GetChannels(id: number): JQuery.jqXHR<OpenXDA.Types.Channel[]> {
         return $.ajax({
@@ -172,67 +131,79 @@ const Trending = (props: {}) => {
     }
 
     return (
-        <div style={{ height: "100%", width: '100%' }}>
-            <div className="row" style={{ height: 130, margin: 5 }}>
+        <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div className="row" style={{ margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
                     <div className="card">
-                        <div className="card-body" style={{ height: 130 }}>
+                        <div className="card-body" style={{ height: '145px' }}>
                             <div className="row">
-                                <div className="col">
-                                    <label>Meter</label>
-                                    <select className='form-control' value={meter?.ID ?? 0} onChange={(evt) => setMeter(meters.find(m => m.ID.toString() === evt.target.value)) }>
-                                        {meters.map((m, i) => <option key={i} value={m.ID}>{m.Name }</option>)}
-                                    </select>
+                                <div className="col-2">
+                                    <Select<TrendingFilter>
+                                        Options={meters.map(m => ({ Label: m.Name, Value: m.ID }))}
+                                        Setter={setTrendFilter}
+                                        Field='MeterID'
+                                        Label="Meter"
+                                        Record={trendFilter}
+                                    />
                                 </div>
-                                <div className="col">
-                                    <label>Channels</label>
-                                    <MultiCheckBoxSelect Options={channels.map(t => Object.create({ Text: t.Channel.Name, Value: t.Channel.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
+                                <div className="col-2">
+                                    <MultiCheckBoxSelect Label="Channels" Options={channels.map(t => ({ Label: t.Channel.Name, Value: t.Channel.ID, Selected: t.Selected }))} OnChange={(evt, options) => {
                                         let newChannels = _.cloneDeep(channels);
-                                        $.each(options, (index, option) => {
+                                        $.each(options, (_index, option) => {
                                             newChannels.find(type => type.Channel.ID == option.Value).Selected = !option.Selected
                                         });
                                         setChannels(newChannels)
                                     }} />
                                 </div>
-                                <div className="col-4">
-                                    <div className="pull-left" >Date Range</div>
-                                    <div style={{ position: 'relative', width: '100%', top: 32 }}>
-                                        <select className='form-control' style={{ width: 150, position: 'absolute', left: 0 }} value={dateRange} onChange={(evt) => setDateRange(evt.target.value as DateRange)}>
-                                            {DateRanges.map((dr, i) => <option key={i} value={dr}>{dr}</option>)}
-                                        </select>
-
-                                        <input style={{ width: 200, position: 'absolute', left: 150 }} className="form-control" value={moment(dates[0], MomentDateTimeFormat).format(MomentDateFormat)} type="date" onChange={e => setDates([e.target.value, dates[1]])} disabled={dateRange != 'custom' }/>
-                                        <input style={{ width: 200, position: 'absolute', left: 350 }} className="form-control" value={moment(dates[1], MomentDateTimeFormat).format(MomentDateFormat)} type="date" onChange={e => setDates([dates[0],e.target.value])} disabled={dateRange != 'custom'}/>
-                                    </div>
-                                </div>{/*
-                                    <div className="col">
-                                        <label>Query Aggregation</label>
-                                        <select className='form-control' value={aggregation} onChange={(evt) => setAggregation(evt.target.value as any)}>
-                                            <option value='none'>None</option>
-                                            <option value='hourly'>Hourly</option>
-                                            <option value='daily'>Daily</option>
-                                        </select>
-                                    </div>*/}
-
-                                <div className='col-1'>
-                                    <label>Summary</label>
-                                    <select className='form-control' value={showStats} onChange={(evt) => setShowStats(evt.target.value as any)}>
-                                        <option value='stats'>Stats</option>
-                                        <option value='cp'>CP</option>
-                                    </select>
+                                <div className="col-6">
+                                    <DateRangePicker<TrendingFilter>
+                                        FromField="StartDate"
+                                        ToField="EndDate"
+                                        Label="Date Range"
+                                        Type="date"
+                                        Valid={() => trendFilter.StartDate != null && trendFilter.EndDate != null &&
+                                            moment(trendFilter.StartDate, MomentDateTimeFormat) <= moment(trendFilter.EndDate, MomentDateTimeFormat)}
+                                        Feedback="Date range is required, and start may not be after end."
+                                        Record={trendFilter}
+                                        Format={MomentDateTimeFormat}
+                                        Setter={setTrendFilter}
+                                    />
                                 </div>
 
-                                <div className='col-1' style={{paddingTop: 30}}><ExportCSV Meter={meter} Channels={channels.filter(c => c.Selected).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} /></div>
+                                <div className='col-1'>
+                                    <Select<TrendingFilter>
+                                        Options={[{ Label: "Stats", Value: "stats" }, { Label: "CP", Value: "cp" }]}
+                                        Setter={setTrendFilter}
+                                        Field='ShowStats'
+                                        Label="Summary"
+                                        Record={trendFilter}
+                                    />
+                                </div>
+                                <div className='col-1' style={{ paddingTop: 30 }}>
+                                    <ExportCSV Meter={meter} Channels={channels.filter(c => c.Selected).map(c => c.Channel)} StartDate={trendFilter.StartDate} EndDate={trendFilter.EndDate} />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ maxHeight: "calc(100% - 135px)", overflowY: 'auto', margin: '5px 5px 5px 5px ' }}>
+            <div className="row" style={{ flex: 1, overflowY: 'auto', margin: '5px 5px 5px 5px ' }}>
                 <div className="col" style={{ padding: '0px 2px 0px 0px' }}>
-                    {[...new Set(channels.filter(c => c.Selected).map(c => c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic))].map(k => <Chart key={k} ShowStats={showStats} Name={k} Channels={channels.filter(c => c.Selected && (c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic) == k).map(c => c.Channel)} StartDate={dates[0]} EndDate={dates[1]} Hover={hover} SetHover={setHover} SetZoom={(s, e) => {
-                        setDates([s,e]);
-                    }} />)}
+                    {
+                        [...new Set(channels.filter(c => c.Selected).map(c => c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic))]
+                            .map(k =>
+                                <Chart
+                                    key={k}
+                                    ShowStats={trendFilter.ShowStats}
+                                    Name={k}
+                                    Channels={channels.filter(c => c.Selected && (c.Channel.MeasurementType + ' ' + c.Channel.MeasurementCharacteristic) == k).map(c => c.Channel)}
+                                    StartDate={trendFilter.StartDate}
+                                    EndDate={trendFilter.EndDate}
+                                    Hover={hover}
+                                    SetHover={setHover}
+                                    SetZoom={(s, e) => setTrendFilter(filter => ({ ...filter, StartDate: s, EndDate: e }))}
+                                />)
+                    }
                 </div> 
             </div>
         </div>

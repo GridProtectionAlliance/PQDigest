@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using openXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -23,8 +25,9 @@ namespace PQDigest.Controllers
         }
 
         [Route("{name}")]
-        public ActionResult Get(string name) {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["SystemSettings:ConnectionString"], m_configuration["SystemSettings:DataProviderString"]))
+        public ActionResult Get(string name)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 return Ok(new TableOperations<Setting>(connection).QueryRecordWhere("Name = {0}", name));
             }

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +36,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OpenXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -56,17 +56,21 @@ namespace PQDigest.Controllers
         public IActionResult Get(int id) {
             try
             {
-                using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+                // todo: there is no view that matches typescript channels, so we do a custom query here. Should we create such a view?
+                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
                 {
                     return Ok(connection.RetrieveData(@"
                         SELECT 
-                            Channel.ID,
-                            Channel.Name,
+                            Channel.*,
+                            Meter.AssetKey as Meter,
+                            Meter.AssetKey,
                             MeasurementType.Name as MeasurementType,
                             MeasurementCharacteristic.Name as MeasurementCharacteristic,
                             Phase.Name as Phase
                         FROM
                             Channel JOIN
+                            Asset ON Channel.AssetID = Asset.ID JOIN
+                            Meter ON Channel.MeterID = Meter.ID JOIN
                             MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
                             MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
                             Phase ON Channel.PhaseID = Phase.ID

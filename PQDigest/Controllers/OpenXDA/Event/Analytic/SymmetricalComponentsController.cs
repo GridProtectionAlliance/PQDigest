@@ -28,6 +28,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using FaultData.DataAnalysis;
+using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using MathNet.Numerics.Statistics;
@@ -35,7 +36,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using OpenXDA.Model;
+using openXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
@@ -56,8 +57,9 @@ namespace PQDigest.Controllers
 		}
 
 		[HttpGet, Route("{eventID:int}/{pixels:int}")]
-        public ActionResult Get(int eventID, int pixels) {
-            using (AdoDataConnection connection = new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]))
+        public ActionResult Get(int eventID, int pixels)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);

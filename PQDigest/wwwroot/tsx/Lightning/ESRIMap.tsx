@@ -24,7 +24,6 @@
 import React from 'react';
 import { basemapLayer, Basemaps } from 'esri-leaflet';
 import { MapContainer, CircleMarker, TileLayer, WMSTileLayer, useMapEvents } from 'react-leaflet';
-import 'proj4leaflet';
 import { Lightning, OpenXDA } from '../global';
 import moment from 'moment';
 import 'moment-timezone';

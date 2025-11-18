@@ -27,116 +27,98 @@ import EventCountTable from '../Home/EventCountTable';
 import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
 import moment from 'moment';
+import CollectionWidgetRouter from '../../../EventWidgets/TSX/CollectionWidgetWrapper';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 const Home = () => {
-    const [mailTo, setMailTo] = React.useState<string>('');
-    const [numberMeters, setNumberMeters] = React.useState<number>(0);
-    const [eventCount, setEventCount] = React.useState<number>(0);
 
-    React.useEffect(() => {
-        let handle = GetMailto();
-        handle.done((data: PQDigest.Setting) => {
-            setMailTo(`mailto:${data.Value}`);
-        });
-
-        let handle2 = GetMeterCount();
-        handle2.done((data: number) => {
-            setNumberMeters(data);
-        });
-
-        let handle3 = GetEventCount();
-        handle3.done((data: number) => {
-            setEventCount(data);
-        });
-
-        return function () {
-            if (handle.abort != undefined) handle.abort();
-            if (handle2.abort != undefined) handle2.abort();
-            if (handle3.abort != undefined) handle3.abort();
+    const filter = React.useMemo(() => ({
+        TimeFilter: {
+            StartTime: moment.utc().subtract(30, 'days').format(OpenXDA.Consts.DateTimeFormat),
+            EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
         }
-    }, []);
+    }), []);
+
+    const filterYear = React.useMemo(() => ({
+        TimeFilter: {
+            StartTime: moment.utc().subtract(1, 'years').format(OpenXDA.Consts.DateTimeFormat),
+            EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
+        }
+    }), []);
 
     return (
-        <div className="row h-100" style={{ margin: '5px 5px 5px 5px '}}>
-            <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Welcome, { userName}
+        <div style={{ width: '100%', height: '100%' }}>
+            <div className="container-fluid d-flex h-100 flex-column">
+                <div className="row h-50">
+                    <div className="col-6 h-100 p-0">
+                        <CollectionWidgetRouter
+                            Widget={{
+                                ID: 0,
+                                CategoryID: 0,
+                                Name: 'PQHealthIndex',
+                                Type: 'PQHealthIndex',
+                                Setting: null,
+                            }}
+                            Title="EPRI PQ Health Index - Last 30 Days"
+                            EventFilter={{
+                            // ToDo: this is 10 years in this demo, it should be 30 days. 30 days has no data for demo...
+                            TimeFilter: {
+                                StartTime: moment.utc().subtract(10, 'years').format(OpenXDA.Consts.DateTimeFormat),
+                                EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
+                            }
+                            }} HomePath={homePath} Roles={[]} />
                     </div>
-                    <div className="card-body" style={{ height: (window.innerHeight - 41) / 2 - 52 }}>
-                        <br />
-                        <p>So far this month there have been {eventCount} events recorded from your {numberMeters} power quality meters.</p>
-                        <br />
-                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(365, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100`}>List of last 100 events from all meters over last 365 days</a></p>
-                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=1000`}>List of all meter activity over last 30 days</a></p>
-                        <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
-                    </div>
-                </div>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Magnitude Duration - Last 30 Days
-                    </div>
-                    <div className="card-body" style={{ padding: 0 }}>
-                        <MagDurChart Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 70} />
-                    </div>
-                </div>
-
-            </div>
-            <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Historical Event Counts 
-                  </div>
-                    <div className="card-body" style={{ padding: 0 }}>
-                        <EventCountsByMonth Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 53}  />
-                    </div>
-                </div>
-
-                <div className="card h-50">
-                    <div className="card-header">
-                        Meter Activity - Last 30 Days
-                  </div>
-                    <div className="card-body" style={{ padding: 0, flexDirection: 'column', display: 'flex', overflowY: 'hidden'}}>
-                        <EventCountTable />
+                    <div className="col-6 h-100 p-0">
+                        <CollectionWidgetRouter
+                            Widget={{
+                                ID: 0,
+                                CategoryID: 0,
+                                Name: 'EventCountChart',
+                                Type: 'EventCountChart',
+                                Setting: null
+                            }}
+                            Title="Historical Event Counts - Last Year"
+                            EventFilter={filterYear}
+                            HomePath={homePath}
+                            Roles={[]}
+                        />
                     </div>
                 </div>
-
+                <div className="row h-50">
+                    <div className="col-6 h-100 p-0">
+                        <CollectionWidgetRouter
+                            Widget={{
+                                ID: 0,
+                                CategoryID: 0,
+                                Name: 'MagDurChart',
+                                Type: 'MagDurChart',
+                                Setting: null
+                            }}
+                            Title="Magnitude Duration Chart - Last 30 Days"
+                            EventFilter={filter}
+                            HomePath={homePath}
+                            Roles={[]}
+                        />
+                    </div>
+                    <div className="col-6 h-100 p-0">
+                        <CollectionWidgetRouter
+                            Widget={{
+                                ID: 0,
+                                CategoryID: 0,
+                                Name: 'EventCountTable',
+                                Type: 'EventCountTable',
+                                Setting: null
+                            }}
+                            Title="Meter Activity - Last 30 Days"
+                            EventFilter={filter}
+                            HomePath={homePath}
+                            Roles={[]}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     )
-}
-
-function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/Setting/Email.Mailto`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
-}
-
-function GetMeterCount(): JQuery.jqXHR<number> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/OpenXDA/Meter/Count`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
-}
-
-function GetEventCount(): JQuery.jqXHR<number> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/OpenXDA/Event/Count`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
 }
 
 export default Home;

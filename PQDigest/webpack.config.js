@@ -23,6 +23,7 @@ module.exports = env => {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".css"],
             alias: {
+                leaflet_css: __dirname + "/node_modules/leaflet/dist/leaflet.css"
             }
         },
         module: {
@@ -42,6 +43,10 @@ module.exports = env => {
                 },
                 {
                     test: /\.css$/,
+                    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+                },
+                {
+                    test: /leaflet\.css$/,
                     use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
                 },
                 {

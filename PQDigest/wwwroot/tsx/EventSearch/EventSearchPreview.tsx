@@ -22,19 +22,79 @@
 //******************************************************************************************************
 
 import React from 'react';
-import EventSearchOpenSEE from './OpenSEE/EventSearchOpenSEE';
-import EventSearchTrenDAP from './TrenDAP/EventSearchTrenDAP';
-import EventSearchPQI from './PQI/EventSearchPQI';
-import { OpenXDA } from '../global';
+import moment from 'moment';
+import WidgetRouter from '../../../EventWidgets/TSX/WidgetWrapper';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 
-const EventSearchPreview = (props: { Event: OpenXDA.EventSearch, Width: number, Height: number }) => {
+const EventSearchPreview = (props: { Event: OpenXDA.Types.EventSearch, Width: number, Height: number }) => {
     if (props.Event == undefined) return <span>No Event Selected ... </span>;
 
     return (
         <>
-            <EventSearchOpenSEE Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />
-            <EventSearchTrenDAP Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />            
-            <EventSearchPQI EventID={props.Event.ID} Width={props.Width} Height={props.Height/3 - 1} />
+            <WidgetRouter Widget={{
+                    ID: 0,
+                    CategoryID: 0,
+                    Name: 'OpenSEE',
+                    Type: 'OpenSEE',
+                    Setting: null
+                }}
+                EventID={props.Event.ID}
+                Height={props.Height / 3 - 1}
+                DisturbanceID={0}
+                FaultID={0}
+                StartTime={moment.utc(props.Event.StartTime).valueOf()}
+                HomePath={homePath}
+                Roles={[]}
+                Store={undefined}
+            />    
+            <WidgetRouter Widget={{
+                    ID: 0,
+                    CategoryID: 0,
+                    Name: 'TrendGraph',
+                    Type: 'TrendGraph',
+                    Setting: null
+                }}
+                EventID={props.Event.ID}
+                Height={props.Height / 3 - 1}
+                DisturbanceID={0}
+                FaultID={0}
+                StartTime={moment.utc(props.Event.StartTime).valueOf()}
+                HomePath={homePath}
+                Roles={[]}
+                Store={undefined}
+            />
+            <WidgetRouter Widget={{
+                ID: 0,
+                CategoryID: 0,
+                Name: 'PQICurves',
+                Type: 'PQICurves',
+                Setting: null
+            }}
+                EventID={props.Event.ID}
+                Height={props.Height / 3 - 1}
+                DisturbanceID={0}
+                FaultID={0}
+                StartTime={moment.utc(props.Event.StartTime).valueOf()}
+                HomePath={homePath}
+                Roles={[]}
+                Store={undefined}
+            />
+            <WidgetRouter Widget={{
+                ID: 0,
+                CategoryID: 0,
+                Name: 'pqi',
+                Type: 'pqi',
+                Setting: null
+            }}
+                EventID={props.Event.ID}
+                Height={props.Height / 3 - 1}
+                DisturbanceID={0}
+                FaultID={0}
+                StartTime={moment.utc(props.Event.StartTime).valueOf()}
+                HomePath={homePath}
+                Roles={[]}
+                Store={undefined}
+            />       
         </>
     );
 }

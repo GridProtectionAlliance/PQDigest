@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Program.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -25,116 +25,223 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Gemstone.Configuration;
 using Gemstone.Data;
-using Gemstone.Diagnostics;
-using Gemstone.Threading;
+using Gemstone.Web;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Debug;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
+using openXDA.APIAuthentication;
+using PQDigest;
+using PQDigest.Controllers;
 using PQDigest.Models;
+using Serilog;
 
-namespace PQDigest
+var builder = WebApplication.CreateBuilder(args);
+var Configuration = builder.Configuration;
+
+Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(Configuration).CreateLogger();
+
+try
 {
-    public class Program
+    Log.Information("Starting web application");
+
+    builder.Services.AddSerilog();
+
+    builder.Services.Configure<SystemSettings>(Configuration.GetSection("systemSettings"));
+
+    builder.Services.AddSingleton<IAPICredentialRetriever, XDAAPICredentialRetriever>();
+
+    /*
+    builder.Services.AddCors(options =>
     {
-        public static IConfiguration Configuration { get; } = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
-        .Build();
+        options.AddPolicy(
+            name: "AllowInfluxDB",
+            builder =>
+            {
+                using (
+                    AdoDataConnection connection = new AdoDataConnection(
+                        Configuration["OpenXDA:ConnectionString"],
+                        Configuration["OpenXDA:DataProviderString"]
+                    )
+                )
+                {
+                    string host =
+                        connection.ExecuteScalar<string>(
+                            "SELECT Value FROM Setting WHERE Name = 'HIDS.Host'"
+                        ) ?? "http://localhost:8086";
+                    builder.WithOrigins(host);
+                }
+            }
+        );
+    });
+    */
 
-        public static void Main(string[] args)
+    IMvcBuilder mvcBuilder = builder
+        .Services.AddControllersWithViews(options =>
         {
-            try
-            {
-                ShutdownHandler.Initialize();
-
-                Settings settings = new()
-                {
-                    INIFile = ConfigurationOperation.ReadWrite,
-                    SQLite = ConfigurationOperation.Disabled
-                };
-
-                DefineSettings(settings);
-
-                // Bind settings to configuration sources
-                settings.Bind(new ConfigurationBuilder()
-                    .ConfigureGemstoneDefaults(settings)
-                    .AddCommandLine(args, settings.SwitchMappings));
-
-                HostApplicationBuilderSettings appSettings = new()
-                {
-                    Args = args,
-                    ApplicationName = nameof(PQDigest),
-                    DisableDefaults = true,
-                };
-
-                CreateHostBuilder(args).Build().Run();
-
-                #if DEBUG
-                    Settings.Save(forceSave: true);
-                #else
-                    Settings.Save();
-                #endif
-            }
-            finally
-            {
-                ShutdownHandler.InitiateSafeShutdown();
-            }
-        }
-
-        /// <summary>
-        /// Establishes default settings for the config file.
-        /// </summary>
-        public static void DefineSettings(Settings settings)
+            options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
+        })
+        .AddNewtonsoftJson(options =>
         {
-            using (Logger.SuppressFirstChanceExceptionLogMessages())
-            {
-                DiagnosticsLogger.DefineSettings(settings);
-                AdoDataConnection.DefineSettings(settings);
-            }
-        }
+            options.SerializerSettings.ReferenceLoopHandling = Newtonsoft
+                .Json
+                .ReferenceLoopHandling
+                .Ignore;
+            options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+        });
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                })
-                .ConfigureServices((hostContext, services) =>
-                {
-                    // load settings from config file
-                    services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
-                })
-                .ConfigureLogging(builder =>
-                {
-                    builder.ClearProviders();
-                    builder.SetMinimumLevel(LogLevel.Information);
+    builder
+        .Services.AddMvc(options =>
+        {
+            var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            options.Filters.Add(new AuthorizeFilter(policy));
+        })
+        .AddMicrosoftIdentityUI();
 
-                    builder.AddFilter("Microsoft", LogLevel.Warning);
-                    builder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error);
-                    builder.AddFilter<DebugLoggerProvider>("", LogLevel.Debug);
-                    builder.AddFilter<DiagnosticsLoggerProvider>("", LogLevel.Trace);
+    var authBuilder = builder
+        .Services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        })
+        .AddOpenIdConnect(options =>
+        {
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-                    builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Error);
-                    builder.AddDebug();
+            Configuration.Bind("Oidc", options);
+        });
 
-                    // Add Gemstone diagnostics logging
-                    builder.AddGemstoneDiagnostics();
-
-                    #if RELEASE
-                    if (OperatingSystem.IsWindows())
-                    {
-                        builder.AddFilter<EventLogLoggerProvider>("Application", LogLevel.Warning);
-                        builder.AddEventLog();
-                    }
-                    #endif
-                });
+    /*
+    static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, string json)
+    {
+        var identity = claimsPrincipal.Identity as ClaimsIdentity;
+        var graph = JObject.Parse(json);
+        string name =
+            graph.Properties().Select(p => p.Name).FirstOrDefault(n => n.ToLower().Contains("tvaorgid"))
+            ?? "";
+        identity.AddClaim(
+            new Claim(
+                "org_id",
+                Regex.Replace(graph[name]?.Value<string>() ?? "d9999", "[A-Za-z]", "0000")
+            )
+        );
     }
+
+    authBuilder
+            .AddMicrosoftIdentityWebApp(options =>
+            {
+                Configuration.Bind("AzureAd", options);
+                // do something
+                options.Events.OnTokenValidated = async context =>
+                {
+                    var tokenAcquisition =
+                        context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+
+                    HttpClient client = new HttpClient();
+                    var token = await tokenAcquisition.GetAccessTokenForUserAsync(
+                        Configuration.GetSection("GraphAPI")["Scopes"].Split(","),
+                        user: context.Principal
+                    );
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                        "Bearer",
+                        token
+                    );
+
+                    //var authProvider = new DelegateAuthenticationProvider(async (request) =>
+                    //{
+                    //    var token = await tokenAcquisition
+                    //        .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
+                    //    request.Headers.Authorization =
+                    //        new AuthenticationHeaderValue("Bearer", token);
+                    //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    //});
+
+                    //var graphClient = new GraphServiceClient(authProvider);
+
+                    //var user = await graphClient.Me.Request().GetAsync();
+                    //var extensions = await graphClient.Me.Extensions.Request().GetAsync();
+                    string json = await client.GetStringAsync(
+                        Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me"
+                    );
+                    AddUserGraphInfo(context.Principal, json);
+                };
+            })
+            .EnableTokenAcquisitionToCallDownstreamApi(
+                options =>
+                {
+                    Configuration.Bind("AzureAd", options);
+                },
+                Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
+            )
+            .AddInMemoryTokenCaches();
+    }*/
+
+
+
+    var app = builder.Build();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+    else
+    {
+        app.UseExceptionHandler("/Error");
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
+    }
+
+    app.UseForwardedHeaders(
+        new ForwardedHeadersOptions()
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+        }
+    );
+
+    app.UseStaticFiles(WebExtensions.StaticFileEmbeddedResources());
+    app.UseStaticFiles();
+
+    app.UseRouting();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapControllerRoute(
+            name: "default",
+            pattern: "{newaction?}/{id?}",
+            defaults: new { controller = "Home", action = "Index" }
+        );
+
+        endpoints.MapControllers();
+    });
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }

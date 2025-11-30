@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Libraries/">
+    <Project Path="../Libraries/FaultAlgorithms/FaultAlgorithms.csproj" />
+    <Project Path="../Libraries/FaultData/FaultData.csproj" />
+    <Project Path="../Libraries/openXDA.Model/openXDA.Model.csproj" />
+  </Folder>
+    <Folder Name="/References/">
+    <Project Path="../../gemstone/web/src/Gemstone.Web/Gemstone.Web.csproj" />
+	<Project Path="../../gemstone/data/src/Gemstone.Data/Gemstone.Data.csproj" />
+    <Project Path="../../gemstone/numeric/src/Gemstone.Numeric/Gemstone.Numeric.csproj" />
+	<Project Path="../../gemstone/common/src/Gemstone/Gemstone.Common.csproj" />
+    <Project Path="../../gemstone/pqdif/src/Gemstone.PQDif/Gemstone.PQDif.csproj" />
+  </Folder>
+  <Project Path="PQDigest.csproj" />
+</Solution>

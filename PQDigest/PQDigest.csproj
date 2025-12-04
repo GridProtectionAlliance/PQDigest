@@ -61,11 +61,6 @@
 
 
   <ItemGroup>
-    <Folder Include="Views\Shared\" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\Libraries\FaultData\FaultData.csproj" />
     <ProjectReference Include="..\Libraries\openXDA.Model\openXDA.Model.csproj" />
   </ItemGroup>

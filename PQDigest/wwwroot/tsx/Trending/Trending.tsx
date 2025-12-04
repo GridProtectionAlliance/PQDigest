@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { OpenXDA, HIDS, Application } from '@gpa-gemstone/application-typings';
 import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
-import { axisBottom, axisLeft, brushX, format as d3Format, extent, line, scaleLinear, scaleUtc } from 'd3';
-import { select } from 'd3-selection';
+import { SpacedColor } from '@gpa-gemstone/helper-functions';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { createBrowserHistory } from "history";
 import _ from 'lodash';
 import moment from 'moment';
@@ -33,9 +33,9 @@ import queryString from "querystring";
 import React from 'react';
 import stats from 'stats-lite';
 import ExportCSV from './ExportCSV';
+import { Line, Plot } from '@gpa-gemstone/react-graph';
 
 const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss';
-const MomentTimeZone = 'America/Chicago';
 
 interface TrendingFilter {
     ShowStats: 'stats' | 'cp',
@@ -162,7 +162,7 @@ const Trending = () => {
                                         Label="Date Range"
                                         Type="date"
                                         Valid={() => trendFilter.StartDate != null && trendFilter.EndDate != null &&
-                                            moment(trendFilter.StartDate, MomentDateTimeFormat) <= moment(trendFilter.EndDate, MomentDateTimeFormat)}
+                                            moment.utc(trendFilter.StartDate, MomentDateTimeFormat) <= moment.utc(trendFilter.EndDate, MomentDateTimeFormat)}
                                         Feedback="Date range is required, and start may not be after end."
                                         Record={trendFilter}
                                         Format={MomentDateTimeFormat}
@@ -201,27 +201,83 @@ const Trending = () => {
                                     EndDate={trendFilter.EndDate}
                                     Hover={hover}
                                     SetHover={setHover}
-                                    SetZoom={(s, e) => setTrendFilter(filter => ({ ...filter, StartDate: s, EndDate: e }))}
                                 />)
                     }
-                </div> 
+                </div>
             </div>
         </div>
     )
 }
 
-interface ChartSeries {
-    Channel: OpenXDA.Types.Channel, Field: 'min' | 'max' | 'avg', Selected: boolean, Data: { TimeStamp: string, Value: number }[], Min: number, Max: number, Avg: number, StDev: number, CP99: number, CP95: number, CP50: number, CP05: number, CP01: number, Outliers: number, DataPoints: number
+interface IChartSeries {
+    [key: string]: {
+        Min: [number, number][],
+        Max: [number, number][],
+        Avg: [number, number][],
+        Color: string
+    }
 }
 
-const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDate: string, EndDate: string, ShowStats: 'stats' | 'cp', Hover: number, SetHover: (hov: number) => void, SetZoom: (startDate: string, endDate: string) => void }) => {  
-    const svgHeight = 300;
-    const svgWidth = window.innerWidth * 2 / 3;
-    const margin = { top: 40, right: 0, bottom: 40, left: 50 };
-    const ref = React.useRef(null);
-    const [data, setData] = React.useState<object>({});
+interface IHover {
+    [key: string]: number
+}
+
+interface ITableData {
+    Name: string,
+    Min: number | string,
+    Max: number | string,
+    Avg: number | string,
+    StDev: number | string,
+    CP99: number | string,
+    CP95: number | string,
+    CP50: number | string,
+    CP05: number | string,
+    CP01: number | string,
+    Outliers: number | string,
+    Count: number | string
+}
+
+interface IChartProps {
+    Name: string,
+    Channels: OpenXDA.Types.Channel[],
+    StartDate: string,
+    EndDate: string,
+    ShowStats: 'stats' | 'cp',
+    Hover: number,
+    SetHover: (hov: number) => void
+}
+const svgHeight = 300;
+
+const Chart = (props: IChartProps) => {
+    const containerRef = React.useRef<HTMLTableSectionElement | undefined>(undefined);
+    const [data, setData] = React.useState<IChartSeries>({});
+    const [hover, setHover] = React.useState<IHover>({});
+    const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
+    const [tableData, setTableData] = React.useState<ITableData[]>([]);
+    const [dataLimits, setDataLimits] = React.useState<[number, number]>([0, 1]);
     const [channels, setChannels] = React.useState<OpenXDA.Types.Channel[]>(props.Channels);
-    const [hoverData, setHoverData] = React.useState<object>({});
+    const [width, setWidth] = React.useState<number>(300);
+
+    React.useEffect(() => {
+        let resizeObserver: ResizeObserver;
+        const intervalHandle = setInterval(() => {
+            if (containerRef?.current == null) return;
+            resizeObserver = new ResizeObserver(
+                _.debounce(() => {
+                    if (containerRef.current == null) return;
+
+                    setWidth(containerRef.current?.getBoundingClientRect().width ?? 300);
+                }, 100)
+            );
+            resizeObserver.observe(containerRef.current);
+            clearInterval(intervalHandle);
+        }, 10);
+
+        return () => {
+            clearInterval(intervalHandle);
+            if (resizeObserver != null && resizeObserver.disconnect != null) resizeObserver.disconnect();
+        };
+    }, []);
 
     React.useEffect(() => {
         let channelsjson = JSON.stringify(channels);
@@ -231,333 +287,297 @@ const Chart = (props: { Name: string, Channels: OpenXDA.Types.Channel[], StartDa
     }, [props.Channels]);
 
     React.useEffect(() => {
-        if (channels.length > 0)
-            return GetData();
-    }, [channels, props.StartDate, props.EndDate]);
+        if (channels.length === 0)
+            return;
 
-
-    React.useEffect(() => {
-        if (Object.keys(data).length > 0)
-            return DrawChart(data);
-    }, [data]);
-
-    React.useEffect(() => {
-        if (props.Hover < margin.left) return;
-        else if (props.Hover > svgWidth - margin.right) return;
-
-        const svg = select(ref.current).select('svg');
-        svg.selectAll("g.hover-line").remove();
-        svg.append("g")
-            .classed("hover-line", true)
-            .append("path")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-            .attr("stroke",'red')
-            .attr("d", `M ${props.Hover} ${svgHeight - margin.bottom} V ${margin.top}`)
-
-        let x = scaleUtc().rangeRound([margin.left, svgWidth - margin.right]);
-        x.domain([moment.utc(props.StartDate, MomentDateTimeFormat), moment.utc(props.EndDate, MomentDateTimeFormat)]);
-        let ts = moment.utc(x.invert(props.Hover)).format(MomentDateTimeFormat);
-
-        let hovDict = {};
-        $.each(Object.keys(data), (i, key) => {
-            let length = data[key].Data.length;
-            let mult = (props.Hover - margin.left - margin.right) / (svgWidth - margin.left - margin.right);
-            let index = Math.floor(mult * length);
-            //console.log(ts, data[key].Data[index].TimeStamp);
-
-            hovDict[key] = data[key].Data[index].Value;
-        });
-        setHoverData(hovDict);
-
-    }, [props.Hover]);
-
-
-    function GetData() {
-        const query = `
-            from(bucket: "${bucket}")
-            |> range(start: ${moment.tz(props.StartDate, MomentTimeZone).utc().format(MomentDateTimeFormat)}Z, stop: ${moment.tz(props.EndDate, MomentTimeZone).utc().format(MomentDateTimeFormat)}Z)
-            |> filter(fn: (r) => ${props.Channels.map(c => ("000000000000000" + c.ID.toString(16)).substr(-8)).map(c => 'r.tag == "' + c + '"').join(' or ')})
-        `;
-
+        let abort = false;
         let handle = $.ajax({
-            beforeSend: request => {
-                request.setRequestHeader('Authorization', `Token ${token}`);
-            },
             type: "POST",
-            url: `${host}/api/v2/query?org=${org}`,
-            contentType: "application/json; encoding=utf-8",
-            data: JSON.stringify({ query, type: 'flux'}),
-            cache: true,
+            url: `${homePath}api/PQDigest/HIDS/QueryPoints`,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                Channels: channels.map(channel => channel.ID),
+                StartTime: moment.utc(props.StartDate, MomentDateTimeFormat).format(OpenXDA.Consts.DateTimeFormat),
+                StopTime: moment.utc(props.EndDate, MomentDateTimeFormat).format(OpenXDA.Consts.DateTimeFormat),
+            }),
+            dataType: 'text',
+            cache: false,
             async: true
-        }).done((data: string) => {
-            let rows = data.split('\r\n');
-            let i = 0;
-            let header = rows[i++].split(',');
-            let tagIndex = header.indexOf('tag');
-            let timeIndex = header.indexOf('_time');
-            let valueIndex = header.indexOf('_value');
-            let fieldIndex = header.indexOf('_field');
-            let dict = {};
-            for (; i < rows.length; i++) {
-                let row = rows[i].split(',');
-                if (row[tagIndex] == undefined || row[tagIndex] == "tag" || row[fieldIndex] == "flags" ) continue;
-                else if (dict.hasOwnProperty(row[tagIndex] + '-' + row[fieldIndex])) {
-                    dict[row[tagIndex] + '-' + row[fieldIndex]].Data.push({ TimeStamp: moment.utc(row[timeIndex]).tz(MomentTimeZone).format(MomentDateTimeFormat) + 'Z', Value: parseFloat(row[valueIndex]) });
+        });
 
+        handle.then(allData => {
+            const newPoints: string[] = allData.split("\n");
+            const organizedData: IChartSeries = {};
+
+            newPoints.forEach(jsonPoint => {
+                let point: HIDS.Types.IPQData | undefined = undefined;
+                try {
+                    if (jsonPoint !== "") point = JSON.parse(jsonPoint);
                 }
-                else {
-                    dict[row[tagIndex] + '-' + row[fieldIndex]] = {
-                        Channel: props.Channels.find(c => ("000000000000000" + c.ID.toString(16)).substr(-8) == row[tagIndex]),
-                        Field: row[fieldIndex],
-                        Selected: true,
-                        Data: [{ TimeStamp: moment.utc(row[timeIndex]).tz(MomentTimeZone).format(MomentDateTimeFormat) + 'Z', Value: parseFloat(row[valueIndex]) }],
-                        Max: 0,
-                        Min: 0,
-                        Avg: 0,
-                        StDev: 0
-                    } as ChartSeries;
+                catch {
+                    console.error("Failed to parse point: " + jsonPoint);
                 }
-            }
-
-            let hovDict = {};
-            $.each(Object.keys(dict), (i, key) => {
-                dict[key].Min = Math.min(...dict[key].Data.map(d => d.Value));
-                dict[key].Max = Math.max(...dict[key].Data.map(d => d.Value));
-                dict[key].Avg = stats.mean(dict[key].Data.map(d => d.Value));
-                dict[key].StDev = stats.stdev(dict[key].Data.map(d => d.Value));
-                dict[key].CP99 = stats.percentile(dict[key].Data.map(d => d.Value),0.99);
-                dict[key].CP95 = stats.percentile(dict[key].Data.map(d => d.Value), 0.95);
-                dict[key].CP50 = stats.percentile(dict[key].Data.map(d => d.Value), 0.5);
-                dict[key].CP05 = stats.percentile(dict[key].Data.map(d => d.Value), 0.05);
-                dict[key].CP01 = stats.percentile(dict[key].Data.map(d => d.Value), 0.01);
-
-                let lowerBound = dict[key].Avg - 3 * dict[key].StDev;
-                let upperBound = dict[key].Avg + 3 * dict[key].StDev;
-
-                dict[key].Outliers = dict[key].Data.filter(d => d.Value < lowerBound || d.Value > upperBound).length;
-                dict[key].DataPoints = dict[key].Data.length;
-                hovDict[key] = dict[key].Data[0].Value;
+                if (point !== undefined) {
+                    const timeStamp = moment.utc(point.Timestamp, HIDS.Consts.DateTimeFormat).valueOf();
+                    if (organizedData.hasOwnProperty(point.Tag)) {
+                        organizedData[point.Tag].Min.push([timeStamp, point.Minimum]);
+                        organizedData[point.Tag].Max.push([timeStamp, point.Maximum]);
+                        organizedData[point.Tag].Avg.push([timeStamp, point.Average]);
+                    } else {
+                        organizedData[point.Tag] = {
+                            Min: [[timeStamp, point.Minimum]],
+                            Max: [[timeStamp, point.Maximum]],
+                            Avg: [[timeStamp, point.Average]],
+                            Color: ""
+                        };
+                    }
+                }
             });
-            setData(dict);
-            setHoverData(hovDict);
+
+            let lowerTemporalBound = Number.MAX_SAFE_INTEGER;
+            let upperTemporalBound = Number.MIN_SAFE_INTEGER;
+
+            const dataDict: IChartSeries = {};
+
+            Object.keys(organizedData).forEach(tag => {
+                const index = props.Channels.findIndex(chan => chan.ID === Number("0x" + tag));
+                if (index >= 0) {
+                    const firstTimeStamp = organizedData[tag].Min[0][0];
+                    const lastTimeStamp = organizedData[tag].Min[organizedData[tag].Min.length - 1][0];
+                    if (firstTimeStamp < lowerTemporalBound)
+                        lowerTemporalBound = firstTimeStamp;
+                    if (lastTimeStamp > upperTemporalBound)
+                        upperTemporalBound = lastTimeStamp;
+
+                    const key = `${props.Channels[index].Name} - ${props.Channels[index].Phase}`;
+                    dataDict[key] = organizedData[tag];
+                    dataDict[key].Color = getColor(key);
+                }
+            });
+            let tblData: ITableData[] = [];
+            // No data
+            if (lowerTemporalBound === Number.MAX_SAFE_INTEGER || upperTemporalBound === Number.MIN_SAFE_INTEGER)
+                setDataLimits([0, 1]);
+            else {
+                setDataLimits([lowerTemporalBound, upperTemporalBound]);
+                tblData = Object.keys(dataDict).flatMap((key) => {
+
+                    return ['Min', 'Avg', 'Max'].map(fieldKey => {
+                        const dataArray = dataDict[key][fieldKey].map(d => d[1]);
+                        const avg = stats.mean(dataArray);
+                        const stDev = stats.stdev(dataArray);
+                        const lowerBound = avg - 3 * stDev;
+                        const upperBound = avg + 3 * stDev;
+
+                        return {
+                            Name: `${key} - ${fieldKey}`,
+                            Min: formatText(Math.min(...dataArray)),
+                            Max: formatText(Math.max(...dataArray)),
+                            Avg: formatText(avg),
+                            StDev: formatText(stDev),
+                            CP99: formatText(stats.percentile(dataArray, 0.99)),
+                            CP95: formatText(stats.percentile(dataArray, 0.95)),
+                            CP50: formatText(stats.percentile(dataArray, 0.5)),
+                            CP05: formatText(stats.percentile(dataArray, 0.05)),
+                            CP01: formatText(stats.percentile(dataArray, 0.01)),
+                            Outliers: dataArray.filter(d => d < lowerBound || d > upperBound).length,
+                            Count: dataArray.length
+                        };
+                    });
+
+                });
+            }
+            setTableData(tblData);
+            const newHover: IHover = {};
+            tblData.forEach(datum => newHover[datum.Name] = NaN);
+            setHover(newHover);
+            setData(dataDict);
+            setStatus('idle');
+        }, () => {
+            if (!abort)
+                setStatus('error');
         });
 
-
-        return function () {
-            if (handle.abort != undefined) handle.abort();
+        return () => {
+            if (handle.abort != undefined) {
+                abort = true;
+                handle.abort();
+            }
         }
-    }
-
-    function DrawChart(data: object) {
-        let x = scaleUtc().rangeRound([margin.left, svgWidth - margin.right]);
-        let y = scaleLinear().rangeRound([svgHeight - margin.top, margin.bottom]);
-
-
-        select(ref.current).selectAll('svg').remove()
-        const svg = select(ref.current)
-            .append('svg')
-            .attr('width', svgWidth)
-            .attr('height', svgHeight)
-            .style('user-select', 'none')
-            .on('mousemove', (d: MouseEvent) => props.SetHover(d.offsetX))
-            .on('mousedown', (d: MouseEvent) => OnXZoom(d, svg, x));
-
-        let yextent = extent([].concat(...Object.keys(data).filter(key => data[key].Selected).map(key => data[key].Data.map(d => d.Value))));
-        y.domain(yextent);
-        x.domain([moment.utc(props.StartDate, MomentDateTimeFormat), moment.utc(props.EndDate, MomentDateTimeFormat)]);
-
-        const xAxis = svg.append("g").classed('xaxis', true)
-            .attr("transform", "translate(0," + (svgHeight - margin.bottom) + ")")
-            .call(axisBottom(x));
-
-
-        const yAxis = svg.append("g").classed('yaxis', true)
-            .attr("transform", `translate(${margin.left},0)`)
-            .call(axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3Format("~s")(value)));
-
-        let linefunc = line<{ TimeStamp:string, Value: number, Field: string }>().x(d => x(moment.utc(d.TimeStamp))).y(d => y(d.Value));
-
-        svg.selectAll("g.min-line").remove();
-        svg.selectAll("g.min-line")
-            .data(Object.keys(data).filter(key => data[key].Field == 'min' && data[key].Selected))
-            .enter()
-            .append("g")
-            .classed("line", true)
-            .append("path")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-            .attr("stroke-dasharray", 4)
-            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
-            .attr("d", (d: string) => {
-                return linefunc(data[d].Data);
-            })
-
-        svg.selectAll("g.avg-line").remove();
-        svg.selectAll("g.avg-line")
-            .data(Object.keys(data).filter(key => data[key].Field == 'avg' && data[key].Selected))
-            .enter()
-            .append("g")
-            .classed("line", true)
-            .append("path")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
-            .attr("d", (d: string) => {
-                return linefunc(data[d].Data);
-            })
-
-
-        svg.selectAll("g.max-line").remove();
-        svg.selectAll("g.max-line")
-            .data(Object.keys(data).filter(key => data[key].Field == 'max' && data[key].Selected))
-            .enter()
-            .append("g")
-            .classed("line", true)
-            .append("path")
-            .attr("fill", "none")
-            .attr("stroke-width", 1.5)
-            .attr("stroke-dasharray", (d) => 2)
-            .attr("stroke", (d: string) => getColor(data[d].Channel.Phase))
-            .attr("d", (d: string) => {
-                return linefunc(data[d].Data);
-            })
-    }
-
-
-    function getColor(label) {
-        if (label.toUpperCase().indexOf('AN') >= 0) return '#A30000';   // darker red
-        else if (label.toUpperCase().indexOf('BN') >= 0) return '#0029A3';   
-        else if (label.toUpperCase().indexOf('CN') >= 0) return '#007A29';
-        else if (label.toUpperCase().indexOf('NG') >= 0) return '#c3c3c3';   // grey
-        else if (label.toUpperCase().indexOf('AB') >= 0) return '#FF0000';   // brighter red
-        else if (label.toUpperCase().indexOf('BC') >= 0) return '#0066CC';
-        else if (label.toUpperCase().indexOf('CA') >= 0) return '#33CC33';   // grey
-        else if (label.toUpperCase().indexOf('RES') >= 0) return '#c3c3c3';  // grey
-        else if (label.toUpperCase().indexOf('ALL') >= 0) return '#c3c3c3';  // grey
-        else {
-            var ranNumOne = Math.floor(Math.random() * 256).toString(16);
-            var ranNumTwo = Math.floor(Math.random() * 256).toString(16);
-            var ranNumThree = Math.floor(Math.random() * 256).toString(16);
-
-            return `#${(ranNumOne.length > 1 ? ranNumOne : "0" + ranNumOne)}${(ranNumTwo.length > 1 ? ranNumTwo : "0" + ranNumTwo)}${(ranNumThree.length > 1 ? ranNumThree : "0" + ranNumThree)}`;
-        }
-    }
-
-    function getlabel(label) {
-        if (label.toUpperCase().indexOf('MAX') >= 0) return 'Max';
-        else if (label.toUpperCase().indexOf('MIN') >= 0) return 'Min';
-        else return 'Avg';
-    }
-
-    function getDashArray(label) {
-        if (label.toUpperCase().indexOf('MAX') >= 0) return 2;
-        else if (label.toUpperCase().indexOf('MIN') >= 0) return 4;
-        else return null;
-    }
-
-    function getLine(tag, measurement) {
-        let path = "M 0 17  C 10 0, 20 0, 25 10 S 32 25, 45 17";
-        if (measurement.Selected)
-            return <svg height={25} width={50} onClick={() => {
-                let newData = { ...data };
-                newData[tag].Selected = false;
-                setData(newData);
-            }}>
-                <path d={path} stroke={getColor(measurement.Channel.Phase)} strokeDasharray={getDashArray(measurement.Field)} strokeWidth={1.5} fill="transparent" />
-            </svg>;
-        else
-            return <svg height={25} width={50} onClick={() => {
-                let newData = { ...data };
-                newData[tag].Selected = true;
-                setData(newData);
-
-            }}>
-                <path d={path} stroke={getColor(measurement.Channel.Phase)} strokeDasharray={getDashArray(measurement.Field)} strokeWidth={1.5} fill="transparent" opacity={0.2}/>
-            </svg>;
-
-    }
-
-    function formatText(num: number) {
-        if (num >= 10) return num.toFixed(0);
-        else if (num >= 0) return num.toFixed(2);
-        else if (num >= 0.0001) return num.toFixed(4);
-        else if (num >= 0.000001) return num.toFixed(6);
-        else return num;
-
-    }
-
-    function OnXZoom(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
-        const start = evt.offsetX;
-        const brush = brushX()
-            .extent([[margin.left, margin.top + 0.5], [svgWidth - margin.right, svgHeight - margin.bottom + 0.5]])
-
-        const br = svg.append('g').call(brush)
-        br.call(brush.move, [start, start + 1]);
-        svg.on('mousemove.brush', (e: MouseEvent) => {
-            br.call(brush.move, [start, e.offsetX]);
-        })
-        svg.on('mouseup.brush', (e: MouseEvent) => {
-            const min = Math.min(start, e.offsetX);
-            const max = Math.max(start, e.offsetX);
-            props.SetZoom(moment(scale.invert(min)).format(MomentDateTimeFormat), moment(scale.invert(max)).format(MomentDateTimeFormat));
-            br.remove();
-            svg.on('mousemove.brush', null);
-            svg.on('mouseup.brush', null);
-        });
-    }
+    }, [channels, props.StartDate, props.EndDate]);
 
     return (
         <div className="card">
-            <div className="card-header">{props.Name }</div>
-            <div className="card-body" style={{padding:0, position: 'relative'}}>
-                <div ref={ref} className='pull-left' style={{ height: 300, width: 'calc(100% - 400px)', position: 'absolute', top: 0, left: 0 }}></div>
-                <div className='pull-right' style={{ height: 300, maxHeight: 300, overflowY: 'auto', width: window.innerWidth / 3 - 75, position: 'relative', right: 0 }}>
-                    <table className='table'>
-                        <thead>
-                            <tr>
-                                <th>Phase</th>
-                                <th></th>
-                                <th>Hover</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Min</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Avg</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Max</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>StDev</th>
-                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP99</th>
-                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP95</th>
-                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP50</th>
-                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP05</th>
-                                <th style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>CP01</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Counts</th>
-                                <th style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>Outliers</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Object.keys(data).map(key =>
-                                <tr key={key}>
-                                    <td>{data[key].Channel.Phase}-{getlabel(key)}</td>
-                                    <td>{getLine(key, data[key])}</td>
-                                    <td>{formatText(hoverData[key])}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Min)}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Avg)}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].Max)}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].StDev)}</td>
-                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5}}>{formatText(data[key].CP99)}</td>
-                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP95)}</td>
-                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP50)}</td>
-                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP05)}</td>
-                                    <td style={{ display: props.ShowStats == 'cp' ? 'table-cell' : 'none', padding: 5 }}>{formatText(data[key].CP01)}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{data[key].DataPoints}</td>
-                                    <td style={{ display: props.ShowStats == 'stats' ? 'table-cell' : 'none', padding: 5 }}>{data[key].Outliers}</td>
-                                </tr>)}
-                       
-                        </tbody>
-                    </table>
+            <div className="card-header">{props.Name}</div>
+            <div className="card-body" style={{ padding: 0, position: 'relative' }}>
+                <div className="row">
+                    <div ref={containerRef} className='col-6' style={{ height: svgHeight }}>
+                        <Plot
+                            height={svgHeight}
+                            width={width}
+                            showBorder={false}
+                            showGrid={true}
+                            yDomain={'AutoValue'}
+                            legendWidth={150}
+                            defaultTdomain={dataLimits}
+                            legend={'right'}
+                            Tlabel={'Time'}
+                            showMouse={'vertical'}
+                            zoom={false}
+                            pan={false}
+                            useMetricFactors={true}
+                        >
+                            {Object.keys(data).flatMap((s) => [
+                                <Line
+                                    showPoints={false}
+                                    lineStyle={':'}
+                                    color={getColor(s)}
+                                    data={data[s].Min}
+                                    legend={formKey(s, 'Min')}
+                                    key={s + 'min'}
+                                    onHover={(_, y) => setHover(hov => ({ ...hov, [formKey(s, 'Min')]: y }))}
+                                />,
+                                <Line
+                                    showPoints={false}
+                                    lineStyle={'-'}
+                                    color={getColor(s)}
+                                    data={data[s].Avg}
+                                    legend={formKey(s, 'Avg')}
+                                    key={s + 'avg'}
+                                    onHover={(_, y) => setHover(hov => ({ ...hov, [formKey(s, 'Avg')]: y }))}
+                                />,
+                                <Line
+                                    showPoints={false}
+                                    lineStyle={':'}
+                                    color={getColor(s)}
+                                    data={data[s].Max}
+                                    legend={formKey(s, 'Max')}
+                                    key={s + 'max'}
+                                    onHover={(_, y) => setHover(hov => ({ ...hov, [formKey(s, 'Max')]: y }))}
+                                />
+                            ])}
+                        </Plot>
+                    </div>
+                    <div className='col-6' style={{ height: svgHeight, display: 'flex', flexDirection: 'column' }}>
+                        <Table<ITableData>
+                            Data={tableData}
+                            SortKey={''}
+                            Ascending={false}
+                            OnSort={() => { }}
+                            KeySelector={(_, index) => index}
+                        >
+                            <Column<ITableData>
+                                Key={'Name'}
+                                Field={'Name'}
+                                AllowSort={false}
+                                RowStyle={{ width: '20%' }}
+                                HeaderStyle={{ width: '20%' }}
+                            >Phase</Column>
+                            <Column<ITableData>
+                                Key={'Hover'}
+                                AllowSort={false}
+                                Content={(row) => formatText(hover?.[row.item.Name] ?? NaN)}
+                            >{""}</Column>
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'Min'}
+                                    Field={'Min'}
+                                    AllowSort={false}
+                                >Min</Column> :
+                                <Column<ITableData>
+                                    Key={'CP99'}
+                                    Field={'CP99'}
+                                    AllowSort={false}
+                                >CP99</Column>
+                            }
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'Avg'}
+                                    Field={'Avg'}
+                                    AllowSort={false}
+                                >Avg</Column> :
+                                <Column<ITableData>
+                                    Key={'CP95'}
+                                    Field={'CP95'}
+                                    AllowSort={false}
+                                >CP95</Column>
+                            }
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'Max'}
+                                    Field={'Max'}
+                                    AllowSort={false}
+                                >Max</Column> :
+                                <Column<ITableData>
+                                    Key={'CP50'}
+                                    Field={'CP50'}
+                                    AllowSort={false}
+                                >CP50</Column>
+                            }
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'StDev'}
+                                    Field={'StDev'}
+                                    AllowSort={false}
+                                >StDev</Column> :
+                                <Column<ITableData>
+                                    Key={'CP05'}
+                                    Field={'CP05'}
+                                    AllowSort={false}
+                                >CP05</Column>
+                            }
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'Count'}
+                                    Field={'Count'}
+                                    AllowSort={false}
+                                >Count</Column> :
+                                <Column<ITableData>
+                                    Key={'CP01'}
+                                    Field={'CP01'}
+                                    AllowSort={false}
+                                >CP01</Column>
+                            }
+                            {props.ShowStats === 'stats' ?
+                                <Column<ITableData>
+                                    Key={'Outliers'}
+                                    Field={'Outliers'}
+                                    AllowSort={false}
+                                >Outliers</Column> :
+                                <></>
+                            }
+                        </Table>
+                    </div>
                 </div>
             </div>
         </div>
 
     );
+}
+
+const formKey = (key: string, field: string) => `${key} - ${field}`;
+
+function getColor(label) {
+    if (label.toUpperCase().indexOf('AN') >= 0) return '#A30000';   // darker red
+    if (label.toUpperCase().indexOf('BN') >= 0) return '#0029A3';
+    if (label.toUpperCase().indexOf('CN') >= 0) return '#007A29';
+    if (label.toUpperCase().indexOf('NG') >= 0) return '#c3c3c3';   // grey
+    if (label.toUpperCase().indexOf('AB') >= 0) return '#FF0000';   // brighter red
+    if (label.toUpperCase().indexOf('BC') >= 0) return '#0066CC';
+    if (label.toUpperCase().indexOf('CA') >= 0) return '#33CC33';   // grey
+    if (label.toUpperCase().indexOf('RES') >= 0) return '#c3c3c3';  // grey
+    if (label.toUpperCase().indexOf('ALL') >= 0) return '#c3c3c3';  // grey
+
+    return SpacedColor(1, 0.5);
+}
+
+function formatText(num: number) {
+    if (Number.isNaN(num)) return "NaN";
+    if (num >= 10) return num.toFixed(0);
+    if (num >= 0) return num.toFixed(2);
+    if (num >= 0.0001) return num.toFixed(4);
+    if (num >= 0.000001) return num.toFixed(6);
+    return num;
 }
 
 export default Trending;

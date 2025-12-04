@@ -29,8 +29,9 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "@gpa-gemstone/react-graph": "1.0.88",
-    "@gpa-gemstone/common-pages": "0.0.157",
+    "@gpa-gemstone/react-graph": "1.0.90",
+    "@gpa-gemstone/common-pages": "0.0.159",
+    "@gpa-gemstone/react-interactive": "1.0.170",
     "@influxdata/influxdb-client": "^1.13.0",
     "@reduxjs/toolkit": "1.8.3",
     "@types/ace": "0.0.42",

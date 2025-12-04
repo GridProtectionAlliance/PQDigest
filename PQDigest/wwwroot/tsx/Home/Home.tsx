@@ -22,15 +22,37 @@
 //******************************************************************************************************
 
 import React from 'react';
-import EventCountsByMonth from '../Home/EventCountsByMonth';
-import EventCountTable from '../Home/EventCountTable';
-import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
 import moment from 'moment';
 import CollectionWidgetRouter from '../../../EventWidgets/TSX/CollectionWidgetWrapper';
-import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { OpenXDA, Application } from '@gpa-gemstone/application-typings';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { LayoutGrid, Alert, LoadingIcon } from '@gpa-gemstone/react-interactive';
+
+
+const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IHomeScreenWidget>(`${homePath}api/PQDigest/HomePageWidget`);
 
 const Home = () => {
+
+    const [widgets, setWidgets] = React.useState<PQDigest.IHomeScreenWidget[]>([]);
+    const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    React.useEffect(() => {
+        setStatus("loading");
+
+        const handle = WidgetController.GetAll("ID", true);
+        handle.then(obj => {
+            setWidgets(obj);
+            setStatus("idle");
+        }, () => setStatus("error"));
+
+        return () => { if (handle?.abort == null) handle.abort(); }
+    }, []);
+
+
+
+
+
 
     const filter = React.useMemo(() => ({
         TimeFilter: {
@@ -47,75 +69,36 @@ const Home = () => {
     }), []);
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <div className="container-fluid d-flex h-100 flex-column">
-                <div className="row h-50">
-                    <div className="col-6 h-100 p-0">
-                        <CollectionWidgetRouter
+         <div className="row" style={{ flex: 1, overflow: "hidden" }}>
+                <div className="col-12 p-0" style={{ height: '100%' }}>
+                <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
+                {status === 'error' ?
+                    <div className="row" style={{ padding: "5px 0 0 0" }}>
+                        <Alert Class='alert-danger'>Error retrieving widget information.</Alert>
+                    </div> :
+                    <></>
+                }
+                {status === 'idle' ?
+                    <LayoutGrid RowsPerPage={2} ColMax={2}>
+                        {widgets.map(w => <CollectionWidgetRouter
                             Widget={{
-                                ID: 0,
+                                ...w,
                                 CategoryID: 0,
-                                Name: 'PQHealthIndex',
-                                Type: 'PQHealthIndex',
-                                Setting: null,
+                                CategoryName: "",
                             }}
-                            Title="EPRI PQ Health Index - Last 30 Days"
+                            Title={w.Name}
                             EventFilter={{
-                            // ToDo: this is 10 years in this demo, it should be 30 days. 30 days has no data for demo...
-                            TimeFilter: {
-                                StartTime: moment.utc().subtract(10, 'years').format(OpenXDA.Consts.DateTimeFormat),
-                                EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
-                            }
-                            }} HomePath={homePath} Roles={[]} />
-                    </div>
-                    <div className="col-6 h-100 p-0">
-                        <CollectionWidgetRouter
-                            Widget={{
-                                ID: 0,
-                                CategoryID: 0,
-                                Name: 'EventCountChart',
-                                Type: 'EventCountChart',
-                                Setting: null
+                                TimeFilter: {
+                                    StartTime: moment.utc().subtract(w.TimeFrame, 'days').format(OpenXDA.Consts.DateTimeFormat),
+                                    EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
+                                }
                             }}
-                            Title="Historical Event Counts - Last Year"
-                            EventFilter={filterYear}
                             HomePath={homePath}
                             Roles={[]}
-                        />
-                    </div>
-                </div>
-                <div className="row h-50">
-                    <div className="col-6 h-100 p-0">
-                        <CollectionWidgetRouter
-                            Widget={{
-                                ID: 0,
-                                CategoryID: 0,
-                                Name: 'MagDurChart',
-                                Type: 'MagDurChart',
-                                Setting: null
-                            }}
-                            Title="Magnitude Duration Chart - Last 30 Days"
-                            EventFilter={filter}
-                            HomePath={homePath}
-                            Roles={[]}
-                        />
-                    </div>
-                    <div className="col-6 h-100 p-0">
-                        <CollectionWidgetRouter
-                            Widget={{
-                                ID: 0,
-                                CategoryID: 0,
-                                Name: 'EventCountTable',
-                                Type: 'EventCountTable',
-                                Setting: null
-                            }}
-                            Title="Meter Activity - Last 30 Days"
-                            EventFilter={filter}
-                            HomePath={homePath}
-                            Roles={[]}
-                        />
-                    </div>
-                </div>
+                        />)}
+                    </LayoutGrid>
+
+             : null}
             </div>
         </div>
     )

@@ -69,8 +69,8 @@ const Home = () => {
     }), []);
 
     return (
-         <div className="row" style={{ flex: 1, overflow: "hidden" }}>
-                <div className="col-12 p-0" style={{ height: '100%' }}>
+         <div className="row h-100" style={{ overflow: "hidden" }}>
+                <div className="col-12 p-0 h-100">
                 <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
                 {status === 'error' ?
                     <div className="row" style={{ padding: "5px 0 0 0" }}>

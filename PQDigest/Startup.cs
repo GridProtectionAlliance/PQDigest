@@ -45,6 +45,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using openXDA.APIAuthentication;
 using PQDigest.Controllers;
+using PQDigest.Security;
 
 namespace PQDigest
 {
@@ -77,7 +78,13 @@ namespace PQDigest
             //    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read" })
             //    //.AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
             //    .AddInMemoryTokenCaches();
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+
+            /*services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+                .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme,(options) => {
+                    Configuration.Bind("OpenIDConnect", options);
+
+
+                })
                .AddMicrosoftIdentityWebApp(options =>
                {
                    Configuration.Bind("AzureAd", options);
@@ -111,8 +118,10 @@ namespace PQDigest
                 {
                     Configuration.Bind("AzureAd", options);
                 }, Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
-             )
-            .AddInMemoryTokenCaches();
+             ) */
+            services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
+                .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, (options) => { options.DefaultUserId = "Test";  });
+
 
             services.AddMvc(options =>
             {

@@ -67,7 +67,7 @@ namespace PQDigest.Controllers
 #else
 
 
-                DataTable lines = connection.RetrieveData(@"
+                DataTable lines = new AdoDataConnection(Settings.Instance).RetrieveData(@"
                     select 
 	                    *
                     From 

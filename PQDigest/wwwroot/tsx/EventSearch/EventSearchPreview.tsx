@@ -22,79 +22,63 @@
 //******************************************************************************************************
 
 import React from 'react';
-import moment from 'moment';
 import WidgetRouter from '../../../EventWidgets/TSX/WidgetWrapper';
-import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { Alert, LoadingIcon } from '@gpa-gemstone/react-interactive'
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { PQDigest } from '../global';
+import { Application } from '@gpa-gemstone/application-typings';
 
-const EventSearchPreview = (props: { Event: OpenXDA.Types.EventSearch, Width: number, Height: number }) => {
-    if (props.Event == undefined) return <span>No Event Selected ... </span>;
+const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IWidget>(`${homePath}api/PQDigest/EventWidgets`);
 
+const EventSearchPreview = (props: { ID: number, Width: number, Height: number }) => {
+
+    const [widgets, setWidgets] = React.useState<PQDigest.IWidget[]>([]);
+    const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    React.useEffect(() => {
+        setStatus("loading");
+
+        const handle = WidgetController.GetAll("ID", true);
+        handle.then(obj => {
+            setWidgets(obj);
+            setStatus("idle");
+        }, () => setStatus("error"));
+
+        return () => { if (handle?.abort == null) handle.abort(); }
+    }, []);
+
+    if (props.ID < 0)
+        return <Alert Class='alert-info'
+            Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
+            ShowX={false}>
+            No Event Selected. Please select an event on the left.
+     </Alert>
+
+    if (status === 'error')
+        return <Alert Class='alert-danger'
+            Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
+            ShowX={false}>
+            Error retrieving widget information.
+     </Alert>
+
+
+    //#ToDO Add Note Slices to Event Store
     return (
         <>
-            <WidgetRouter Widget={{
-                    ID: 0,
-                    CategoryID: 0,
-                    Name: 'OpenSEE',
-                    Type: 'OpenSEE',
-                    Setting: null
-                }}
-                EventID={props.Event.ID}
-                Height={props.Height / 3 - 1}
-                DisturbanceID={0}
-                FaultID={0}
-                StartTime={moment.utc(props.Event.StartTime).valueOf()}
-                HomePath={homePath}
-                Roles={[]}
-                Store={undefined}
-            />    
-            <WidgetRouter Widget={{
-                    ID: 0,
-                    CategoryID: 0,
-                    Name: 'TrendGraph',
-                    Type: 'TrendGraph',
-                    Setting: null
-                }}
-                EventID={props.Event.ID}
-                Height={props.Height / 3 - 1}
-                DisturbanceID={0}
-                FaultID={0}
-                StartTime={moment.utc(props.Event.StartTime).valueOf()}
-                HomePath={homePath}
-                Roles={[]}
-                Store={undefined}
-            />
-            <WidgetRouter Widget={{
-                ID: 0,
+            <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
+            {widgets.map(w => <WidgetRouter Widget={{
+                ...w,
                 CategoryID: 0,
-                Name: 'PQICurves',
-                Type: 'PQICurves',
-                Setting: null
+                CategoryName: ''
             }}
-                EventID={props.Event.ID}
+                EventID={props.ID}
                 Height={props.Height / 3 - 1}
                 DisturbanceID={0}
                 FaultID={0}
-                StartTime={moment.utc(props.Event.StartTime).valueOf()}
                 HomePath={homePath}
                 Roles={[]}
                 Store={undefined}
-            />
-            <WidgetRouter Widget={{
-                ID: 0,
-                CategoryID: 0,
-                Name: 'pqi',
-                Type: 'pqi',
-                Setting: null
-            }}
-                EventID={props.Event.ID}
-                Height={props.Height / 3 - 1}
-                DisturbanceID={0}
-                FaultID={0}
-                StartTime={moment.utc(props.Event.StartTime).valueOf()}
-                HomePath={homePath}
-                Roles={[]}
-                Store={undefined}
-            />       
+            />)}          
         </>
     );
 }

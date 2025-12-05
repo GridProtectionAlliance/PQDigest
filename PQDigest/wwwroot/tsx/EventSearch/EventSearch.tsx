@@ -38,14 +38,15 @@ const EventSearch = (props: {}) => {
         CategoryID: 0,
         Name: 'EventTable',
         Type: 'EventTable',
-        Setting: null
+        Setting: null,
+        CategoryName: '',
     });
 
     const [types, setTypes] = React.useState<OpenXDA.Types.EventType[]>([]);
     const [meters, setMeters] = React.useState<OpenXDA.Types.Meter[]>([]);
 
-    const [selectedEvents, setSelectedEvents] = React.useState<Set<number>>(new Set<number>());
-    const [shownEvent, setShownEvent] = React.useState<OpenXDA.Types.EventSearch>();
+    const [selectedEvent, setSelectedEvent] = React.useState<number>(-1);
+
     const [filt, setFilt] = React.useState<EventWidget.ICollectionFilter>(() => ({
         TimeFilter: {
             StartTime: qs.startDate == undefined ? moment.utc().subtract(30, 'days').format(OpenXDA.Consts.DateTimeFormat) : qs.startDate as string,
@@ -107,17 +108,6 @@ const EventSearch = (props: {}) => {
         }
     }, []);
 
-    const selectEventCallback = React.useCallback((evts: OpenXDA.Types.EventSearch[]) => {
-        if (evts.length > 0) {
-            setShownEvent(evts[0]);
-            setSelectedEvents(new Set<number>([evts[0].ID]));
-        }
-        else {
-            setShownEvent(undefined);
-            setSelectedEvents(new Set<number>());
-        }
-    }, []);
-
     return (
         <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
             <div className="row" style={{ margin: 5 }}>
@@ -176,13 +166,20 @@ const EventSearch = (props: {}) => {
             </div>
             <div className="row" style={{ flex: 1, margin: '5px 5px 5px 5px', overflow: 'hidden' }}>
                 <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
-                    <CollectionWidgetRouter Widget={selectedWidget} EventCallBack={selectEventCallback} SelectedEvents={selectedEvents} EventFilter={filt} HomePath={homePath} Roles={[]} />
+                    <CollectionWidgetRouter
+                        Widget={selectedWidget}
+                        Callback={setSelectedEvent}
+                        EventID={selectedEvent}
+                        EventFilter={filt}
+                        HomePath={homePath}
+                        Roles={[]}
+                    />
                 </div>
                 <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
                     <div className="card h-100" style={{overflowY: 'auto', overflowX: 'hidden'} }>
                         {/*<div className="card-header">Event Preview</div>*/}
                         <div className="card-body" style={{ padding: 0 }}>
-                            <EventSearchPreview Event={shownEvent} Height={window.innerHeight - 226} Width={window.innerWidth / 2}/>
+                            <EventSearchPreview ID={selectedEvent} Height={window.innerHeight - 226} Width={window.innerWidth / 2} />
                         </div>
                     </div>
                 </div>

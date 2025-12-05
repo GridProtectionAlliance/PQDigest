@@ -86,7 +86,6 @@ const Home = () => {
                                 CategoryID: 0,
                                 CategoryName: "",
                             }}
-                            Title={w.Name}
                             EventFilter={{
                                 TimeFilter: {
                                     StartTime: moment.utc().subtract(w.TimeFrame, 'days').format(OpenXDA.Consts.DateTimeFormat),

@@ -33,7 +33,6 @@ import { LayoutGrid, Alert, LoadingIcon } from '@gpa-gemstone/react-interactive'
 const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IHomeScreenWidget>(`${homePath}api/PQDigest/HomePageWidget`);
 
 const Home = () => {
-
     const [widgets, setWidgets] = React.useState<PQDigest.IHomeScreenWidget[]>([]);
     const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
 
@@ -49,24 +48,20 @@ const Home = () => {
         return () => { if (handle?.abort == null) handle.abort(); }
     }, []);
 
-
-
-
-
-
-    const filter = React.useMemo(() => ({
-        TimeFilter: {
-            StartTime: moment.utc().subtract(30, 'days').format(OpenXDA.Consts.DateTimeFormat),
-            EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
-        }
-    }), []);
-
-    const filterYear = React.useMemo(() => ({
-        TimeFilter: {
-            StartTime: moment.utc().subtract(1, 'years').format(OpenXDA.Consts.DateTimeFormat),
-            EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
-        }
-    }), []);
+    const collectionRouters = React.useMemo(() => 
+        widgets.map((w, i) => <CollectionWidgetRouter
+            Widget={w}
+            EventFilter={{
+                TimeFilter: {
+                    StartTime: moment.utc().subtract(w.TimeFrame, 'days').format(OpenXDA.Consts.DateTimeFormat),
+                    EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
+                }
+            }}
+            HomePath={homePath}
+            Roles={[]}
+            key={i}
+        />)
+    , [widgets]);
 
     return (
          <div className="row h-100" style={{ overflow: "hidden" }}>
@@ -80,23 +75,8 @@ const Home = () => {
                 }
                 {status === 'idle' ?
                     <LayoutGrid RowsPerPage={2} ColMax={2}>
-                        {widgets.map(w => <CollectionWidgetRouter
-                            Widget={{
-                                ...w,
-                                CategoryID: 0,
-                                CategoryName: "",
-                            }}
-                            EventFilter={{
-                                TimeFilter: {
-                                    StartTime: moment.utc().subtract(w.TimeFrame, 'days').format(OpenXDA.Consts.DateTimeFormat),
-                                    EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
-                                }
-                            }}
-                            HomePath={homePath}
-                            Roles={[]}
-                        />)}
+                        {collectionRouters}
                     </LayoutGrid>
-
              : null}
             </div>
         </div>

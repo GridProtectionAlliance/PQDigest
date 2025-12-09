@@ -66,19 +66,18 @@ const EventSearchPreview = (props: { ID: number, Width: number, Height: number }
     return (
         <>
             <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
-            {widgets.map(w => <WidgetRouter Widget={{
-                ...w,
-                CategoryID: 0,
-                CategoryName: ''
-            }}
-                EventID={props.ID}
-                Height={props.Height / 3 - 1}
-                DisturbanceID={0}
-                FaultID={0}
-                HomePath={homePath}
-                Roles={[]}
-                Store={undefined}
-            />)}          
+            {widgets.map(w =>
+                <WidgetRouter
+                    Widget={w}
+                    EventID={props.ID}
+                    Height={props.Height / 3 - 1}
+                    DisturbanceID={0}
+                    FaultID={0}
+                    HomePath={homePath}
+                    Roles={[]}
+                    Store={undefined}
+                />
+            )}          
         </>
     );
 }

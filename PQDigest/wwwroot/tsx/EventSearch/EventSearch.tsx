@@ -35,11 +35,9 @@ const EventSearch = (props: {}) => {
 
     const [selectedWidget, setSelectedWidget] = React.useState<EventWidget.IWidgetView>({
         ID: 0,
-        CategoryID: 0,
         Name: 'EventTable',
         Type: 'EventTable',
-        Setting: null,
-        CategoryName: '',
+        Setting: null
     });
 
     const [types, setTypes] = React.useState<OpenXDA.Types.EventType[]>([]);

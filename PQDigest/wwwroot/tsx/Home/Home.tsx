@@ -59,7 +59,7 @@ const Home = () => {
             }}
             HomePath={homePath}
             Roles={[]}
-            key={i}
+            key={w.ID}
         />)
     , [widgets]);
 

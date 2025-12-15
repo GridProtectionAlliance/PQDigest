@@ -34,14 +34,39 @@ import { Provider } from 'react-redux';
 import store from './Store';
 
 const PQDigest: React.FunctionComponent = () => {
+    const [logo, setLogo] = React.useState<string>("Image/home.png");
+
+    React.useEffect(() => {
+        const handle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/Setting/Logo`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'text',
+            cache: true,
+            async: true
+        });
+
+        handle.done(setLogo);
+
+        return () => { if (handle?.abort != null) handle.abort(); }
+    }, []);
+
     return (
         <Application
             HomePath={homePath}
             DefaultPath={"Home"}
             Logo={`${homePath}Image/PQDigest.png`}
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
-            SidebarUI={<>&copy; 2020 - PQDigest</>}
-            AllowCollapsed={false}
+            SidebarUI={<>
+                <div style={{ width: '100%', textAlign: 'center' }}>
+                    <img style={{ maxHeight: 36, maxWidth: "100%" }} src={logo} />
+                    <br />
+                    <span>Version {version}</span>
+                    <br/>
+                    <span>&copy; 2020 - PQDigest</span>
+                </div>
+            </>}
+            AllowCollapsed={true}
         >
             <Page Name={'Home'} Label={'Home'} Icon={<img style={{ maxHeight: 36 }} src={`${homePath}Image/home.png`} />}>
                 <Home />

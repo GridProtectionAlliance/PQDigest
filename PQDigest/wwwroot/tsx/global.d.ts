@@ -25,6 +25,7 @@ import { namespace } from "d3";
 
 declare global {
     var homePath: string;
+    var version: string;
     var controllerViewPath: string;
     var userName: string;
     var isAuthenticated: boolean;

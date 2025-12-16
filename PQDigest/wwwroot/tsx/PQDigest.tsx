@@ -34,7 +34,7 @@ import { Provider } from 'react-redux';
 import store from './Store';
 
 const PQDigest: React.FunctionComponent = () => {
-    const [logo, setLogo] = React.useState<string>("Image/home.png");
+    const [logo, setLogo] = React.useState<string>("Image/GPA_Horizontal.png");
 
     React.useEffect(() => {
         const handle = $.ajax({
@@ -59,7 +59,7 @@ const PQDigest: React.FunctionComponent = () => {
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
             SidebarUI={<>
                 <div style={{ width: '100%', textAlign: 'center' }}>
-                    <img style={{ maxHeight: 36, maxWidth: "100%" }} src={logo} />
+                    <img style={{ maxHeight: 150, maxWidth: "100%" }} src={logo} />
                     <br />
                     <span>Version {version}</span>
                     <br/>

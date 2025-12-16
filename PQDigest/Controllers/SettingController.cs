@@ -17,7 +17,7 @@ namespace PQDigest.Controllers
     [ApiController]
     public class SettingController : ControllerBase
     {
-        private readonly string m_defaultLogo = "Image/PQDigest.png";
+        private readonly string m_defaultLogo = "Image/GPA_Horizontal.png";
         private readonly IConfiguration m_configuration;
 
         public SettingController(IConfiguration configuration)

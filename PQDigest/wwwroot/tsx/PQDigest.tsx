@@ -55,7 +55,7 @@ const PQDigest: React.FunctionComponent = () => {
         <Application
             HomePath={homePath}
             DefaultPath={"Home"}
-            Logo={`${homePath}Image/PQDigest.png`}
+            Logo={`${homePath}Image/PQDigestLogo.png`}
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
             SidebarUI={<>
                 <div style={{ width: '100%', textAlign: 'center' }}>

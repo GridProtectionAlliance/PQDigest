@@ -34,7 +34,7 @@ import { Provider } from 'react-redux';
 import store from './Store';
 
 const PQDigest: React.FunctionComponent = () => {
-    const [logo, setLogo] = React.useState<string>("Image/GPA_Horizontal.png");
+    const [logo, setLogo] = React.useState<string>(null);
 
     React.useEffect(() => {
         const handle = $.ajax({
@@ -46,7 +46,7 @@ const PQDigest: React.FunctionComponent = () => {
             async: true
         });
 
-        handle.done(setLogo);
+        handle.done(l => setLogo("data:image/png;base64, " + l));
 
         return () => { if (handle?.abort != null) handle.abort(); }
     }, []);
@@ -59,7 +59,10 @@ const PQDigest: React.FunctionComponent = () => {
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
             SidebarUI={<>
                 <div style={{ width: '100%', textAlign: 'center' }}>
-                    <img style={{ maxHeight: 150, maxWidth: "100%" }} src={logo} />
+                    {logo != null ?
+                        <img style={{ maxHeight: 150, maxWidth: "100%" }} src={logo} /> :
+                        <></>
+                    }
                     <br />
                     <span>Version {version}</span>
                     <br/>

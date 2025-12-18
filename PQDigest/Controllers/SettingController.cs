@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Reflection;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -37,7 +40,13 @@ namespace PQDigest.Controllers
         [HttpGet, Route("Logo")]
         public IActionResult GetLogo()
         {
-            string logo = m_defaultLogo;
+            string webRoot = Path.GetDirectoryName(AssemblyInfo.EntryAssembly.Location);
+
+            #if DEBUG
+            webRoot = Path.Combine(webRoot, "..", "..", "..", "wwwroot");
+            #else
+            webRoot = Path.Combine(webRoot, "wwwroot");
+            #endif
 
             /*
             // ToDo: use claim to lookup base64/url representation in DB, return that if available.
@@ -47,7 +56,13 @@ namespace PQDigest.Controllers
             }
             */
 
-            return Ok(logo);
+            return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+        }
+
+        private string ConvertImageToBase64(string filePath)
+        {
+            byte[] imageBytes = System.IO.File.ReadAllBytes(filePath);
+            return Convert.ToBase64String(imageBytes);
         }
     }
 }

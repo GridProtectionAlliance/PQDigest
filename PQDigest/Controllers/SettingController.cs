@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Gemstone.Configuration;
 using Gemstone.Data;
@@ -48,15 +49,20 @@ namespace PQDigest.Controllers
             webRoot = Path.Combine(webRoot, "wwwroot");
             #endif
 
-            /*
-            // ToDo: use claim to lookup base64/url representation in DB, return that if available.
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default)) 
             {
-                logo = await new TableOperations<LogoClaim>(connection).QueryRecordWhere("Claim query here", HttpContext.User.Claims.Claim)?.Logo ?? DefaultLogo;
-            }
-            */
+                Claim companyID = HttpContext.User.FindAll(ClaimTypes.GroupSid).First();
+                Company company = new TableOperations<Company>(connection).QueryRecordWhere("CompanyID = {0}", companyID.Value);
 
-            return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+                if (company is null)
+                    return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+
+                string[] files = Directory.GetFiles(webRoot, Path.Combine("Image", "CompanyLogos", company.Name + ".*"));
+                if (files.Length > 0)
+                    return Ok(ConvertImageToBase64(files[0]));
+
+                return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+            }
         }
 
         private string ConvertImageToBase64(string filePath)

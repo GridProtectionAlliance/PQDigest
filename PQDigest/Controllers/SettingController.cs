@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
@@ -51,8 +52,8 @@ namespace PQDigest.Controllers
 
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default)) 
             {
-                Claim companyID = HttpContext.User.FindAll(ClaimTypes.GroupSid).First();
-                Company company = new TableOperations<Company>(connection).QueryRecordWhere("CompanyID = {0}", companyID.Value);
+                Claim customerKey = HttpContext.User.FindAll(ClaimTypes.GroupSid).First();
+                Customer company = new TableOperations<Customer>(connection).QueryRecordWhere("CustomerKey = {0}", customerKey.Value);
 
                 if (company is null)
                     return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));

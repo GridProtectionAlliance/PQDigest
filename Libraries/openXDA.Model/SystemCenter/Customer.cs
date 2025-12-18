@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  SystemSettings.cs - Gbtc
+//  AdditionalField.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,32 +16,33 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/23/2020 - Billy Ernest
+//  09/20/2019 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Gemstone.Data.Model;
+using System.ComponentModel.DataAnnotations;
 
-namespace PQDigest.Models
+namespace SystemCenter.Model
 {
     /// <summary>
-    /// Defines a company
+    /// Customer Model. Distinct and joined to PQViewSiteID to reduce number of duplicate Customers coming from PQView
     /// </summary>
-    [PostRoles("Administrator")]
-    [DeleteRoles("Administrator")]
-    [PatchRoles("Administrator")]
-    public class Company
+    [PatchRoles("Administrator, Transmission SME")]
+    [PostRoles("Administrator, Transmission SME")]
+    [DeleteRoles("Administrator, Transmission SME")]
+    public class Customer
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public string CompanyID { get; set; }
-        public int CompanyTypeID { get; set; }
+        [Required]
+        [DefaultSortOrder]
+        public string CustomerKey { get; set; }
         public string Name { get; set; }
+        public string Phone { get; set; }
         public string Description { get; set; }
+        public bool LSCVS { get; set; }
+        public int PQIFacilityID { get; set; }
     }
 }

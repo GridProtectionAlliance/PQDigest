@@ -32,6 +32,7 @@ import { EventWidget } from '../../../EventWidgets/TSX/global';
 import EventSearchPreview from '../EventSearch/EventSearchPreview';
 
 const EventTypeController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.EventType>(`${homePath}api/OpenXDA/EventType`);
+const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
 
 const EventSearch = (props: {}) => {
     const qs = queryString.parse(location.search.substring(1));
@@ -55,17 +56,6 @@ const EventSearch = (props: {}) => {
         }
     }));
 
-    function GetMeters(): JQuery.jqXHR<OpenXDA.Types.Meter[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
     React.useEffect(() => {
         const typeHandle = EventTypeController.GetAll("ID", true);
         typeHandle.done((data: OpenXDA.Types.EventType[]) => {
@@ -79,8 +69,14 @@ const EventSearch = (props: {}) => {
             setTypes(data);
         });
 
-        let handle2 = GetMeters();
-        handle2.done((data: OpenXDA.Types.Meter[]) => {
+        return () => {
+            if (typeHandle.abort != undefined) typeHandle.abort();
+        }
+    }, []);
+
+    React.useEffect(() => {
+        const meterHandle = MeterController.GetAll("Name", true);
+        meterHandle.done((data: OpenXDA.Types.Meter[]) => {
             let b64string = (qs.meters == undefined ? '' : qs.meters)
             let ids = atob(b64string as string).split(',').map(a => parseInt(a))
             if (qs.meters == undefined)
@@ -91,9 +87,8 @@ const EventSearch = (props: {}) => {
             setMeters(data);
         });
 
-        return function () {
-            if (typeHandle.abort != undefined) typeHandle.abort();
-            if (handle2.abort != undefined) handle2.abort();
+        return () => {
+            if (meterHandle.abort != undefined) meterHandle.abort();
         }
     }, []);
 

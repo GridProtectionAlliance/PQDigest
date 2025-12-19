@@ -21,13 +21,8 @@
 //
 //******************************************************************************************************
 
-using Gemstone.Data;
 using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Data;
-using System.IO;
-using System.Net;
 
 namespace PQDigest.Controllers
 {

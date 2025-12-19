@@ -21,10 +21,12 @@
 //
 //******************************************************************************************************
 
-import { OpenXDA, HIDS, Application } from '@gpa-gemstone/application-typings';
-import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
+import { Application, HIDS, OpenXDA } from '@gpa-gemstone/application-typings';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
 import { SpacedColor } from '@gpa-gemstone/helper-functions';
-import { Table, Column } from '@gpa-gemstone/react-table';
+import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
+import { Line, Plot } from '@gpa-gemstone/react-graph';
+import { Column, Table } from '@gpa-gemstone/react-table';
 import { createBrowserHistory } from "history";
 import _ from 'lodash';
 import moment from 'moment';
@@ -33,9 +35,10 @@ import queryString from "querystring";
 import React from 'react';
 import stats from 'stats-lite';
 import ExportCSV from './ExportCSV';
-import { Line, Plot } from '@gpa-gemstone/react-graph';
 
 const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss';
+
+const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
 
 interface TrendingFilter {
     ShowStats: 'stats' | 'cp',
@@ -68,23 +71,20 @@ const Trending = () => {
     }, [meters, trendFilter?.MeterID]);
 
     React.useEffect(() => {
-        let handle = $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-        handle.done((data: OpenXDA.Types.Meter[]) => setMeters(data));
+        const meterHandle = MeterController.GetAll("Name", true);
+        meterHandle.done((data: OpenXDA.Types.Meter[]) => setMeters(data));
 
+        return () => {
+            if (meterHandle?.abort != null) meterHandle.abort();
+        }
+    }, []);
+
+    React.useEffect(() => {
         history.listen(() => {
-            setTrendFilter(filter => ({ ...filter, StartDate: qs.startDate as string, EndDate: qs.endDate as string }))
-            console.log('listening');
+            setTrendFilter(filter => ({ ...filter, StartDate: qs.startDate as string, EndDate: qs.endDate as string }));
         });
 
-        return function () {
-            if (handle?.abort != null) handle.abort();
+        return () => {
             history.listen = null;
         }
     }, []);

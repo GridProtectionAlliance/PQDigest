@@ -34,6 +34,8 @@ import { Lightning } from '../global';
 import ESRIMap from './ESRIMap';
 
 type ToleranceUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+const LocationController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Location>(`${homePath}api/OpenXDA/Location`);
+
 const Lightning = (props: {}) => {
     const history = createBrowserHistory();
 
@@ -57,8 +59,8 @@ const Lightning = (props: {}) => {
     const [strikes, setStrikes] = React.useState<Lightning.Strike[]>([]);
 
     React.useEffect(() => {
-        let handle2 = GetLocations();
-        handle2.done((data: OpenXDA.Location[]) => {
+        const handle = LocationController.GetAll("Name", true);
+
         handle.done((data: OpenXDA.Types.Location[]) => {
             setLocations(data);
             let json: GeoJSON.FeatureCollection<GeoJSON.Point> = {
@@ -78,12 +80,11 @@ const Lightning = (props: {}) => {
             let b = L.geoJSON(json).getBounds();
             setBounds([[b.getSouthWest().lat, b.getSouthWest().lng], [b.getNorthEast().lat, b.getNorthEast().lng]]);
         });
-        return function () {
-            if (handle2.abort != undefined) handle2.abort();
-
+        return () => {
+            if (handle?.abort != null) handle.abort();
         }
-
     }, []);
+
     React.useEffect(() => {
         history.push({
             pathname: homePath + 'Lightning',
@@ -116,17 +117,6 @@ const Lightning = (props: {}) => {
                 SWLat: bounds[0][0],
                 SWLng: bounds[0][1]
             }),
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetLocations(): JQuery.jqXHR<OpenXDA.Location[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Location`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
             cache: true,
             async: true
         });

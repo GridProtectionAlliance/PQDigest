@@ -21,73 +21,28 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using PQDigest.Models;
+using openXDA.Model;
+using PQDigest.Security;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/[controller]")]
-    [ApiController]
-    public class ChannelController : ControllerBase
+    [Route("api/OpenXDA/Channel")]
+    public class ChannelController : ReadOnlyModelController<ChannelDetail>
     {
-        private readonly IConfiguration m_configuration;
-        private readonly ILogger<ChannelController> m_logger;
-        public ChannelController(IConfiguration configuration, ILogger<ChannelController> logger)
+        protected override TableOperations<ChannelDetail> CreateTableOperation(AdoDataConnection connection)
         {
-            m_configuration = configuration;
-            m_logger = logger;
+            Customer customer = HttpContext.User.GetCustomer(connection);
+            string sql = "Trend = 1 AND MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}) OR AssetID IN (Select AssetID FROM CustomerAsset WHERE AssetID = {0})";
+            RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
+            TableOperations<ChannelDetail> operations = new TableOperations<ChannelDetail>(connection);
+            operations.RootQueryRestriction += claimsRestriction;
+            return operations;
         }
-
-        [Route("{id:int}")]
-        public IActionResult Get(int id) {
-            try
-            {
-                // todo: there is no view that matches typescript channels, so we do a custom query here. Should we create such a view?
-                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-                {
-                    return Ok(connection.RetrieveData(@"
-                        SELECT 
-                            Channel.*,
-                            Meter.AssetKey as Meter,
-                            Meter.AssetKey,
-                            MeasurementType.Name as MeasurementType,
-                            MeasurementCharacteristic.Name as MeasurementCharacteristic,
-                            Phase.Name as Phase
-                        FROM
-                            Channel JOIN
-                            Asset ON Channel.AssetID = Asset.ID JOIN
-                            Meter ON Channel.MeterID = Meter.ID JOIN
-                            MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
-                            MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-                            Phase ON Channel.PhaseID = Phase.ID
-                        WHERE
-                            Channel.MeterID = {0} AND MeasurementCharacteristic.Name != 'Instantaneous'
-                        ORDER BY 
-                            Channel.Name
-                    ", id));
-                }
-
-            }
-            catch (Exception ex) {
-                
-                m_logger.LogError(ex.Message);
-                return StatusCode(500, ex);
-            }
-        }
-
     }
 }

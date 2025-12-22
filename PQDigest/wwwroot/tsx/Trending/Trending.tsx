@@ -39,7 +39,7 @@ import ExportCSV from './ExportCSV';
 const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss';
 
 const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
-const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/Channel`);
+const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/TrendChannel`);
 
 interface TrendingFilter {
     ShowStats: 'stats' | 'cp',

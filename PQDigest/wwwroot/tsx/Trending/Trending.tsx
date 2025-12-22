@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { Application, HIDS, OpenXDA } from '@gpa-gemstone/application-typings';
-import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { Gemstone, ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
 import { SpacedColor } from '@gpa-gemstone/helper-functions';
 import { DateRangePicker, MultiCheckBoxSelect, Select } from '@gpa-gemstone/react-forms';
 import { Line, Plot } from '@gpa-gemstone/react-graph';
@@ -39,6 +39,7 @@ import ExportCSV from './ExportCSV';
 const MomentDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss';
 
 const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
+const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/Channel`);
 
 interface TrendingFilter {
     ShowStats: 'stats' | 'cp',
@@ -91,7 +92,15 @@ const Trending = () => {
 
     React.useEffect(() => {
         if (meter != undefined) {
-            let handle = GetChannels(meter.ID);
+            const filter = Gemstone.HelperFunctions.getSearchFilter<OpenXDA.Types.Channel>([{
+                FieldName: "MeterID",
+                SearchText: meter.ID.toString(),
+                Operator: '=',
+                Type: 'number',
+                IsPivotColumn: false
+            }]);
+            const handle = ChannelController.GetAll("Name", true, filter);
+            const handle2 = ChannelController.GetPage(0, "Name");
             handle.done((data: OpenXDA.Types.Channel[]) => setChannels(data.map(d => ({ Channel: d, Selected: GetDefault(d) }))));
 
             return function () {
@@ -113,17 +122,6 @@ const Trending = () => {
 
         window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?${queryString.stringify(nqs)}`)
     }, [trendFilter.StartDate, trendFilter.EndDate, meter]);
-
-    function GetChannels(id: number): JQuery.jqXHR<OpenXDA.Types.Channel[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Channel/${id}`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
 
     function GetDefault(channel: OpenXDA.Types.Channel) {
         if (channel.MeasurementCharacteristic == 'RMS') return true;

@@ -34,27 +34,16 @@ interface Channel extends OpenXDA.Types.Channel { Tag: string, Data?: [], MeterI
 interface Meter extends OpenXDA.Types.Meter { FirstTime: string, LastTime: string }
 
 const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
+const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/Channel`);
 
 const MeterAvailability = (props: {}) => {
     const [sortField, setSortField] = React.useState<keyof Meter>('Name');
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [data, setData] = React.useState<Meter[]>([]);
 
-    // ToDo: need to make a channels controller to handle this, one constrained by meter
-    function GetChannels(): JQuery.jqXHR<Channel[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter/Channels`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
     async function QueryInflux() {
         const meters = await MeterController.GetAll("Name", true) as Meter[];
-        let channels = await GetChannels();
+        const channels = await ChannelController.GetAll("Name", true) as Channel[];
 
         const client = new InfluxDB({ url: host, token: token });
         const queryApi = client.getQueryApi(org);

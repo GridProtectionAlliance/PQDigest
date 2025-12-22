@@ -34,7 +34,7 @@ interface Channel extends OpenXDA.Types.Channel { Tag: string, Data?: [], MeterI
 interface Meter extends OpenXDA.Types.Meter { FirstTime: string, LastTime: string }
 
 const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
-const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/Channel`);
+const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/TrendChannel`);
 
 const MeterAvailability = (props: {}) => {
     const [sortField, setSortField] = React.useState<keyof Meter>('Name');

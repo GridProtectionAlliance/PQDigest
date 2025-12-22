@@ -21,17 +21,18 @@
 //
 //******************************************************************************************************
 
-import React from 'react';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 import { basemapLayer, Basemaps } from 'esri-leaflet';
-import { MapContainer, CircleMarker, TileLayer, WMSTileLayer, useMapEvents } from 'react-leaflet';
-import { Lightning, OpenXDA } from '../global';
+import _ from 'lodash';
 import moment from 'moment';
 import 'moment-timezone';
-import _ from 'lodash';
+import React from 'react';
+import { CircleMarker, MapContainer, TileLayer, useMapEvents, WMSTileLayer } from 'react-leaflet';
+import { Lightning } from '../global';
 
 type bounds = [[number, number], [number, number]];
 
-const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Location[], Width: number, Height: number, Bounds: bounds, SetBounds: (bounds: bounds) => void, SetStrike: (strike)=> void }> = (props) => {
+const ESRIMap: React.FunctionComponent<{ DateTime: string, Strike: Lightning.Strike, Strikes: Lightning.Strike[], Locations: OpenXDA.Types.Location[], Width: number, Height: number, Bounds: bounds, SetBounds: (bounds: bounds) => void, SetStrike: (strike)=> void }> = (props) => {
     const [radar, setRadar] = React.useState<boolean>(false);
     const [baseMap, setBaseMap] = React.useState<Basemaps>('Streets');
 

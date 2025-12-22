@@ -21,17 +21,17 @@
 //
 //******************************************************************************************************
 
-import React from 'react';
-import { OpenXDA, Lightning } from '../global';
-import _ from 'lodash';
-import { Table, Column } from '@gpa-gemstone/react-table';
-import queryString from "querystring";
-import { createBrowserHistory } from "history"
-import { ExportToCsv } from '../ExportCSV';
-
-import ESRIMap from './ESRIMap';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { Column, Table } from '@gpa-gemstone/react-table';
+import { createBrowserHistory } from "history";
 import L from 'leaflet';
 import moment from 'moment';
+import queryString from "querystring";
+import React from 'react';
+import { ExportToCsv } from '../ExportCSV';
+import { Lightning } from '../global';
+import ESRIMap from './ESRIMap';
 
 type ToleranceUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
 const Lightning = (props: {}) => {
@@ -41,7 +41,7 @@ const Lightning = (props: {}) => {
     const [date, setDate] = React.useState<string>(qs.date == undefined ? moment().format("YYYY-MM-DDTHH:mm") : qs.date as string)
     const [tolerance, setTolerance] = React.useState<number>(qs.tolerance == undefined ? 1 : parseInt(qs.tolerance as string))
     const [toleranceUnits, setToleranceUnits] = React.useState<ToleranceUnit>(qs.units == undefined ? 'minute' : qs.units as ToleranceUnit)
-    const [locations, setLocations] = React.useState<OpenXDA.Location[]>([]);
+    const [locations, setLocations] = React.useState<OpenXDA.Types.Location[]>([]);
     const [strike, setStrike] = React.useState<Lightning.Strike>(null)
 
     const [bounds, setBounds] = React.useState<[[number, number], [number, number]]>([
@@ -59,6 +59,7 @@ const Lightning = (props: {}) => {
     React.useEffect(() => {
         let handle2 = GetLocations();
         handle2.done((data: OpenXDA.Location[]) => {
+        handle.done((data: OpenXDA.Types.Location[]) => {
             setLocations(data);
             let json: GeoJSON.FeatureCollection<GeoJSON.Point> = {
                 type: "FeatureCollection",

@@ -72,16 +72,6 @@
         var userName = graphJson.displayName;
         var isAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
         var companyName = graphJson.companyName;
-        var org = '@Html.Raw(ViewData["org"])';
-        var host = '@Html.Raw(ViewData["host"])';
-        var token = '@Html.Raw(ViewData["token"])';
-        var bucket = '@Html.Raw(ViewData["bucket"])';
-
-        @*var userJson = @Html.Raw(JsonConvert.SerializeObject(json));
-        var user = @Html.Raw(JsonConvert.SerializeObject(user));
-        var extensionsJson = @Html.Raw(JsonConvert.SerializeObject(extensions));
-        var extensions = @Html.Raw(JsonConvert.SerializeObject(userExtensions));*@
-
     </script>
 
     <script type="text/javascript" src="~/js/PQDigest.js"></script>

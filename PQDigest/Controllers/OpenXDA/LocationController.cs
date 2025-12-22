@@ -32,52 +32,31 @@ using System.Threading.Tasks;
 using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Newtonsoft.Json;
+using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/[controller]")]
-    [ApiController]
-    public class LocationController : ControllerBase
+    [Route("api/OpenXDA/Location")]
+    public class LocationController : ReadOnlyModelController<Location>
     {
-        private readonly IConfiguration m_configuration;
-        private readonly ILogger<LocationController> m_logger;
-        public LocationController(IConfiguration configuration, ILogger<LocationController> logger)
+        protected override TableOperations<Location> CreateTableOperation(AdoDataConnection connection)
         {
-            m_configuration = configuration;
-            m_logger = logger;
-        }
-
-        public IActionResult Get() {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-                {
-                    string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
-                    if (meters.Rows.Count == 0) return Ok(new DataTable());
-
-                    return Ok(connection.RetrieveData(@"
-                        SELECT 
-                            * 
-                        FROM 
-                            Location 
-                        WHERE 
-                            ID IN  (SELECT LocationID FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + "))").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
-                }
-
-            }
-            catch (Exception ex) {
-                
-                m_logger.LogError(ex.Message);
-                return StatusCode(500, ex);
-            }
+            Customer customer = HttpContext.User.GetCustomer(connection);
+            string sql = "ID IN (SELECT LocationID FROM Meter WHERE ID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}))";
+            RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
+            TableOperations<Location> operations = new TableOperations<Location>(connection);
+            operations.RootQueryRestriction += claimsRestriction;
+            return operations;
         }
     }
 }

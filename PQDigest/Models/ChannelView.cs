@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ChannelController.cs - Gbtc
+//  ChannelView.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,34 +16,35 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/30/2020 - Billy Ernest
+//  12/23/2025 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using Gemstone.Data;
 using Gemstone.Data.Model;
-using Gemstone.Web.APIController;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using openXDA.Model;
-using PQDigest.Models;
-using PQDigest.Security;
-using SystemCenter.Model;
 
-namespace PQDigest.Controllers
+namespace PQDigest.Models
 {
-    [Route("api/OpenXDA/TrendChannel")]
-    public class TrendChannelController : ReadOnlyModelController<ChannelView>
+    [TableName("PQDigest.ChannelView"), UseEscapedName]
+    public class ChannelView
     {
-        protected override TableOperations<ChannelView> CreateTableOperation(AdoDataConnection connection)
-        {
-            Customer customer = HttpContext.User.GetCustomer(connection);
-            string sql = "Trend = 1 AND MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}) OR AssetID IN (Select AssetID FROM CustomerAsset WHERE AssetID = {0})";
-            RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
-            TableOperations<ChannelView> operations = new TableOperations<ChannelView>(connection);
-            operations.RootQueryRestriction += claimsRestriction;
-            return operations;
-        }
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public bool Trend { get; set; }
+        public int AssetID { get; set; }
+        public string AssetKey { get; set; }
+        public string AssetName { get; set; }
+        public int MeterID { get; set; }
+        public string MeterKey { get; set; }
+        public string MeterName { get; set; }
+        public string MeterShortName { get; set; }
+        public string Phase { get; set; }
+        public string MeasurementType { get; set; }
+        public string MeasurementCharacteristic { get; set; }
+        public string ChannelGroup { get; set; }
+        public string ChannelGroupType { get; set; }
+        public string Unit { get; set; }
     }
 }

@@ -100,7 +100,6 @@ const Trending = () => {
                 IsPivotColumn: false
             }]);
             const handle = ChannelController.GetAll("Name", true, filter);
-            const handle2 = ChannelController.GetPage(0, "Name");
             handle.done((data: OpenXDA.Types.Channel[]) => setChannels(data.map(d => ({ Channel: d, Selected: GetDefault(d) }))));
 
             return function () {

@@ -39,7 +39,12 @@ namespace PQDigest.Controllers
         protected override TableOperations<ChannelView> CreateTableOperation(AdoDataConnection connection)
         {
             Customer customer = HttpContext.User.GetCustomer(connection);
-            string sql = "Trend = 1 AND MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}) OR AssetID IN (Select AssetID FROM CustomerAsset WHERE AssetID = {0})";
+            string sql = @"
+                Trend = 1 AND 
+                (
+                    MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}) OR 
+                    AssetID IN (Select AssetID FROM CustomerAsset WHERE CustomerID = {0})
+                )";
             RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
             TableOperations<ChannelView> operations = new TableOperations<ChannelView>(connection);
             operations.RootQueryRestriction += claimsRestriction;

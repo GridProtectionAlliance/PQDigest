@@ -21,11 +21,14 @@
 //
 //******************************************************************************************************
 
+using System.Security.Claims;
 using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using openXDA.APIAuthentication;
 using openXDA.Model;
+using PQDigest.Security;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
@@ -43,6 +46,24 @@ namespace PQDigest.Controllers
                 Key = new TableOperations<PQDigestSetting>(connection).QueryRecordWhere("Name = {0}", "XDA.APIKey")?.Value ?? "";
                 Host = new TableOperations<PQDigestSetting>(connection).QueryRecordWhere("Name = {0}", "XDA.Url")?.Value ?? "localhost:8989/";
                 return true;
+            }
+        }
+
+        public bool TryRetrieveCustomer(ClaimsPrincipal principal, out int CustomerID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
+            {
+                try
+                {
+                    Customer customer = principal.GetCustomer(connection);
+                    CustomerID = customer.ID;
+                    return true;
+                }
+                catch
+                {
+                    CustomerID = -1;
+                    return false;
+                }
             }
         }
     }

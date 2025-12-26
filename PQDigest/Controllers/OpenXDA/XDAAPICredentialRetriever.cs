@@ -49,21 +49,17 @@ namespace PQDigest.Controllers
             }
         }
 
-        public bool TryRetrieveCustomer(ClaimsPrincipal principal, out int CustomerID)
+        public bool TryRetrieveCustomer(ClaimsPrincipal principal, out string customerKey)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
+            try
             {
-                try
-                {
-                    Customer customer = principal.GetCustomer(connection);
-                    CustomerID = customer.ID;
-                    return true;
-                }
-                catch
-                {
-                    CustomerID = -1;
-                    return false;
-                }
+                customerKey = principal.GetCustomer();
+                return true;
+            }
+            catch
+            {
+                customerKey = null;
+                return false;
             }
         }
     }

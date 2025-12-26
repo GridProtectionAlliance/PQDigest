@@ -21,10 +21,24 @@ namespace PQDigest.Security
 {
     public static class HelperMethods
     {
-        public static Customer GetCustomer(this ClaimsPrincipal principal, AdoDataConnection connection)
+        /// <summary>
+        /// Gets the <see cref="Customer"/> key <see langword="string"/> from the <see cref="ClaimsPrincipal"/>.
+        /// </summary>
+        /// <returns>A <see langword="string"/> key value that represents the customer.</returns>
+        public static string GetCustomer(this ClaimsPrincipal principal)
         {
             Claim customerKey = principal.FindFirst(ClaimTypes.GroupSid);
-            return new TableOperations<Customer>(connection).QueryRecordWhere("CustomerKey = {0}", customerKey.Value);
+            return customerKey.Value;
+        }
+        /// <summary>
+        /// Gets the <see cref="Customer"/> from the <see cref="ClaimsPrincipal"/>.
+        /// </summary>
+        /// <param name="connection">AdoDataConnection to look in.</param>
+        /// <returns>A <see cref="Customer"/> object.</returns>
+        public static Customer GetCustomer(this ClaimsPrincipal principal, AdoDataConnection connection)
+        {
+            string key = principal.GetCustomer();
+            return new TableOperations<Customer>(connection).QueryRecordWhere("CustomerKey = {0}", key);
         }
     }
 }

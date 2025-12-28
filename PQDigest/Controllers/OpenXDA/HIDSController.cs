@@ -22,14 +22,23 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gemstone.Configuration;
+using Gemstone.Data;
+using Gemstone.Data.Model;
 using Gemstone.Web;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using openXDA.APIAuthentication;
+using openXDA.Model;
+using PQDigest.Security;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers.OpenXDA
 {
@@ -46,21 +55,52 @@ namespace PQDigest.Controllers.OpenXDA
             API = new XDAAPI(retriever);
         }
 
+        public class PostData
+        {
+            public string StartTime { get; set; }
+            public string StopTime { get; set; }
+            public List<int> Channels { get; set; }
+        }
+
         [Route("QueryPoints"), HttpPost]
-        public async Task ForwardQueryPoints([FromBody] JObject postData, CancellationToken token)
+        public async Task ForwardQueryPoints([FromBody] PostData postData, CancellationToken token)
         {
             if (!API.TryRefreshSettings())
                 throw new InvalidOperationException("Unable to refresh XDA API helper.");
 
+            RestrictPostData(postData);
+
             StringContent content = null;
             if (postData is not null)
-                content = new StringContent(postData.ToString(), Encoding.UTF8, "application/json");
+                content = new StringContent(JObject.FromObject(postData).ToString(), Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await API
                 .GetResponseTask("api/HIDS/QueryPoints", content)
                 .ConfigureAwait(false);
 
             await Response.SetValues(response, token);
+        }
+
+        private void RestrictPostData(PostData postData)
+        {
+            using (AdoDataConnection connection = new(Settings.Default))
+            {
+                // Restrict Channels based on channels on either allowed asset or meter
+                Customer customer = HttpContext.User.GetCustomer(connection);
+                string sql = $@"
+                ID IN ({string.Join(",", postData.Channels.Select((_, index) => $"{{{index+ 1}}}"))}) AND
+                Trend = 1 AND 
+                (
+                    MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {{0}}) OR 
+                    AssetID IN (Select AssetID FROM CustomerAsset WHERE CustomerID = {{0}})
+                )";
+                object[] sqlParams = postData.Channels
+                    .Prepend(customer.ID)
+                    .Select<int, object>(id => id)
+                    .ToArray();
+                IEnumerable<Channel> restrictedChannels = new TableOperations<Channel>(connection).QueryRecordsWhere(sql, sqlParams);
+                postData.Channels = restrictedChannels.Select(channel => channel.ID).ToList();
+            }
         }
     }
 }

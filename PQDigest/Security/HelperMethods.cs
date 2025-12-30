@@ -24,6 +24,8 @@
 using System.Security.Claims;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Microsoft.Extensions.Logging;
+using openXDA.Model;
 using SystemCenter.Model;
 
 namespace PQDigest.Security
@@ -48,6 +50,45 @@ namespace PQDigest.Security
         {
             string key = principal.GetCustomer();
             return new TableOperations<Customer>(connection).QueryRecordWhere("CustomerKey = {0}", key);
+        }
+
+        /// <summary>
+        /// Tells if the <see cref="Customer"/> is auhorized to view the <see cref="Event"/>.
+        /// </summary>
+        /// <param name="eventID">A <see langword="int"/> that represents the event being authorized for.</param>
+        /// <param name="connection">The <see cref="AdoDataConnection"/> that performs lookups.</param>
+        /// <returns>A <see langword="bool"/> that represents authorization success.</returns>
+        public static bool IsCustomerAuthorized(this Customer customer, int eventID, AdoDataConnection connection)
+        {
+            Event evt = new TableOperations<Event>(connection).QueryRecordWhere(@"
+                (
+                    MeterID in (
+                        SELECT MeterID
+                        FROM CustomerMeter
+                        WHERE CustomerID = {0}
+                    ) OR
+                    AssetID in (
+                        SELECT AssetID
+                        FROM CustomerAsset
+                        WHERE CustomerID = {0}
+                    )
+                )
+                AND
+                ID = {1}
+            ", customer.ID, eventID);
+            return !(evt is null);
+        }
+
+        /// <summary>
+        /// Tells if a <see cref="Customer"/> defined in the <see cref="ClaimsPrincipal"/> provided is auhorized to view the <see cref="Event"/>.
+        /// </summary>
+        /// <param name="eventID">A <see langword="int"/> that represents the event being authorized for.</param>
+        /// <param name="connection">The <see cref="AdoDataConnection"/> that performs lookups.</param>
+        /// <returns>A <see langword="bool"/> that represents authorization success.</returns>
+        public static bool IsCustomerAuthorized(this ClaimsPrincipal principal, int eventID, AdoDataConnection connection)
+        {
+            Customer customer = principal.GetCustomer(connection);
+            return customer.IsCustomerAuthorized(eventID, connection);
         }
     }
 }

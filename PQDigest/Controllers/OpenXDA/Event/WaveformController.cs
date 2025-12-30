@@ -53,7 +53,7 @@ namespace PQDigest.Controllers
 			m_memoryCache = memoryCache;
 		}
 
-		[HttpGet, Route("{eventID:int}/{type}/{pixels:int}")]
+		[HttpGet, Route("{eventID:int}/{type}")]
         public ActionResult Get(int eventID, string type, int pixels)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))

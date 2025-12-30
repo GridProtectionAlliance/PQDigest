@@ -155,7 +155,7 @@ const WaveformViewer = () => {
     function GetWaveformData(type: 'Current' | 'Voltage', id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}/${Math.floor(waveformWidth)}`,
+            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

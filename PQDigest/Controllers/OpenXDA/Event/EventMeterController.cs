@@ -29,15 +29,11 @@ using Microsoft.AspNetCore.Mvc;
 using PQDigest.Security;
 using SystemCenter.Model;
 
-namespace PQDigest.Controllers.OpenXDA
+namespace PQDigest.Controllers
 {
-    /// <summary>
-    /// Controller that handles WaveformViewer endpoints.
-    /// </summary>
     [Route("api/OpenXDA/Event")]
-    public class EventController : Controller
+    public class EventMeterController : Controller
     {
-
         [HttpGet, Route("Previous/One/{eventID:int}")]
         public ActionResult GetPreviousOneMeter(int eventID) =>
             GetOneMeter(eventID, false);

@@ -37,6 +37,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
 
 namespace PQDigest.Controllers
 {
@@ -54,10 +55,13 @@ namespace PQDigest.Controllers
         }
 
         [HttpGet, Route("{eventID:int}")]
-        public FileStreamResult Get(int eventID)
+        public ActionResult Get(int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
                 DateTime epoch = new DateTime(1970, 1, 1);
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);

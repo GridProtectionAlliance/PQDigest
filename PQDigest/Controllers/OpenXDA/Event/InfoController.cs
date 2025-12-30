@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using PQDigest.Models;
+using PQDigest.Security;
 
 namespace PQDigest.Controllers
 {
@@ -51,7 +52,10 @@ namespace PQDigest.Controllers
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-				try
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
+                try
 				{
 					return Ok(connection.RetrieveData(@"
 					With WorstSeverityCode as (

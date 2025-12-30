@@ -37,25 +37,32 @@ namespace PQDigest.Controllers.OpenXDA
     [Route("api/OpenXDA/Event")]
     public class EventController : Controller
     {
-        [Route("Previous/One/{eventID:int}")]
-        [HttpGet]
-        public ActionResult GetOneMeter(int eventID)
+
+        [HttpGet, Route("Previous/One/{eventID:int}")]
+        public ActionResult GetPreviousOneMeter(int eventID) =>
+            GetOneMeter(eventID, false);
+
+        [HttpGet, Route("Next/One/{eventID:int}")]
+        public ActionResult GetNextOneMeters(int eventID) =>
+            GetOneMeter(eventID, true);
+
+        private ActionResult GetOneMeter(int eventID, bool isNext)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
                     return Unauthorized();
 
-                DataTable table = connection.RetrieveData(@"
+                DataTable table = connection.RetrieveData($@"
                     SELECT
 	                    TOP 1
 	                    e2.*,
 	                    DATEDIFF(SECOND, e2.StartTime, e1.StartTime) as Difference
                     FROM
 	                    Event e1 JOIN
-	                    Event e2 ON e1.MeterID = e2.MeterID AND e2.ID != {0}
+	                    Event e2 ON e1.MeterID = e2.MeterID AND e2.ID != {{0}}
                     WHERE 
-	                    e1.ID = {0} AND e1.StartTime >= e2.StartTime
+	                    e1.ID = {{0}} AND e1.StartTime {(isNext ? "<" : ">=")} e2.StartTime
                     ORDER BY
 	                    Difference ASC
                 ", eventID);
@@ -63,9 +70,15 @@ namespace PQDigest.Controllers.OpenXDA
             }
         }
 
-        [Route("Previous/All/{eventID:int}")]
-        [HttpGet]
-        public ActionResult GetAlLMeters(int eventID)
+        [HttpGet, Route("Previous/All/{eventID:int}")]
+        public ActionResult GetPreviousAllMeters(int eventID) =>
+            GetAllMeters(eventID, false);
+
+        [HttpGet, Route("Next/All/{eventID:int}")]
+        public ActionResult GetNextAllMeters(int eventID) =>
+            GetAllMeters(eventID, true);
+
+        private ActionResult GetAllMeters(int eventID, bool isNext)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
@@ -76,16 +89,16 @@ namespace PQDigest.Controllers.OpenXDA
                 DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = {0}", customer.ID);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
-                return Ok(connection.RetrieveData(@"
+                return Ok(connection.RetrieveData($@"
                     SELECT
 	                    TOP 1
 	                    e2.*,
 	                    DATEDIFF(SECOND, e2.StartTime, e1.StartTime) as Difference
                     FROM
 	                    Event e1 JOIN
-	                    Event e2 ON e1.MeterID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + @") AND e2.ID != {0}
+	                    Event e2 ON e1.MeterID IN ({string.Join(",", meters.Select().Select(row => row["MeterID"]))}) AND e2.ID != {{0}}
                     WHERE 
-	                    e1.ID = {0} AND e1.StartTime >= e2.StartTime
+	                    e1.ID = {{0}} AND e1.StartTime {(isNext ? "<" : ">=")} e2.StartTime
                     ORDER BY
 	                    Difference ASC
                     ", eventID));

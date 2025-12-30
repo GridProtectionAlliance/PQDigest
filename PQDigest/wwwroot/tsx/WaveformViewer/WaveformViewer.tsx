@@ -166,7 +166,7 @@ const WaveformViewer = () => {
     function GetAnalyticData(type: string, id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic' ? '/' + harmonic : '')}/${Math.floor(waveformWidth)}`,
+            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic' ? '/' + harmonic : '')}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

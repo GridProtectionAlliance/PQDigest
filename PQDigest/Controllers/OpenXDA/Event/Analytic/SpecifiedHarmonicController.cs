@@ -56,8 +56,8 @@ namespace PQDigest.Controllers
 			m_memoryCache = memoryCache;
 		}
 
-		[HttpGet, Route("{eventID:int}/{harmonic:int}/{pixels:int}")]
-        public ActionResult Get(int eventID, int harmonic, int pixels)
+		[HttpGet, Route("{eventID:int}/{harmonic:int}}")]
+        public ActionResult Get(int eventID, int harmonic)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {

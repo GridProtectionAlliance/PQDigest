@@ -82,7 +82,7 @@ namespace PQDigest.Controllers
                 if (!customer.IsCustomerAuthorized(eventID, connection))
                     return Unauthorized();
 
-                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = {0}", customer.ID);
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CustomerMeter WHERE CustomerID = {0}", customer.ID);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 return Ok(connection.RetrieveData($@"

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  HIDSController.cs - Gbtc
+//  EventController.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,35 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/24/2023 - G. Santos
+//  12/30/2023 - G. Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Gemstone.Configuration;
 using Gemstone.Data;
-using Gemstone.Data.Model;
-using Gemstone.Web;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
-using openXDA.Model;
 using PQDigest.Security;
 using SystemCenter.Model;
 
 namespace PQDigest.Controllers.OpenXDA
 {
     /// <summary>
-    /// Controller that handles fetching HIDS trending data from XDA.
+    /// Controller that handles WaveformViewer endpoints.
     /// </summary>
     [Route("api/OpenXDA/Event")]
     public class EventController : Controller

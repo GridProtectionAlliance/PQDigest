@@ -64,6 +64,7 @@ namespace PQDigest.Controllers
                     return Unauthorized();
 
                 DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CustomerMeter WHERE CustomerID = {0}", customer.ID);
+                if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 return Ok(connection.RetrieveData(@"
                     SELECT

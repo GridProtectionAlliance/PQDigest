@@ -64,7 +64,7 @@ namespace PQDigest.Controllers
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 if (evt == null) return BadRequest("Must provide a valid EventID");
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
+                meter.ConnectionFactory = () => new AdoDataConnection(Settings.Default);
 
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);

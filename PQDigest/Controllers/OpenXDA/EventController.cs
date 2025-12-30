@@ -55,6 +55,9 @@ namespace PQDigest.Controllers.OpenXDA
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
                 DataTable table = connection.RetrieveData(@"
                     SELECT
 	                    TOP 1
@@ -77,8 +80,11 @@ namespace PQDigest.Controllers.OpenXDA
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-                string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
+                Customer customer = HttpContext.User.GetCustomer(connection);
+                if (!customer.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
+                DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = {0}", customer.ID);
                 if (meters.Rows.Count == 0) return Ok(new DataTable());
 
                 return Ok(connection.RetrieveData(@"

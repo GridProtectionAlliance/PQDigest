@@ -37,6 +37,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
 
 namespace PQDigest.Controllers
 {
@@ -60,6 +61,8 @@ namespace PQDigest.Controllers
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 if (evt == null) return BadRequest("Must provide a valid EventID");

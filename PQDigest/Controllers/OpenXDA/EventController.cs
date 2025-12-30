@@ -46,11 +46,11 @@ namespace PQDigest.Controllers.OpenXDA
     /// <summary>
     /// Controller that handles fetching HIDS trending data from XDA.
     /// </summary>
-    [Route("api/PQDigest/Event")]
+    [Route("api/OpenXDA/Event")]
     public class EventController : Controller
     {
-
-        [HttpGet, Route("PreviousEvent/One/{eventID:int}")]
+        [Route("Previous/One/{eventID:int}")]
+        [HttpGet]
         public ActionResult GetOneMeter(int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
@@ -75,7 +75,8 @@ namespace PQDigest.Controllers.OpenXDA
             }
         }
 
-        [HttpGet, Route("PreviousEvent/All/{eventID:int}")]
+        [Route("Previous/All/{eventID:int}")]
+        [HttpGet]
         public ActionResult GetAlLMeters(int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))

@@ -49,7 +49,7 @@ namespace PQDigest.Security
             }
 
             // TODO: Add as many claims as you need here
-            claims.Add(new Claim(ClaimTypes.GroupSid, "00009999")); // test gpa group sid
+            claims.Add(new Claim("Gemstone.Company", "00009999")); // test gpa group sid
 
             var identity = new ClaimsIdentity(claims, AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

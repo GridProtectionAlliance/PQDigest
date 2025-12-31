@@ -38,7 +38,7 @@ namespace PQDigest.Security
         /// <returns>A <see langword="string"/> key value that represents the customer.</returns>
         public static string GetCustomer(this ClaimsPrincipal principal)
         {
-            Claim customerKey = principal.FindFirst(ClaimTypes.GroupSid);
+            Claim customerKey = principal.FindFirst("Gemstone.Company");
             return customerKey.Value;
         }
         /// <summary>

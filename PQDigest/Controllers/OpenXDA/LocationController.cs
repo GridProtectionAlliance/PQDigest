@@ -54,8 +54,10 @@ namespace PQDigest.Controllers
             Customer customer = HttpContext.User.GetCustomer(connection);
             string sql = "ID IN (SELECT LocationID FROM Meter WHERE ID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}))";
             RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
-            TableOperations<Location> operations = new TableOperations<Location>(connection);
-            operations.RootQueryRestriction += claimsRestriction;
+            TableOperations<Location> operations = new TableOperations<Location>(connection)
+            {
+                RootQueryRestriction = claimsRestriction
+            };
             return operations;
         }
     }

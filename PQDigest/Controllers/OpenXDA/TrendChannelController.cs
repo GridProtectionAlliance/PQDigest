@@ -46,8 +46,10 @@ namespace PQDigest.Controllers
                     AssetID IN (Select AssetID FROM CustomerAsset WHERE CustomerID = {0})
                 )";
             RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
-            TableOperations<ChannelView> operations = new TableOperations<ChannelView>(connection);
-            operations.RootQueryRestriction += claimsRestriction;
+            TableOperations<ChannelView> operations = new TableOperations<ChannelView>(connection)
+            {
+                RootQueryRestriction = claimsRestriction
+            };
             return operations;
         }
     }

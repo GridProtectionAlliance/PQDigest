@@ -38,8 +38,10 @@ namespace PQDigest.Controllers
         protected override TableOperations<Meter> CreateTableOperation(AdoDataConnection connection) {
             Customer customer = HttpContext.User.GetCustomer(connection);
             RecordRestriction claimsRestriction = new RecordRestriction("ID IN (Select MeterID FROM CustomerMeter Where CustomerID = {0})", customer.ID);
-            TableOperations<Meter> operations = new TableOperations<Meter>(connection);
-            operations.RootQueryRestriction += claimsRestriction;
+            TableOperations<Meter> operations = new TableOperations<Meter>(connection)
+            {
+                RootQueryRestriction = claimsRestriction
+            };
             return operations;
         }
     }

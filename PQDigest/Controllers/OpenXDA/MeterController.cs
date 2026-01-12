@@ -21,28 +21,12 @@
 //
 //******************************************************************************************************
 
-using Gemstone.Data;
-using Gemstone.Data.Model;
 using Gemstone.Web.APIController;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using openXDA.Model;
-using PQDigest.Security;
-using SystemCenter.Model;
+using PQDigest.Models;
 
 namespace PQDigest.Controllers
 {
     [Route("api/OpenXDA/Meter")]
-    public class MeterController : ReadOnlyModelController<Meter>
-    {
-        protected override TableOperations<Meter> CreateTableOperation(AdoDataConnection connection) {
-            Customer customer = HttpContext.User.GetCustomer(connection);
-            RecordRestriction claimsRestriction = new RecordRestriction("ID IN (Select MeterID FROM CustomerMeter Where CustomerID = {0})", customer.ID);
-            TableOperations<Meter> operations = new TableOperations<Meter>(connection)
-            {
-                RootQueryRestriction = claimsRestriction
-            };
-            return operations;
-        }
-    }
+    public class MeterController : ReadOnlyModelController<MeterView> { }
 }

@@ -33,12 +33,17 @@ namespace PQDigest.Security
     public static class HelperMethods
     {
         /// <summary>
+        /// Claim key which is expecte to store the customer key of the claim principal.
+        /// </summary>
+        public const string ClaimKey = "Gemstone.Company";
+
+        /// <summary>
         /// Gets the <see cref="Customer"/> key <see langword="string"/> from the <see cref="ClaimsPrincipal"/>.
         /// </summary>
         /// <returns>A <see langword="string"/> key value that represents the customer.</returns>
         public static string GetCustomer(this ClaimsPrincipal principal)
         {
-            Claim customerKey = principal.FindFirst("Gemstone.Company");
+            Claim customerKey = principal.FindFirst(ClaimKey);
             return customerKey.Value;
         }
         /// <summary>

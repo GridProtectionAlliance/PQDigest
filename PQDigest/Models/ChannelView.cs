@@ -22,10 +22,26 @@
 //******************************************************************************************************
 
 using Gemstone.Data.Model;
+using PQDigest.Security;
 
 namespace PQDigest.Models
 {
     [TableName("PQDigest.ChannelView"), UseEscapedName]
+    [RootQueryRestriction("Trend = {0}", true)]
+    [ClaimQueryRestriction(@"
+        MeterID IN (
+            SELECT MeterID FROM CustomerMeter WHERE CustomerID = (
+                SELECT ID FROM Customer WHERE CustomerKey = {0}
+            )
+        ) OR 
+        AssetID IN (
+            SELECT AssetID FROM CustomerAsset WHERE CustomerID = (
+                SELECT ID FROM Customer WHERE CustomerKey = {0}
+            )
+        )", SecurityHelperMethods.ClaimKey
+    )]
+    public class TrendChannelView : ChannelView { }
+
     public class ChannelView
     {
         [PrimaryKey(true)]

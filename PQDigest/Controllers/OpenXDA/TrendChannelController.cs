@@ -21,36 +21,12 @@
 //
 //******************************************************************************************************
 
-using Gemstone.Data;
-using Gemstone.Data.Model;
 using Gemstone.Web.APIController;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using openXDA.Model;
 using PQDigest.Models;
-using PQDigest.Security;
-using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
     [Route("api/OpenXDA/TrendChannel")]
-    public class TrendChannelController : ReadOnlyModelController<ChannelView>
-    {
-        protected override TableOperations<ChannelView> CreateTableOperation(AdoDataConnection connection)
-        {
-            Customer customer = HttpContext.User.GetCustomer(connection);
-            string sql = @"
-                Trend = 1 AND 
-                (
-                    MeterID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}) OR 
-                    AssetID IN (Select AssetID FROM CustomerAsset WHERE CustomerID = {0})
-                )";
-            RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
-            TableOperations<ChannelView> operations = new TableOperations<ChannelView>(connection)
-            {
-                RootQueryRestriction = claimsRestriction
-            };
-            return operations;
-        }
-    }
+    public class TrendChannelController : ReadOnlyModelController<TrendChannelView> { }
 }

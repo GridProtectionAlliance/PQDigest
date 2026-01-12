@@ -30,7 +30,7 @@ using SystemCenter.Model;
 
 namespace PQDigest.Security
 {
-    public static class HelperMethods
+    public static class SecurityHelperMethods
     {
         /// <summary>
         /// Claim key which is expecte to store the customer key of the claim principal.

@@ -22,43 +22,12 @@
 //******************************************************************************************************
 
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Gemstone.Configuration;
-using Gemstone.Data;
-using Gemstone.Data.Model;
 using Gemstone.Web.APIController;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
-using Newtonsoft.Json;
-using openXDA.Model;
 using PQDigest.Models;
-using PQDigest.Security;
-using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
     [Route("api/OpenXDA/Location")]
-    public class LocationController : ReadOnlyModelController<Location>
-    {
-        protected override TableOperations<Location> CreateTableOperation(AdoDataConnection connection)
-        {
-            Customer customer = HttpContext.User.GetCustomer(connection);
-            string sql = "ID IN (SELECT LocationID FROM Meter WHERE ID IN (Select MeterID FROM CustomerMeter WHERE CustomerID = {0}))";
-            RecordRestriction claimsRestriction = new RecordRestriction(sql, customer.ID);
-            TableOperations<Location> operations = new TableOperations<Location>(connection)
-            {
-                RootQueryRestriction = claimsRestriction
-            };
-            return operations;
-        }
-    }
+    public class LocationController : ReadOnlyModelController<LocationView> { }
 }

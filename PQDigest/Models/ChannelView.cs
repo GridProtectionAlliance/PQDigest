@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Linq;
+using Gemstone.Configuration;
+using Gemstone.Console;
+using Gemstone.Data;
 using Gemstone.Data.Model;
 using PQDigest.Security;
 
@@ -28,19 +33,27 @@ namespace PQDigest.Models
 {
     [TableName("PQDigest.ChannelView"), UseEscapedName]
     [RootQueryRestriction("Trend = {0}", true)]
-    [ClaimQueryRestriction(@"
-        MeterID IN (
-            SELECT MeterID FROM CustomerMeter WHERE CustomerID = (
-                SELECT ID FROM Customer WHERE CustomerKey = {0}
-            )
-        ) OR 
-        AssetID IN (
-            SELECT AssetID FROM CustomerAsset WHERE CustomerID = (
-                SELECT ID FROM Customer WHERE CustomerKey = {0}
-            )
-        )", SecurityHelperMethods.ClaimKey
-    )]
-    public class TrendChannelView : ChannelView { }
+    public class TrendChannelView : ChannelView 
+    {
+        [ClaimRestriction(SecurityHelperMethods.ClaimKey)]
+        public static RecordRestriction GetCustomerRestriction(params object[] claimValues)
+        {
+            if ((claimValues?.Length ?? 0) != 1)
+                throw new ArgumentException($"{nameof(TrendChannelView)} model accepts one and only one claim value for the {SecurityHelperMethods.ClaimKey} claim.");
+
+            return new RecordRestriction(@"
+                MeterID IN (
+                    SELECT MeterID FROM CustomerMeter WHERE CustomerID = (
+                        SELECT ID FROM Customer WHERE CustomerKey = {0}
+                    )
+                ) OR 
+                AssetID IN (
+                    SELECT AssetID FROM CustomerAsset WHERE CustomerID = (
+                        SELECT ID FROM Customer WHERE CustomerKey = {0}
+                    )
+                )", claimValues);
+        }
+    }
 
     public class ChannelView
     {

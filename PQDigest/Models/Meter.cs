@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using Gemstone.Data.Model;
 using openXDA.Model;
 using PQDigest.Security;
@@ -28,12 +29,20 @@ using PQDigest.Security;
 namespace PQDigest.Models
 {
     [TableName("Meter")]
-    [ClaimQueryRestriction(@"
-        ID IN (
-            SELECT MeterID FROM CustomerMeter WHERE CustomerID = (
-                SELECT ID FROM Customer WHERE CustomerKey = {0}
-            )
-        )", SecurityHelperMethods.ClaimKey
-    )]
-    public class MeterView : Meter { }
+    public class MeterView : Meter
+    {
+        [ClaimRestriction(SecurityHelperMethods.ClaimKey)]
+        public static RecordRestriction GetCustomerRestriction(params object[] claimValues)
+        {
+            if ((claimValues?.Length ?? 0) != 1)
+                throw new ArgumentException($"{nameof(MeterView)} model accepts one and only one claim value for the {SecurityHelperMethods.ClaimKey} claim.");
+
+            return new RecordRestriction(@"
+                ID IN (
+                    SELECT MeterID FROM CustomerMeter WHERE CustomerID = (
+                        SELECT ID FROM Customer WHERE CustomerKey = {0}
+                    )
+                )", claimValues);
+        }
+    }
 }

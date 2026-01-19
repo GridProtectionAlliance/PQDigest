@@ -63,7 +63,7 @@ const PQDigest: React.FunctionComponent = () => {
                     <br />
                     <span>Version {version}</span>
                     <br/>
-                    <span>&copy; 2020 - PQDigest</span>
+                    <span>&copy; 2026 - PQDigest</span>
                 </div>
             </>}
             AllowCollapsed={true}

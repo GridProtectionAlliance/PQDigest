@@ -55,53 +55,46 @@ namespace PQDigest.Controllers
                 if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
                     return Unauthorized();
 
-                try
-				{
-					return Ok(connection.RetrieveData(@"
-					With WorstSeverityCode as (
-					SELECT 
-						EventID,
-						MAX(DisturbanceSeverity.SeverityCode) as SeverityCode
-					FROM 
-						Disturbance INNER HASH JOIN
-						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
-					WHERE
-						PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
-						EventID = {0}
-					GROUP BY
-						EventID
-					), WorstSeverityRecord as (
-					SELECT 
-						Disturbance.*, DisturbanceSeverity.SeverityCode, row_number() over (Partition By Disturbance.EventID Order By Disturbance.EventTypeID) as Ranking 
-					FROM 
-						Disturbance INNER HASH JOIN
-						DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
-						WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
-					WHERE
-						PhaseID IN (SELECT ID FROM Phase WHERE Name != 'Worst') AND Disturbance.EventID = {0}
-					)
-					SELECT 	
-						Meter.Name as Meter,
-						Event.StartTime,
-						Phase.Name as Phase,
-						EventType.Name as EventType,
-						CAST(ROUND(WorstSeverityRecord.DurationCycles, 2) as VARCHAR(20)) + ' cycles' as Duration,
-						CAST(WorstSeverityRecord.Magnitude as VARCHAR(20)) + ' Amps (RMS)' as Magnitude,
-						CAST(ROUND((1 - WorstSeverityRecord.PerUnitMagnitude) * 100,1) as VARCHAR(20)) + '%' as SagDepth
-					FROM
-						Event JOIN
-						Meter ON Event.MeterID = Meter.ID LEFT JOIN
-						WorstSeverityRecord ON Ranking = 1 LEFT JOIN
-						Phase ON WorstSeverityRecord.PhaseID = Phase.ID LEFT JOIN
-						EventType ON WorstSeverityRecord.EventTypeID = EventType.ID
-					WHERE	
-						Event.ID = {0}
-                ", eventID));
-
-				}
-				catch (Exception ex) {
-					return StatusCode(500, ex);
-				}
+				return Ok(connection.RetrieveData(@"
+				With WorstSeverityCode as (
+				SELECT 
+					EventID,
+					MAX(DisturbanceSeverity.SeverityCode) as SeverityCode
+				FROM 
+					Disturbance INNER HASH JOIN
+					DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
+				WHERE
+					PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND 
+					EventID = {0}
+				GROUP BY
+					EventID
+				), WorstSeverityRecord as (
+				SELECT 
+					Disturbance.*, DisturbanceSeverity.SeverityCode, row_number() over (Partition By Disturbance.EventID Order By Disturbance.EventTypeID) as Ranking 
+				FROM 
+					Disturbance INNER HASH JOIN
+					DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID INNER HASH JOIN
+					WorstSeverityCode ON Disturbance.EventID = WorstSeverityCode.EventID AND DisturbanceSeverity.SeverityCode = WorstSeverityCode.SeverityCode
+				WHERE
+					PhaseID IN (SELECT ID FROM Phase WHERE Name != 'Worst') AND Disturbance.EventID = {0}
+				)
+				SELECT 	
+					Meter.Name as Meter,
+					Event.StartTime,
+					Phase.Name as Phase,
+					EventType.Name as EventType,
+					CAST(ROUND(WorstSeverityRecord.DurationCycles, 2) as VARCHAR(20)) + ' cycles' as Duration,
+					CAST(WorstSeverityRecord.Magnitude as VARCHAR(20)) + ' Amps (RMS)' as Magnitude,
+					CAST(ROUND((1 - WorstSeverityRecord.PerUnitMagnitude) * 100,1) as VARCHAR(20)) + '%' as SagDepth
+				FROM
+					Event JOIN
+					Meter ON Event.MeterID = Meter.ID LEFT JOIN
+					WorstSeverityRecord ON Ranking = 1 LEFT JOIN
+					Phase ON WorstSeverityRecord.PhaseID = Phase.ID LEFT JOIN
+					EventType ON WorstSeverityRecord.EventTypeID = EventType.ID
+				WHERE	
+					Event.ID = {0}
+            ", eventID));
             }
         }
     }

@@ -9,6 +9,7 @@ using Gemstone.Data;
 using Gemstone.Data.Model;
 using Gemstone.Reflection;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -24,11 +25,11 @@ namespace PQDigest.Controllers
     public class SettingController : ControllerBase
     {
         private readonly string m_defaultLogo = "Image/GPA_Horizontal.png";
-        private readonly IConfiguration m_configuration;
+        private readonly IWebHostEnvironment m_environment;
 
-        public SettingController(IConfiguration configuration)
+        public SettingController(IWebHostEnvironment environment)
         {
-            m_configuration = configuration;
+            m_environment = environment;
         }
 
         [Route("{name}")]
@@ -43,17 +44,11 @@ namespace PQDigest.Controllers
         [HttpGet, Route("Logo")]
         public IActionResult GetLogo()
         {
-            string webRoot = Path.GetDirectoryName(AssemblyInfo.EntryAssembly.Location);
-
-            #if DEBUG
-            webRoot = Path.Combine(webRoot, "..", "..", "..", "wwwroot");
-            #else
-            webRoot = Path.Combine(webRoot, "wwwroot");
-            #endif
 
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
                 Customer customer = HttpContext.User.GetCustomer(connection);
+                string webRoot = m_environment.WebRootPath;
 
                 if (customer is null)
                     return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));

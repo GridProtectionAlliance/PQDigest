@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Program.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -58,7 +58,8 @@ namespace PQDigest
                 Settings settings = new()
                 {
                     INIFile = ConfigurationOperation.ReadWrite,
-                    SQLite = ConfigurationOperation.Disabled
+                    SQLite = ConfigurationOperation.Disabled,
+                    EnvironmentalVariables = ConfigurationOperation.ReadOnly
                 };
 
                 DefineSettings(settings);

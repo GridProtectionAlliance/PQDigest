@@ -35,11 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.157" Condition="'$(Configuration)'!='Debug'" />
-    <PackageReference Include="Gemstone.Data" Version="1.0.157" Condition="'$(Configuration)'!='Debug'" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.157" Condition="'$(Configuration)'!='Debug'" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.157" Condition="'$(Configuration)'!='Debug'" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.157" Condition="'$(Configuration)'!='Debug'" />
+    <PackageReference Include="Gemstone.Common" Version="1.0.165" Condition="'$(Configuration)'!='Debug'" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.165" Condition="'$(Configuration)'!='Debug'" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.165" Condition="'$(Configuration)'!='Debug'" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.165" Condition="'$(Configuration)'!='Debug'" />
+    <PackageReference Include="Gemstone.Web" Version="1.0.165" Condition="'$(Configuration)'!='Debug'" />
 	  <ProjectReference Include="..\..\gemstone\web\src\Gemstone.Web\Gemstone.Web.csproj" Condition="'$(Configuration)'=='Debug'" />
     <ProjectReference Include="..\..\gemstone\common\src\Gemstone\Gemstone.Common.csproj" Condition="'$(Configuration)'=='Debug'" />
     <ProjectReference Include="..\..\gemstone\data\src\Gemstone.Data\Gemstone.Data.csproj" Condition="'$(Configuration)'=='Debug'" />

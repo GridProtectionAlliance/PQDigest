@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Gemstone.Reflection;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
+using SystemCenter.Model;
 
 namespace PQDigest.Controllers
 {
@@ -18,11 +25,11 @@ namespace PQDigest.Controllers
     public class SettingController : ControllerBase
     {
         private readonly string m_defaultLogo = "Image/GPA_Horizontal.png";
-        private readonly IConfiguration m_configuration;
+        private readonly IWebHostEnvironment m_environment;
 
-        public SettingController(IConfiguration configuration)
+        public SettingController(IWebHostEnvironment environment)
         {
-            m_configuration = configuration;
+            m_environment = environment;
         }
 
         [Route("{name}")]
@@ -37,17 +44,27 @@ namespace PQDigest.Controllers
         [HttpGet, Route("Logo")]
         public IActionResult GetLogo()
         {
-            string logo = m_defaultLogo;
 
-            /*
-            // ToDo: use claim to lookup base64/url representation in DB, return that if available.
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default)) 
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-                logo = await new TableOperations<LogoClaim>(connection).QueryRecordWhere("Claim query here", HttpContext.User.Claims.Claim)?.Logo ?? DefaultLogo;
-            }
-            */
+                Customer customer = HttpContext.User.GetCustomer(connection);
+                string webRoot = m_environment.WebRootPath;
 
-            return Ok(logo);
+                if (customer is null)
+                    return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+
+                string[] files = Directory.GetFiles(webRoot, Path.Combine("Image", "CompanyLogos", customer.Name + ".*"));
+                if (files.Length > 0)
+                    return Ok(ConvertImageToBase64(files[0]));
+
+                return Ok(ConvertImageToBase64(Path.Combine(webRoot, m_defaultLogo)));
+            }
+        }
+
+        private string ConvertImageToBase64(string filePath)
+        {
+            byte[] imageBytes = System.IO.File.ReadAllBytes(filePath);
+            return Convert.ToBase64String(imageBytes);
         }
     }
 }

@@ -21,106 +21,12 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Gemstone.Configuration;
-using Gemstone.Data;
-using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Http;
+using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using openXDA.Model;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/[controller]")]
-    [ApiController]
-    public class MeterController : ControllerBase
-    {
-        private readonly IConfiguration m_configuration;
-        private readonly ILogger<MeterController> m_logger;
-        public MeterController(IConfiguration configuration, ILogger<MeterController> logger)
-        {
-            m_configuration = configuration;
-            m_logger = logger;
-        }
-
-        public IActionResult Get() {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-                {
-                    string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = connection.RetrieveData("SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company as C WHERE C.CompanyID = {0})", orgId);
-                    if (meters.Rows.Count == 0) return Ok(new DataTable());
-
-                    return Ok(connection.RetrieveData("SELECT * FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + ")").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
-                }
-
-            }
-            catch (Exception ex) {
-                
-                m_logger.LogError(ex.Message);
-                return StatusCode(500, ex);
-            }
-        }
-
-        [HttpGet("Count")]
-        public IActionResult GetCount()
-        {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-                {
-
-                    string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
-                    return Ok(meters.Rows.Count);
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-                m_logger.LogError(ex.Message);
-                return StatusCode(500, ex);
-            }
-        }
-
-        [HttpGet("Channels")]
-        public ActionResult GetChannels()
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-            {
-                DateTime epoch = new DateTime(1970, 1, 1);
-                Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
-                string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                DataTable companyMeters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
-                if (companyMeters.Rows.Count == 0) return Ok(new DataTable());
-
-                IEnumerable<Meter> meters = new TableOperations<Meter>(connection).QueryRecordsWhere("ID IN (" + string.Join(",", companyMeters.Select().Select(row => row["MeterID"])) + ")");
-                DataTable channels = connection.RetrieveData($@"
-                    SELECT 
-	                    *, RIGHT('000000000' + FORMAT(ID,'X'),8) as Tag
-                    FROM 
-	                    Channel
-                    WHERE
-                        MeterID IN ({string.Join(",", meters.Select(m => m.ID))})
-                ");
-
-                return Ok(channels);
-            }
-
-        }
-
-
-    }
+    [Route("api/OpenXDA/Meter")]
+    public class MeterController : ReadOnlyModelController<MeterView> { }
 }

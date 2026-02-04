@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
 import { DateRangePicker, MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 import moment from 'moment';
@@ -29,6 +30,9 @@ import React from 'react';
 import CollectionWidgetRouter from '../../../EventWidgets/TSX/CollectionWidgetWrapper';
 import { EventWidget } from '../../../EventWidgets/TSX/global';
 import EventSearchPreview from '../EventSearch/EventSearchPreview';
+
+const EventTypeController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.EventType>(`${homePath}api/OpenXDA/EventType`);
+const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
 
 const EventSearch = (props: {}) => {
     const qs = queryString.parse(location.search.substring(1));
@@ -52,31 +56,9 @@ const EventSearch = (props: {}) => {
         }
     }));
 
-    function GetTypes(): JQuery.jqXHR<OpenXDA.Types.EventType[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/EventType`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetMeters(): JQuery.jqXHR<OpenXDA.Types.Meter[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
     React.useEffect(() => {
-        let handle1 = GetTypes();
-        handle1.done((data: OpenXDA.Types.EventType[]) => {
+        const typeHandle = EventTypeController.GetAll("ID", true);
+        typeHandle.done((data: OpenXDA.Types.EventType[]) => {
             let b64string = (qs.types == undefined ? '' : qs.types)
             let ids = atob(b64string as string).split(',').map(a => parseInt(a))
             if (qs.types == undefined)
@@ -87,8 +69,14 @@ const EventSearch = (props: {}) => {
             setTypes(data);
         });
 
-        let handle2 = GetMeters();
-        handle2.done((data: OpenXDA.Types.Meter[]) => {
+        return () => {
+            if (typeHandle.abort != undefined) typeHandle.abort();
+        }
+    }, []);
+
+    React.useEffect(() => {
+        const meterHandle = MeterController.GetAll("Name", true);
+        meterHandle.done((data: OpenXDA.Types.Meter[]) => {
             let b64string = (qs.meters == undefined ? '' : qs.meters)
             let ids = atob(b64string as string).split(',').map(a => parseInt(a))
             if (qs.meters == undefined)
@@ -99,10 +87,8 @@ const EventSearch = (props: {}) => {
             setMeters(data);
         });
 
-        return function () {
-            if (handle1.abort != undefined) handle1.abort();
-            if (handle2.abort != undefined) handle2.abort();
-
+        return () => {
+            if (meterHandle.abort != undefined) meterHandle.abort();
         }
     }, []);
 

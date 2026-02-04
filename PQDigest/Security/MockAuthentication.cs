@@ -49,6 +49,7 @@ namespace PQDigest.Security
             }
 
             // TODO: Add as many claims as you need here
+            claims.Add(new Claim(SecurityHelperMethods.ClaimKey, "00009999")); // test gpa group sid
 
             var identity = new ClaimsIdentity(claims, AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

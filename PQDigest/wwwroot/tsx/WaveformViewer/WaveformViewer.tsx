@@ -34,11 +34,13 @@ import PolarChart from './PolarChart';
 import WaveformViewerD3Chart from './WaveformViewerD3Chart';
 
 import moment from 'moment';
+import { createBrowserHistory } from 'history';
 
 const WaveformViewer = () => {
     const infoWidth = 300;
     const pointsWidth = 500;
     const waveformWidth = window.innerWidth - infoWidth - pointsWidth - 10;
+    const history = createBrowserHistory();
 
     const [eventID, setEventID] = React.useState<number|undefined>(undefined);
 
@@ -71,7 +73,7 @@ const WaveformViewer = () => {
     }, []);
 
     React.useEffect(() => {
-        const query = queryString.parse(location.search);
+        const query = queryString.parse(history.location.search.substring(1));
         setEventID(query['EventID'] != null ? parseInt(query['EventID'].toString()) : undefined);
     }, []);
 
@@ -155,7 +157,7 @@ const WaveformViewer = () => {
     function GetWaveformData(type: 'Current' | 'Voltage', id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}/${Math.floor(waveformWidth)}`,
+            url: `${homePath}api/OpenXDA/Event/Waveform/${id}/${type}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -166,7 +168,7 @@ const WaveformViewer = () => {
     function GetAnalyticData(type: string, id: number): JQuery.jqXHR<object> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic' ? '/' + harmonic : '')}/${Math.floor(waveformWidth)}`,
+            url: `${homePath}api/OpenXDA/Event/Analytic/${type}/${id}${(type == 'SpecifiedHarmonic' ? '/' + harmonic : '')}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

@@ -476,6 +476,28 @@ namespace openXDA.Model
         }
     }
 
+    [TableName("ChannelDetail")]
+    public class ChannelDetail : Channel
+    {
+        public string MeterName { get; set; }
+
+        public string AssetKey { get; set; }
+
+        public string AssetName { get; set; }
+
+        public new string MeasurementType { get; set; }
+
+        public new string MeasurementCharacteristic { get; set; }
+
+        public new string Phase { get; set; }
+
+        public string Mapping { get; set; }
+
+        public int SeriesTypeID { get; set; }
+
+        public string SeriesType { get; set; }
+    }
+
     public class ChannelInfo
     {
         [PrimaryKey(true)]

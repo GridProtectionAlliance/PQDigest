@@ -8,18 +8,18 @@
   <ItemGroup>
     <PackageReference
       Include="Gemstone.Data"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
     <PackageReference
       Include="Gemstone.IO"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
     <PackageReference
       Include="Gemstone.PQDIF"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
     <ProjectReference
       Include="..\..\..\gemstone\data\src\Gemstone.Data\Gemstone.Data.csproj"

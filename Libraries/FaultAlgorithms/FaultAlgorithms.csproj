@@ -8,8 +8,8 @@
   <ItemGroup>
     <PackageReference
       Include="Gemstone.Numeric"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
     <ProjectReference
       Include="..\..\..\gemstone\numeric\src\Gemstone.Numeric\Gemstone.Numeric.csproj"

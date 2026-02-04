@@ -8,13 +8,13 @@
   <ItemGroup>
     <PackageReference
       Include="Gemstone.Data"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
     <PackageReference
       Include="Gemstone.PQDIF"
-      Version="1.0.157"
       Condition="'$(Configuration)'!='Debug'"
+      Version="1.0.165"
     />
 
     <ProjectReference

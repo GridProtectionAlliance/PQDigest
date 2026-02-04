@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,7 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.157" />
+    <PackageReference
+      Include="Gemstone.Numeric"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+    <ProjectReference
+      Include="..\..\..\gemstone\numeric\src\Gemstone.Numeric\Gemstone.Numeric.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
   </ItemGroup>
-
 </Project>

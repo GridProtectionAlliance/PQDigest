@@ -38,6 +38,9 @@
       <Project Path="../../gemstone/web/src/Gemstone.Web/Gemstone.Web.csproj">
         <BuildType Solution="Debug|*" Project="Development" />
       </Project>
+      <Project Path="../../gemstone/io/src/Gemstone.IO/Gemstone.IO.csproj">
+        <BuildType Solution="Debug|*" Project="Development" />
+      </Project>
     </Folder>
   <Project Path="PQDigest.csproj" />
 </Solution>

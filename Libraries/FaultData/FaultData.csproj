@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,13 +6,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Data" Version="1.0.157" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.157" />
+    <PackageReference
+      Include="Gemstone.Data"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+    <PackageReference
+      Include="Gemstone.PQDIF"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+
+    <ProjectReference
+      Include="..\..\..\gemstone\data\src\Gemstone.Data\Gemstone.Data.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
+    <ProjectReference
+      Include="..\..\..\gemstone\pqdif\src\Gemstone.PQDif\Gemstone.PQDif.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FaultAlgorithms\FaultAlgorithms.csproj" />
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj" />
   </ItemGroup>
-
 </Project>

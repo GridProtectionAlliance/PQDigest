@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,9 +6,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Data" Version="1.0.157" />
-    <PackageReference Include="Gemstone.IO" Version="1.0.157" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.157" />
+    <PackageReference
+      Include="Gemstone.Data"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+    <PackageReference
+      Include="Gemstone.IO"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+    <PackageReference
+      Include="Gemstone.PQDIF"
+      Version="1.0.157"
+      Condition="'$(Configuration)'!='Debug'"
+    />
+    <ProjectReference
+      Include="..\..\..\gemstone\data\src\Gemstone.Data\Gemstone.Data.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
+    <ProjectReference
+      Include="..\..\..\gemstone\io\src\Gemstone.IO\Gemstone.IO.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
+    <ProjectReference
+      Include="..\..\..\gemstone\pqdif\src\Gemstone.PQDif\Gemstone.PQDif.csproj"
+      Condition="'$(Configuration)'=='Debug'"
+    />
   </ItemGroup>
-
 </Project>

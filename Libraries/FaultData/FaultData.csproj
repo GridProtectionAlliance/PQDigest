@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Data" Version="1.0.141" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.141" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.178" />
+    <PackageReference Include="Gemstone.PQDIF" Version="1.0.178" />
   </ItemGroup>
 
   <ItemGroup>

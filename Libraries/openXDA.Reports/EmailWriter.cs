@@ -31,10 +31,13 @@ using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Xsl;
 
 namespace openXDA.Reports
 {
@@ -91,7 +94,7 @@ namespace openXDA.Reports
 	                    FOR XML RAW ('PQReport'),TYPE, ELEMENTS
                     ", month, year);
 
-                XDocument htmlDocument = XDocument.Parse(data.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
+                XDocument htmlDocument = XDocument.Parse(ApplyXSLTransform(data, template), LoadOptions.PreserveWhitespace);
 
                 try
                 {
@@ -109,6 +112,20 @@ namespace openXDA.Reports
                 }
 
             }
+        }
+
+        private static string ApplyXSLTransform(string document, string transform)
+        {
+            using StringReader documentReader = new StringReader(document);
+            using StringReader transformReader = new StringReader(transform);
+            using XmlReader xmlDocumentReader = XmlReader.Create(documentReader);
+            using XmlReader xmlTransformReader = XmlReader.Create(transformReader);
+            using StringWriter resultWriter = new StringWriter();
+
+            XslCompiledTransform compiler = new XslCompiledTransform();
+            compiler.Load(xmlTransformReader);
+            compiler.Transform(xmlDocumentReader, null, resultWriter);
+            return resultWriter.ToString();
         }
 
 

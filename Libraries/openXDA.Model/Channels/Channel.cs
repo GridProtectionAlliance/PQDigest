@@ -21,13 +21,14 @@
 //
 //******************************************************************************************************
 
+using Gemstone.Data;
+using Gemstone.Data.Model;
+using Newtonsoft.Json;
+
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Transactions;
-using Gemstone.Data;
-using Gemstone.Data.Model;
-using Newtonsoft.Json;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace openXDA.Model
@@ -473,6 +474,54 @@ namespace openXDA.Model
         public int GetHashCode(Channel obj)
         {
             return obj.ID;
+        }
+    }
+
+    [TableName("ChannelDetail")]
+    public class ChannelDetail : Channel
+    {
+        public string MeterName { get; set; }
+
+        public string AssetKey { get; set; }
+
+        public string AssetName { get; set; }
+
+        public new string MeasurementType { get; set; }
+
+        public new string MeasurementCharacteristic { get; set; }
+
+        public new string Phase { get; set; }
+
+        public string Mapping { get; set; }
+
+        public int SeriesTypeID { get; set; }
+
+        public string SeriesType { get; set; }
+
+        [SearchExtension("^VoltageKV$")]
+        public static RecordRestriction GetVoltageKVRestriction(IRecordFilter filter)
+        {
+            return SearchRestrictionHelper.GetSearchRestriction("(SELECT VoltageKV FROM Asset WHERE Asset.ID = FullTbl.AssetID)", filter);
+        }
+
+        [SearchExtension("^ChannelGroupTypeID$")]
+        public static RecordRestriction GetChannelGroupTypeRestriction(IRecordFilter filter)
+        {
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("ID", filter);
+
+            return new RecordRestriction(
+                $"EXISTS(SELECT * FROM ChannelGroupType WHERE {restriction.FilterExpression} AND MeasurementTypeID = FullTbl.MeasurementTypeID AND MeasurementCharacteristicID = FullTbl.MeasurementCharacteristicID)",
+                restriction.Parameters);
+        }
+
+        [SearchExtension("^SeriesID$")]
+        public static RecordRestriction GetSeriesRestriction(IRecordFilter filter)
+        {
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("Series.SeriesTypeID", filter);
+
+            return new RecordRestriction(
+                $"(SELECT COUNT(Series.ID) FROM SERIES WHERE Series.ChannelID = FullTbl.ID AND {restriction.FilterExpression}) > 0",
+                restriction.Parameters);
         }
     }
 

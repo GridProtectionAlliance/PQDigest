@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.179" />
+    <PackageReference Include="Gemstone.Numeric" Version="1.0.180" />
   </ItemGroup>
 
 </Project>

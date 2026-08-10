@@ -67,7 +67,7 @@ namespace PQDigest.Controllers
 #else
 
 
-                DataTable lines = xdaConnection.RetrieveData(@"
+                DataTable lines = connection.RetrieveData(@"
                     select 
 	                    *
                     From 

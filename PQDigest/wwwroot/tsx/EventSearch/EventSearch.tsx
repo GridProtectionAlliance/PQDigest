@@ -225,6 +225,7 @@ const EventSearch = (props: {}) => {
                                         Record={eventFilter}
                                         Format={momentFormat}
                                         Setter={setEventFilter}
+                                        Field="StartDate"
                                     />
                                 </div>
                             </div>

@@ -28,11 +28,13 @@ module.exports = env => {
         module: {
             rules: [
                 // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
-                { test: /\.tsx?$/, use: [{ loader: 'ts-loader' }] },
+                {
+                    test: /\.tsx?$/,
+                    use: [{ loader: 'ts-loader' }]
+                },
                 {
                     test: /\.css$/,
-                    include: path.resolve(__dirname, 'wwwroot', "Content"),
-                    use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: { modules: true } }],
+                    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
                 },
                 {
                     test: /\.js$/,
@@ -43,19 +45,18 @@ module.exports = env => {
                     test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                     loader: 'url-loader',
                     options: { limit: 100000 }
+                },
+                {
+                    //loader is the default asset loader in webpack 5
+                    test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                    type: 'asset',
+                    parser: { dataUrlCondition: { maxSize: 100000 } }
                 }
             ]
         },
         externals: {
         },
         optimization: {
-            //splitChunks: {
-            //    chunks: 'all',
-            //}
-            //minimizer: [new UglifyJsPlugin({
-            //    test: /\.js(\?.*)?$/i,
-            //    sourceMap: true
-            //})],
         },
         plugins: [
             new webpack.ProvidePlugin({

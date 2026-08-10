@@ -167,7 +167,6 @@ const Trending = () => {
                                         Record={trendFilter}
                                         Format={MomentDateTimeFormat}
                                         Setter={setTrendFilter}
-                                        Field="StartDate"
                                     />
                                 </div>
 

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Data" Version="1.0.179" />
+    <PackageReference Include="Gemstone.Data" Version="1.0.180" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
   </ItemGroup>

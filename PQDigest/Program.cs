@@ -129,13 +129,13 @@ namespace PQDigest
                     // Add Gemstone diagnostics logging
                     builder.AddGemstoneDiagnostics();
 
-                    /*#if RELEASE
+                    #if RELEASE
                     if (OperatingSystem.IsWindows())
                     {
                         builder.AddFilter<EventLogLoggerProvider>("Application", LogLevel.Warning);
                         builder.AddEventLog();
                     }
-                    #endif*/
+                    #endif
                 });
     }
 }

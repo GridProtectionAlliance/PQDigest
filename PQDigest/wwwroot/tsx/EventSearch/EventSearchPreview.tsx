@@ -26,7 +26,7 @@ import WidgetRouter from '../../../EventWidgets/TSX/WidgetWrapper';
 import { Alert, LoadingIcon } from '@gpa-gemstone/react-interactive'
 import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
 import { PQDigest } from '../global';
-import { Application } from '@gpa-gemstone/application-typings';
+import { Application, OpenXDA } from '@gpa-gemstone/application-typings';
 
 const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IWidget>(`${homePath}api/PQDigest/EventWidgets`);
 
@@ -34,6 +34,21 @@ const EventSearchPreview = (props: { ID: number, Width: number, Height: number }
 
     const [widgets, setWidgets] = React.useState<PQDigest.IWidget[]>([]);
     const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    const [eventTypes, setEventTypes] = React.useState<OpenXDA.Types.EventType[]>([]);
+    const [eventTypesStatus, setEventTypesStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    React.useEffect(() => {
+        setEventTypesStatus('loading');
+        const handle = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.EventType>(`${homePath}api/OpenXDA/EventTypes`).GetAll('Name', true);
+        handle.done((d) => {
+            setEventTypes(d);
+            setEventTypesStatus('idle');
+        });
+        handle.fail(() => setEventTypesStatus('error'));
+
+        return () => { if (handle?.abort != null) handle.abort(); }
+    }, [])
 
     React.useEffect(() => {
         setStatus("loading");
@@ -52,17 +67,15 @@ const EventSearchPreview = (props: { ID: number, Width: number, Height: number }
             Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
             ShowX={false}>
             No Event Selected. Please select an event on the left.
-     </Alert>
+        </Alert>
 
     if (status === 'error')
         return <Alert Class='alert-danger'
             Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
             ShowX={false}>
             Error retrieving widget information.
-     </Alert>
+        </Alert>
 
-
-    //#ToDO Add Note Slices to Event Store
     return (
         <>
             <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
@@ -74,10 +87,23 @@ const EventSearchPreview = (props: { ID: number, Width: number, Height: number }
                     DisturbanceID={0}
                     FaultID={0}
                     HomePath={homePath}
-                    Roles={[]}
-                    Store={undefined}
+                    WidgetAuthorization={
+                        {
+                            Notes: {
+                                Create: false,
+                                Update: false,
+                                Delete: false
+                            },
+                            EventInfo: {
+                                Create: false,
+                                Update: false,
+                                Delete: false
+                            }
+                        }
+                    }
+                    EventTypes={eventTypes}
                 />
-            )}          
+            )}
         </>
     );
 }

@@ -156,7 +156,20 @@ const EventSearch = (props: {}) => {
                         EventID={selectedEvent}
                         EventFilter={filt}
                         HomePath={homePath}
-                        Roles={[]}
+                        WidgetAuthorization={
+                            {
+                                Notes: {
+                                    Create: false,
+                                    Update: false,
+                                    Delete: false
+                                },
+                                EventInfo: {
+                                    Create: false,
+                                    Update: false,
+                                    Delete: false
+                                }
+                            }
+                        }
                     />
                 </div>
                 <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>

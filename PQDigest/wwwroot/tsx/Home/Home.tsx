@@ -48,7 +48,7 @@ const Home = () => {
         return () => { if (handle?.abort == null) handle.abort(); }
     }, []);
 
-    const collectionRouters = React.useMemo(() => 
+    const collectionRouters = React.useMemo(() =>
         widgets.map((w, i) => <CollectionWidgetRouter
             Widget={w}
             EventFilter={{
@@ -58,14 +58,28 @@ const Home = () => {
                 }
             }}
             HomePath={homePath}
-            Roles={[]}
             key={w.ID}
-        />)
-    , [widgets]);
+            WidgetAuthorization={
+                {
+                    Notes: {
+                        Create: false,
+                        Update: false,
+                        Delete: false
+                    },
+                    EventInfo: {
+                        Create: false,
+                        Update: false,
+                        Delete: false
+                    }
+                }
+            }
+        />
+        )
+        , [widgets]);
 
     return (
-         <div className="row h-100" style={{ overflow: "hidden" }}>
-                <div className="col-12 p-0 h-100">
+        <div className="row h-100" style={{ overflow: "hidden" }}>
+            <div className="col-12 p-0 h-100">
                 <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
                 {status === 'error' ?
                     <div className="row" style={{ padding: "5px 0 0 0" }}>
@@ -77,7 +91,7 @@ const Home = () => {
                     <LayoutGrid RowsPerPage={2} ColMax={2}>
                         {collectionRouters}
                     </LayoutGrid>
-             : null}
+                    : null}
             </div>
         </div>
     )

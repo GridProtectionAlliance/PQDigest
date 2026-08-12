@@ -38,26 +38,8 @@ module.exports = env => {
                     use: [{ loader: "ts-loader" }]
                 },
                 {
-                    test: /\.tsx?$/,
-                    use: [{ loader: 'ts-loader' }]
-                },
-                {
                     test: /\.css$/,
                     use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
-                },
-                {
-                    test: /leaflet\.css$/,
-                    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
-                },
-                {
-                    test: /\.js$/,
-                    enforce: "pre",
-                    use: [{ loader: 'source-map-loader' }]
-                },
-                {
-                    test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                    loader: 'url-loader',
-                    options: { limit: 100000 }
                 },
                 {
                     //loader is the default asset loader in webpack 5

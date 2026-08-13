@@ -65,13 +65,6 @@
     <ProjectReference Include="..\Libraries\openXDA.APIAuthentication\openXDA.APIAuthentication.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Reference Include="openXDA.APIAuthentication">
-      <HintPath>..\Dependencies\openXDA.APIAuthentication.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
   <ItemGroup>
     <TypeScriptCompile Update="wwwroot\tsx\Chart\Store\XAxisSlice.ts">
       <SubType>Code</SubType>

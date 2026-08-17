@@ -22,16 +22,27 @@
 //******************************************************************************************************
 import React from 'react';
 import { bisect, max } from 'd3';
+import { IDataIV } from './WaveformViewer';
 
-const PolarChart = (props: { Width: number, Height: number, Time: number, VoltageData: any, CurrentData: any }) => {
+interface IProps {
+    Width: number, 
+    Height: number, 
+    Time: number, 
+    VoltageData: IDataIV[], //this needs to be typed
+    CurrentData: IDataIV[] //this needs to be typed
+}
+
+const PolarChart = (props: IProps) => {
     try {
         const chartHeight = props.Height - 150;
         if (props.VoltageData.length == 0 || props.CurrentData.length == 0) return null;
+
         let vData = props.VoltageData.map(x => {
             let data = x.Data[bisect(x.Data.map(x => x[0]), props.Time)];
             return { Key: x.Key, Value: data != undefined ? data[1] : undefined, Color: x.Color }
         });
         let vMax = parseFloat(max(vData.filter(x => x.Key.indexOf('RMS-V') >= 0).map(x => x.Value)).toString());
+
         let iData = props.CurrentData.map(x => {
             let data = x.Data[bisect(x.Data.map(x => x[0]), props.Time)];
             return { Key: x.Key, Value: data != undefined ? data[1] : undefined, Color: x.Color }
@@ -81,12 +92,12 @@ const PolarChart = (props: { Width: number, Height: number, Time: number, Voltag
                     <thead>
                         <tr>
                             <th></th>
-                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VAN')?.Color ?? null, color: 'white' }}>VAN</th>
-                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VBN')?.Color ?? null, color: 'white'  }}>VBN</th>
-                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VCN')?.Color ?? null, color: 'white'  }}>VCN</th>
-                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IAN')?.Color ?? null, color: 'white'  }}>IAN</th>
-                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IBN')?.Color ?? null, color: 'white'  }}>IBN</th>
-                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-ICN')?.Color ?? null, color: 'white'  }}>ICN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VAN')?.Color ?? undefined, color: 'white' }}>VAN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VBN')?.Color ?? undefined, color: 'white'  }}>VBN</th>
+                            <th style={{ backgroundColor: vData.find(x => x.Key == 'RMS-VCN')?.Color ?? undefined, color: 'white'  }}>VCN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IAN')?.Color ?? undefined, color: 'white'  }}>IAN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-IBN')?.Color ?? undefined, color: 'white'  }}>IBN</th>
+                            <th style={{ backgroundColor: iData.find(x => x.Key == 'RMS-ICN')?.Color ?? undefined, color: 'white'  }}>ICN</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,12 +122,11 @@ const PolarChart = (props: { Width: number, Height: number, Time: number, Voltag
 
                     </tbody>
                 </table>
-
-
             </>
         );
     }
-    catch {
+    catch(e) {
+        console.log('phasorChart error', e)
         return null;
     }
 }
@@ -127,6 +137,5 @@ function DrawVectorSVG(x0: number, y0: number, radius: number, mag: number, max:
     var y = (mag / max) * Math.sin(angle * Math.PI / 180);
     return `M ${x0} ${y0} L ${x0 + radius*x} ${y0 - radius*y} Z`
 }
-
 
 export default PolarChart;

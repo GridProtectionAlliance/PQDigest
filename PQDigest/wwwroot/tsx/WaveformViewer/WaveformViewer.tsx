@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 import { bisect } from 'd3';
+import { useGetContainerPosition } from '@gpa-gemstone/helper-functions';
+import { RadioButtons, Select, ToolTip } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 import queryString from "querystring";
 import React from 'react';
@@ -32,64 +34,88 @@ import Info from './Info';
 import Legend from './Legend';
 import PolarChart from './PolarChart';
 import WaveformViewerD3Chart from './WaveformViewerD3Chart';
+import { ErrorIcon, LoadingIcon, NoDataIcon } from './ChartIcons';
 
 import moment from 'moment';
 import { createBrowserHistory } from 'history';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
+
+export interface IDataIV {
+    Key: string,
+    Show: boolean,
+    Color: string,
+    Data: [number, number][]
+}
+
+type PlotStatus = 'uninitiated' | 'loading' | 'idle' | 'error';
 
 const WaveformViewer = () => {
-    const infoWidth = 300;
-    const pointsWidth = 500;
-    const waveformWidth = window.innerWidth - infoWidth - pointsWidth - 10;
     const history = createBrowserHistory();
+    const waveformRef = React.useRef<HTMLDivElement | null>(null);
+    const pointsRef = React.useRef<HTMLDivElement | null>(null);
+    const waveformsBodyRef = React.useRef<HTMLDivElement | null>(null);
+    const analyticBodyRef = React.useRef<HTMLDivElement | null>(null);
+    const polarBodyRef = React.useRef<HTMLDivElement | null>(null);
+    const { width: waveformWidth } = useGetContainerPosition(waveformRef);
+    const { width: pointsWidth } = useGetContainerPosition(pointsRef);
+    const { height: waveformsBodyHeight } = useGetContainerPosition(waveformsBodyRef);
+    const { height: analyticBodyHeight } = useGetContainerPosition(analyticBodyRef);
+    const { height: polarBodyHeight } = useGetContainerPosition(polarBodyRef);
 
-    const [eventID, setEventID] = React.useState<number|undefined>(undefined);
+    const [eventID, setEventID] = React.useState<number | undefined>(undefined);
 
     const [compareEventID, setCompareEventID] = React.useState<number>(0);
 
-    const [voltageData, setVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
-    const [currentData, setCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
-    const [analyticData, setAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [voltageData, setVoltageData] = React.useState<IDataIV[]>([]);
+    const [currentData, setCurrentData] = React.useState<IDataIV[]>([]);
+    const [analyticData, setAnaltyicData] = React.useState<IDataIV[]>([]);
 
-    const [compareVoltageData, setCompareVoltageData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
-    const [compareCurrentData, setCompareCurrentData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
-    const [compareAnaltyicData, setCompareAnaltyicData] = React.useState<{ Key: string, Show: boolean, Color: string, Data: [number, number][] }[]>([]);
+    const [compareVoltageData, setCompareVoltageData] = React.useState<IDataIV[]>([]);
+    const [compareCurrentData, setCompareCurrentData] = React.useState<IDataIV[]>([]);
+    const [compareAnaltyicData, setCompareAnaltyicData] = React.useState<IDataIV[]>([]);
+
+    const [voltageStatus, setVoltageStatus] = React.useState<PlotStatus>('uninitiated');
+    const [currentStatus, setCurrentStatus] = React.useState<PlotStatus>('uninitiated');
+    const [analyticStatus, setAnalyticStatus] = React.useState<PlotStatus>('uninitiated');
 
     const [analytic, setAnalytic] = React.useState<PQDigest.Analtyic>('Frequency');
     const [harmonic, setHarmonic] = React.useState<number>(5);
     const [chartAction, setChartAction] = React.useState<PQDigest.ChartAction>('Click');
 
     const [hover, setHover] = React.useState<number>(-1);
+    const [buttonHover, setButtonHover] = React.useState<'None' | 'Reset' | 'ExportCSV'>('None');
     const [click, setClick] = React.useState<number>(-1);
-    const [extents, setExtents] = React.useState<PQDigest.D3Extent>({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
-
-    const [_ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
-
-    React.useEffect(() => {
-        window.addEventListener('resize', () => forceUpdate());
-
-        return function cleanup() {
-            window.removeEventListener('resize', () => { });
-        }
-    }, []);
+    const [extents, setExtents] = React.useState<PQDigest.D3Extent>({ X: { Min: null, Max: null }, Y: { Min: null, Max: null } });
 
     React.useEffect(() => {
         const query = queryString.parse(history.location.search.substring(1));
-        setEventID(query['EventID'] != null ? parseInt(query['EventID'].toString()) : undefined);
+        const eventIDKey = Object.keys(query).find(key => key.toLowerCase() === 'eventid');
+        setEventID(eventIDKey != null ? parseInt(query[eventIDKey].toString()) : undefined);
     }, []);
 
     React.useEffect(() => {
         if (eventID == null) return;
 
+        setCurrentStatus('loading');
         let handle1 = GetWaveformData('Current', eventID);
         handle1.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Current', key), Show: ShowPath('Current',key), Color: GetColor(key), Data: data[key] } });
-            setCurrentData(returnData)
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Current', key), Show: ShowPath('Current', key), Color: GetColor(key), Data: data[key] } });
+            setCurrentData(returnData);
+            setCurrentStatus('idle');
+        });
+        handle1.fail(() => {
+            setCurrentStatus('error');
         });
 
+        setVoltageStatus('loading');
         let handle2 = GetWaveformData('Voltage', eventID);
         handle2.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Voltage', key), Show: ShowPath('Voltage',key), Color: GetColor(key), Data: data[key] } });
-            setVoltageData(returnData)
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey('Voltage', key), Show: ShowPath('Voltage', key), Color: GetColor(key), Data: data[key] } });
+            setVoltageData(returnData);
+            setVoltageStatus('idle');
+        });
+        handle2.fail(() => {
+            setVoltageStatus('error');
         });
 
 
@@ -103,10 +129,15 @@ const WaveformViewer = () => {
     React.useEffect(() => {
         if (eventID == null) return;
 
+        setAnalyticStatus('loading');
         let handle = GetAnalyticData(analytic, eventID);
         handle.done(data => {
-            let returnData = Object.keys(data).map(key => { return { Key: GetKey(analytic, key), Show: ShowPath(analytic,key), Color: GetColor(key), Data: data[key] } });
-            setAnaltyicData(returnData)
+            let returnData = Object.keys(data).map(key => { return { Key: GetKey(analytic, key), Show: ShowPath(analytic, key), Color: GetColor(key), Data: data[key] } });
+            setAnaltyicData(returnData);
+            setAnalyticStatus('idle');
+        });
+        handle.fail(() => {
+            setAnalyticStatus('error');
         });
 
         return function () {
@@ -177,14 +208,14 @@ const WaveformViewer = () => {
     }
 
     function HandleReset() {
-        setExtents({ X: { Min: null, Max: null }, Y: { Min: null, Max: null }});
+        setExtents({ X: { Min: null, Max: null }, Y: { Min: null, Max: null } });
     }
 
     function HandleChartAction(value: number | PQDigest.D3Extent) {
-        if (chartAction == 'Click' && typeof(value) == 'number') {
+        if (chartAction == 'Click' && typeof (value) == 'number') {
             setClick(value);
         }
-        else if(typeof(value) == 'object')
+        else if (typeof (value) == 'object')
             setExtents(value);
     }
 
@@ -209,175 +240,263 @@ const WaveformViewer = () => {
     if (eventID == null) return null;
 
     return (
-        <div className="row" style={{height: "100%", margin: '5px 5px 5px 5px '}}>
-            <div className="" style={{ padding: '0px 2px 0px 0px', width: infoWidth }}>
-                <div className="card">
+        <div className="row flex-nowrap w-100 m-0" style={{ height: "100%" }}>
+            <div className="col-auto d-flex flex-column h-100" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="card d-flex flex-column" style={{ flex: '3 1 0', minHeight: 0 }}>
                     <div className="card-header">Info</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 2 + 25, height: (window.innerHeight - 296) / 2 + 25, overflowY: 'hidden' }}>
+                    <div className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
                         <Info EventID={eventID} />
                     </div>
                 </div>
-                <div className="card">
+                <div className="card d-flex flex-column" style={{ flex: '1 1 0', minHeight: 0 }}>
                     <div className="card-header">Browse Events</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 - 75, height: (window.innerHeight - 296) / 4 - 75, overflowY: 'hidden' }}>
-                        <BrowseEvents EventID={eventID}/>
+                    <div className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
+                        <BrowseEvents EventID={eventID} />
                     </div>
                 </div>
-                <div className="card">
+                <div className="card d-flex flex-column" style={{ flex: '2 1 0', minHeight: 0 }}>
                     <div className="card-header">Compare</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 296) / 4 + 50, height: (window.innerHeight - 296) / 4 + 50, overflowY: 'hidden' }}>
-                        <ComparableEvents EventID={eventID} ComparableEventID={compareEventID} OnChange={(id) => setCompareEventID(id)} />
+                    <div className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
+                        <ComparableEvents
+                            EventID={eventID}
+                            ComparableEventID={compareEventID}
+                            OnChange={(id) => setCompareEventID(id)}
+                        />
                     </div>
                 </div>
             </div>
-            <div className="" style={{ padding: '0px 2px 0px 0px', width: waveformWidth }}>
-                <div className="card">
-                    <div className="card-header" style={{ paddingBottom: 9, paddingTop: 9 }} >Waveforms
-                        <div className="pull-right">
-                            <div className="form-check-inline">
-                                <label className="form-check-label">
-                                    <input type="radio" className="form-check-input" checked={chartAction == 'Click'} onChange={(evt) => setChartAction('Click')}/>Click
-                                </label>
+            <div ref={waveformRef} className="col d-flex flex-column h-100" style={{ padding: '0px 2px 0px 0px', minWidth: 0 }}>
+                <div className="card d-flex flex-column" style={{ flex: '2 1 0', minHeight: 0 }}>
+                    <div className="card-header" style={{ paddingBottom: 9, paddingTop: 9 }}>
+                        <div className="row align-items-center">
+                            <div className="col">Waveforms</div>
+                            <div className="col-auto d-flex align-items-center">
+                                <RadioButtons
+                                    Record={{ Action: chartAction }}
+                                    Field="Action"
+                                    Label=""
+                                    Setter={(record) => setChartAction(record.Action)}
+                                    Options={[
+                                        { Label: 'Click', Value: 'Click' },
+                                        { Label: 'Pan', Value: 'Pan' },
+                                        { Label: 'Zoom', Value: 'ZoomX' }
+                                    ]}
+                                    Position="horizontal"
+                                    Style={{ marginBottom: 0 }}
+                                />
+                                <button
+                                    className='btn btn-primary'
+                                    onClick={HandleReset}
+                                    data-tooltip='WaveformReset'
+                                    onMouseEnter={() => setButtonHover('Reset')}
+                                    onMouseLeave={() => setButtonHover('None')}
+                                >
+                                    <ReactIcons.Refresh Size={16}/>
+                                </button>
+                                <ToolTip Show={buttonHover == 'Reset'} Position='top' Target='WaveformReset'>
+                                    Reset
+                                </ToolTip>
+                                <button
+                                    className='btn btn-primary'
+                                    onClick={HandleExportCSV}
+                                    data-tooltip='WaveformExportCSV'
+                                    onMouseEnter={() => setButtonHover('ExportCSV')}
+                                    onMouseLeave={() => setButtonHover('None')}
+                                >
+                                    <ReactIcons.ShareArrow Size={16}/>
+                                </button>
+                                <ToolTip Show={buttonHover == 'ExportCSV'} Position='top' Target='WaveformExportCSV'>
+                                    Export CSV
+                                </ToolTip>
                             </div>
-                            <div className="form-check-inline">
-                                <label className="form-check-label">
-                                    <input type="radio" className="form-check-input" checked={chartAction == 'Pan'} onChange={(evt) => setChartAction('Pan')}/>Pan
-                                </label>
-                            </div>
-                            <div className="form-check-inline">
-                                <label className="form-check-label">
-                                    <input type="radio" className="form-check-input" checked={chartAction == 'ZoomX'} onChange={(evt) => setChartAction('ZoomX')}/>Zoom
-                                </label>
-                            </div>
-                            {/*
-                                <div className="form-check-inline">
-                                    <label className="form-check-label">
-                                        <input type="radio" className="form-check-input" checked={chartAction == 'ZoomY'} onChange={(evt) => setChartAction('ZoomY')} />Zoom Y
-                                </label>
-                                </div>
-                                <div className="form-check-inline">
-                                    <label className="form-check-label">
-                                        <input type="radio" className="form-check-input" checked={chartAction == 'ZoomXY'} onChange={(evt) => setChartAction('ZoomXY')} />Zoom X & Y
-                                </label>
-                                </div>
-                            */}
-                            <button onClick={HandleReset}>Reset</button>
-                            <button onClick={HandleExportCSV}>Export CSV</button>
-
                         </div>
                     </div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: 2 * (window.innerHeight - 246) / 3, height: 2 * (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
-                        <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Voltage' Paths={voltageData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
-                                let newPaths = _.clone(voltageData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setVoltageData(newPaths);
-                            }} />
-                            <Legend Type='Voltage' Paths={compareVoltageData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
-                                let newPaths = _.clone(compareVoltageData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setCompareVoltageData(newPaths);
-                            }} />
+                    <div ref={waveformsBodyRef} className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
+                        <div style={{ height: waveformsBodyHeight / 2, position: 'relative' }}>
+                            <PlotState Status={voltageStatus} HasData={HasPlotData(voltageData)} Height={waveformsBodyHeight / 2}>
+                                <Legend Type='Voltage' Paths={voltageData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
+                                    let newPaths = _.clone(voltageData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setVoltageData(newPaths);
+                                }} />
+                                <Legend Type='Voltage' Paths={compareVoltageData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                    let newPaths = _.clone(compareVoltageData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setCompareVoltageData(newPaths);
+                                }} />
 
-                            <WaveformViewerD3Chart EventID={eventID} Data={voltageData} CompareData={compareVoltageData} ChartAction={chartAction} Extent={extents} Units="Volts" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                                <WaveformViewerD3Chart
+                                    EventID={eventID}
+                                    Data={voltageData}
+                                    CompareData={compareVoltageData}
+                                    ChartAction={chartAction}
+                                    Extent={extents}
+                                    Units="Volts"
+                                    DataType="Time"
+                                    Height={waveformsBodyHeight / 2}
+                                    Width={waveformWidth - 4}
+                                    Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }}
+                                    Hover={hover}
+                                    SetHover={(value) => setHover(value)}
+                                    Click={click}
+                                    HandleChartAction={HandleChartAction}
+                                />
+                            </PlotState>
                         </div>
-                        <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type='Current' Paths={currentData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
-                                let newPaths = _.clone(currentData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setCurrentData(newPaths);
-                            }} />
-                            <Legend Type='Current' Paths={compareCurrentData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
-                                let newPaths = _.clone(compareCurrentData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setCompareCurrentData(newPaths);
-                            }} />
+                        <div style={{ height: waveformsBodyHeight / 2, position: 'relative' }}>
+                            <PlotState Status={currentStatus} HasData={HasPlotData(currentData)} Height={waveformsBodyHeight / 2}>
+                                <Legend Type='Current' Paths={currentData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
+                                    let newPaths = _.clone(currentData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setCurrentData(newPaths);
+                                }} />
+                                <Legend Type='Current' Paths={compareCurrentData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                    let newPaths = _.clone(compareCurrentData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setCompareCurrentData(newPaths);
+                                }} />
 
-                            <WaveformViewerD3Chart EventID={eventID} Data={currentData} CompareData={compareCurrentData} ChartAction={chartAction} Extent={extents} Units="Amps" DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                                <WaveformViewerD3Chart
+                                    EventID={eventID}
+                                    Data={currentData}
+                                    CompareData={compareCurrentData}
+                                    ChartAction={chartAction}
+                                    Extent={extents}
+                                    Units="Amps"
+                                    DataType="Time"
+                                    Height={waveformsBodyHeight / 2}
+                                    Width={waveformWidth - 4}
+                                    Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }}
+                                    Hover={hover}
+                                    SetHover={(value) => setHover(value)}
+                                    Click={click}
+                                    HandleChartAction={HandleChartAction}
+                                />
+                            </PlotState>
                         </div>
-
-
                     </div>
                 </div>
-                <div className="card">
+                <div className="card d-flex flex-column" style={{ flex: '1 1 0', minHeight: 0 }}>
                     <div className="card-header">
-                        <select value={analytic} onChange={(evt) => setAnalytic(evt.target.value as PQDigest.Analtyic)} style={{width: 200}}>
-                            <option value="Power">Power</option>
-                            <option value="Frequency">Frequency</option>
-                            <option value="RapidVoltageChange">Rapid Voltage Change</option>
-                            <option value="SpecifiedHarmonic">Specified Harmonic</option>
-                            <option value="SymmetricalComponents">Symmetrical Components</option>
-                            <option value="THD">Total Harmonic Distortion</option>
-                            <option value="Unbalance">Unbalance</option>
-                        </select>
-                        <select value={harmonic} onChange={(evt) => setHarmonic(parseInt(evt.target.value))} hidden={analytic != 'SpecifiedHarmonic'}>
-                            {
-                                Array.from(Array(40), (x, i) => <option key={i} value={i}>{i}</option>)
-                            }
-                        </select>
-
-                    </div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 3, height: (window.innerHeight - 246) / 3, overflowY: 'hidden' }}>
-                        <div style={{ height: (window.innerHeight - 246) / 3, position: 'relative' }}>
-                            <Legend Type={analytic} Paths={analyticData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
-                                let newPaths = _.clone(analyticData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setAnaltyicData(newPaths);
-                            }} />
-                            <Legend Type={analytic} Paths={compareAnaltyicData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
-                                let newPaths = _.clone(compareAnaltyicData);
-                                let newPath = newPaths.find(x => x.Key == path.Key);
-                                newPath.Show = !path.Show;
-                                setCompareAnaltyicData(newPaths);
-                            }} />
-
-                            <WaveformViewerD3Chart EventID={eventID} Data={analyticData} CompareData={compareAnaltyicData} ChartAction={chartAction} Extent={extents} Units={GetUnits(analytic)} DataType="Time" Height={(window.innerHeight - 246) / 3} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                        <div className="row">
+                            <div className="col-auto">
+                                <Select
+                                    Record={{ Analytic: analytic }}
+                                    Field="Analytic"
+                                    Label=""
+                                    Setter={(record) => setAnalytic(record.Analytic)}
+                                    Options={[
+                                        { Label: 'Power', Value: 'Power' },
+                                        { Label: 'Frequency', Value: 'Frequency' },
+                                        { Label: 'Rapid Voltage Change', Value: 'RapidVoltageChange' },
+                                        { Label: 'Specified Harmonic', Value: 'SpecifiedHarmonic' },
+                                        { Label: 'Symmetrical Components', Value: 'SymmetricalComponents' },
+                                        { Label: 'Total Harmonic Distortion', Value: 'THD' },
+                                        { Label: 'Unbalance', Value: 'Unbalance' }
+                                    ]}
+                                    Style={{ marginBottom: 0, width: 200 }}
+                                />
+                            </div>
+                            {analytic == 'SpecifiedHarmonic' ?
+                                <div className="col-auto">
+                                    <Select
+                                        Record={{ Harmonic: harmonic }}
+                                        Field="Harmonic"
+                                        Label=""
+                                        Setter={(record) => setHarmonic(record.Harmonic)}
+                                        Options={Array.from(Array(40), (x, i) => ({ Label: i.toString(), Value: i }))}
+                                        Style={{ marginBottom: 0 }}
+                                    />
+                                </div>
+                                : null}
                         </div>
+                    </div>
+                    <div ref={analyticBodyRef} className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
+                        <div style={{ height: analyticBodyHeight, position: 'relative' }}>
+                            <PlotState Status={analyticStatus} HasData={HasPlotData(analyticData)} Height={analyticBodyHeight}>
+                                <Legend Type={analytic} Paths={analyticData} CompareData={false} GetColor={GetColor} CallBack={(path) => {
+                                    let newPaths = _.clone(analyticData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setAnaltyicData(newPaths);
+                                }} />
+                                <Legend Type={analytic} Paths={compareAnaltyicData} CompareData={true} GetColor={GetCompareColor} CallBack={(path) => {
+                                    let newPaths = _.clone(compareAnaltyicData);
+                                    let newPath = newPaths.find(x => x.Key == path.Key);
+                                    newPath.Show = !path.Show;
+                                    setCompareAnaltyicData(newPaths);
+                                }} />
 
-
+                                <WaveformViewerD3Chart EventID={eventID} Data={analyticData} CompareData={compareAnaltyicData} ChartAction={chartAction} Extent={extents} Units={GetUnits(analytic)} DataType="Time" Height={analyticBodyHeight} Width={waveformWidth - 4} Margin={{ Top: 10, Bottom: 30, Left: 50, Right: 1 }} Hover={hover} SetHover={(value) => setHover(value)} Click={click} HandleChartAction={HandleChartAction} />
+                            </PlotState>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className="" style={{ padding: '0px 2px 0px 0px', width: pointsWidth }}>
-                <div className="card">
+            <div ref={pointsRef} className="col-auto d-flex flex-column h-100" style={{ padding: '0px 2px 0px 0px' }}>
+                <div className="card d-flex flex-column" style={{ flex: '1 1 0', minHeight: 0 }}>
                     <div className="card-header">{click < 0 ? 'Click to get values ...' : 'Values at ' + moment(click).utc().format('MM/DD/YYYY HH:mm:ss.SSSS') + ' (CST)'}</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246) / 2, height: (window.innerHeight - 246) / 2, overflowY: 'auto' }}>
+                    <div className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'auto' }}>
                         <table className="table">
                             <tbody>
                                 {voltageData.filter(x => x.Show).map(x => {
                                     try {
                                         return <tr key={x.Key}><td>{x.Key}</td><td>{x.Data[bisect(x.Data.map(x => x[0]), click)][1].toFixed(2)}</td></tr>
                                     }
-                                    catch{ return null }
+                                    catch { return null }
                                 })}
                                 {currentData.filter(x => x.Show).map(x => {
                                     try {
                                         return <tr key={x.Key}><td>{x.Key}</td><td>{x.Data[bisect(x.Data.map(x => x[0]), click)][1].toFixed(2)}</td></tr>
                                     }
-                                    catch{ return null }
+                                    catch { return null }
                                 })}
 
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div className="card">
+                <div className="card d-flex flex-column" style={{ flex: '1 1 0', minHeight: 0 }}>
                     <div className="card-header">Phasor</div>
-                    <div className="card-body" style={{ padding: 0, maxHeight: (window.innerHeight - 246)/2, height: (window.innerHeight - 246)/2, overflowY: 'hidden' }}>
-                        <PolarChart Height={(window.innerHeight - 246) / 2} Width={pointsWidth - 5} Time={click} VoltageData={voltageData} CurrentData={currentData}/>
+                    <div ref={polarBodyRef} className="card-body" style={{ padding: 0, flex: 1, minHeight: 0, overflowY: 'hidden' }}>
+                        <PlotState Status={GetCombinedStatus(voltageStatus, currentStatus)} HasData={HasPlotData(voltageData) && HasPlotData(currentData)} Height={polarBodyHeight}>
+                            <PolarChart
+                                Height={polarBodyHeight}
+                                Width={pointsWidth - 5}
+                                Time={click}
+                                VoltageData={voltageData}
+                                CurrentData={currentData}
+                            />
+                        </PlotState>
                     </div>
                 </div>
-
-
             </div>
-
         </div>
     )
+}
+
+const PlotState = (props: { Status: PlotStatus, HasData: boolean, Height: number, children: React.ReactNode }) => {
+    if (props.Status === 'loading' || props.Status === 'uninitiated')
+        return <LoadingIcon Size={props.Height * 0.5} />;
+
+    if (props.Status === 'error') return <ErrorIcon />;
+    if (!props.HasData) return <NoDataIcon />;
+
+    return <>{props.children}</>;
+}
+
+function GetCombinedStatus(...statuses: PlotStatus[]): PlotStatus {
+    if (statuses.some(status => status === 'error')) return 'error';
+    if (statuses.some(status => status === 'loading' || status === 'uninitiated')) return 'loading';
+    return 'idle';
+}
+
+function HasPlotData(data: IDataIV[]): boolean {
+    return data.some(series => series.Data.length > 0);
 }
 
 function GetUnits(type: PQDigest.Analtyic): string {
@@ -411,12 +530,12 @@ function ShowPath(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string
 
 function GetKey(type: 'Voltage' | 'Current' | PQDigest.Analtyic, label: string): string {
     const prefix = type == 'Voltage' ? 'V' : 'I';
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}AN`) return `Wf-${prefix}AN`;
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}BN`) return `Wf-${prefix}BN`;
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}CN`) return `Wf-${prefix}CN`;
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}AB`) return `Wf-${prefix}AB`;
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}BC`) return `Wf-${prefix}BC`;
-    if ((type == 'Voltage' || type == 'Current' ) && label == `${prefix}CA`) return `Wf-${prefix}CA`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}AN`) return `Wf-${prefix}AN`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}BN`) return `Wf-${prefix}BN`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}CN`) return `Wf-${prefix}CN`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}AB`) return `Wf-${prefix}AB`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}BC`) return `Wf-${prefix}BC`;
+    if ((type == 'Voltage' || type == 'Current') && label == `${prefix}CA`) return `Wf-${prefix}CA`;
     if (label == `${prefix}NG`) return `Wf-${prefix}NG`;
     if (label == `${prefix}RES`) return `Wf-${prefix}RES`;
     if (label == `${prefix}AN RMS`) return `RMS-${prefix}AN`;

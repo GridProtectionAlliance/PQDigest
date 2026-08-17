@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch --color --mode=development",
-    "build": " npm prune && webpack --mode=development",
+    "builddev": "npm prune && npm i && webpack --mode=development",
+    "build": "npm prune && npm ci && webpack --mode=production",
     "update": "npx npm-check-updates",
     "lint": "npm ci"
   },

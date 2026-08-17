@@ -21,18 +21,12 @@
 //
 //*******************************************************************************************************@
 @using System.Security.Claims
-@using Gemstone.Reflection
 @using Newtonsoft.Json
 @using Microsoft.Graph 
 @using Gemstone.Data
 @{
     Layout = "";
 
-    #if DEBUG
-    bool debug = true;
-    #else
-    bool debug = false;
-    #endif
     ClaimsIdentity identity = null;
     bool DetectIE(string userAgent)
     {
@@ -43,8 +37,6 @@
         identity = User.Identity as ClaimsIdentity; // Azure AD V2 endpoint specific
     }
 
-    Version assemblyVersionInfo = AssemblyInfo.EntryAssembly.Version;
-    string applicationVersion = assemblyVersionInfo.Major + "." + assemblyVersionInfo.Minor + "." + assemblyVersionInfo.Build + "." + assemblyVersionInfo.Revision + (debug ? " (Debug)" : "");
     string graphjson = identity.Claims.FirstOrDefault(c => c.Type == "graph_json")?.Value  ?? "{}";
 }
 
@@ -68,7 +60,6 @@
         var graphJson = JSON.parse(@Html.Raw(JsonConvert.SerializeObject(graphjson)));
 
         var homePath = '@Html.Raw(Url.Content("~/"))';
-        var version = '@Html.Raw(applicationVersion)';
         var userName = graphJson.displayName;
         var isAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
         var companyName = graphJson.companyName;

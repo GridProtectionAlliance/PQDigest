@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+import { Application as ApplicationTypes } from '@gpa-gemstone/application-typings';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { Application, Page } from '@gpa-gemstone/react-interactive';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -32,9 +34,12 @@ import Trending from './Trending/Trending';
 import WaveformViewer from './WaveformViewer/WaveformViewer';
 import { Provider } from 'react-redux';
 import store from './Store';
+import { LIB_VERSION } from './version';
 
 const PQDigest: React.FunctionComponent = () => {
-    const [logo, setLogo] = React.useState<string>(null);
+    const [logo, setLogo] = React.useState<string | null>(null);
+    const [backendVersion, setBackendVersion] = React.useState<string>('0.0.0');
+    const [getBackendVersionStatus, setGetBackendVersionStatus] = React.useState<ApplicationTypes.Types.Status>('uninitiated');
 
     React.useEffect(() => {
         const handle = $.ajax({
@@ -51,6 +56,36 @@ const PQDigest: React.FunctionComponent = () => {
         return () => { if (handle?.abort != null) handle.abort(); }
     }, []);
 
+    React.useEffect(() => {
+        setGetBackendVersionStatus('loading');
+        const handle = getBackendVersion();
+
+        handle.done(data => {
+            setBackendVersion(data);
+            setGetBackendVersionStatus('idle');
+        });
+        handle.fail(() => setGetBackendVersionStatus('error'));
+
+        return () => {
+            if (handle.abort != undefined) handle.abort();
+        }
+    }, []);
+
+    const versionUI = React.useMemo(() => (
+        <div className="row m-0">
+            <div className="col-12 p-0">
+                <p className="text-center">
+                    {getBackendVersionStatus === 'error' ?
+                        'Version: n/a' :
+                        getBackendVersionStatus === 'loading' ? <ReactIcons.SpiningIcon /> : `Version: ${backendVersion}`}
+                </p>
+                <p className="text-center">
+                    UI Version: {LIB_VERSION}
+                </p>
+            </div>
+        </div>
+    ), [backendVersion, getBackendVersionStatus]);
+
     return (
         <Application
             HomePath={homePath}
@@ -63,9 +98,7 @@ const PQDigest: React.FunctionComponent = () => {
                         <img style={{ maxHeight: 150, maxWidth: "100%" }} src={logo} /> :
                         <></>
                     }
-                    <br />
-                    <span>Version {version}</span>
-                    <br/>
+                    {versionUI}
                     <span>&copy; 2026 - PQDigest</span>
                 </div>
             </>}
@@ -90,6 +123,17 @@ const PQDigest: React.FunctionComponent = () => {
                 <WaveformViewer />
             </Page>
         </Application>);
+}
+
+const getBackendVersion = () => {
+    return $.ajax({
+        type: 'GET',
+        url: `${homePath}api/System/Version`,
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'text',
+        cache: false,
+        async: true
+    });
 }
     /*
         {isAuthenticated?

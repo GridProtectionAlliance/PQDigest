@@ -173,13 +173,5 @@ namespace PQDigest
                 endpoints.MapControllers();
             });
         }
-
-        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, string json)
-        {
-            var identity = claimsPrincipal.Identity as ClaimsIdentity;
-            var graph = JObject.Parse(json);
-            string name = graph.Properties().Select(p => p.Name).FirstOrDefault(n => n.ToLower().Contains("tvaorgid")) ?? "";
-            identity.AddClaim(new Claim("org_id", Regex.Replace(graph[name]?.Value<string>() ?? "d9999", "[A-Za-z]", "0000")));
-        }
     }
 }

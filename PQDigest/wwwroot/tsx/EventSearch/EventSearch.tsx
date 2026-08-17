@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 import { OpenXDA } from '@gpa-gemstone/application-typings';
-import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
-import { DateRangePicker, MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
+import { ReadOnlyControllerFunctions_Gemstone, TimeFilter } from '@gpa-gemstone/common-pages';
+import { MultiCheckBoxSelect, ToggleSwitch } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 import moment from 'moment';
 import queryString from "querystring";
@@ -34,7 +34,7 @@ import EventSearchPreview from '../EventSearch/EventSearchPreview';
 const EventTypeController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.EventType>(`${homePath}api/OpenXDA/EventType`);
 const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
 
-const EventSearch = (props: {}) => {
+const EventSearch = () => {
     const qs = queryString.parse(location.search.substring(1));
 
     const [selectedWidget, setSelectedWidget] = React.useState<EventWidget.IWidgetView>({
@@ -93,92 +93,101 @@ const EventSearch = (props: {}) => {
     }, []);
 
     return (
-        <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="h-100 w-100 d-flex flex-column">
             <div className="row" style={{ margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
-                    <div className="card">
-                        <div className="card-body" style={{height: '145px'}}>
-                            <div className="row">
-                                <div className="col-2">
-                                    <MultiCheckBoxSelect Label="Meters" Options={meters.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                    <div className="row">
+                        <div className="col-3">
+                            <fieldset className="border" style={{ padding: '10px', height: '100%' }}>
+                                <legend className="w-auto" style={{ fontSize: 'large' }}>Meters:</legend>
+                                <MultiCheckBoxSelect
+                                    Label=""
+                                    Options={meters.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))}
+                                    OnChange={(_evt, options) => {
                                         let newMeters = _.cloneDeep(meters);
                                         $.each(options, (_, option) => {
                                             newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
                                         });
                                         setMeters(newMeters);
                                         setFilt(oldFilt => ({ ...oldFilt, MeterFilter: newMeters.filter(item => item.Selected) }));
-                                    }} />
-                                </div>
-                                <div className="col-2">
-                                    <MultiCheckBoxSelect Label="Type" Options={types.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                                    }}
+                                />
+                            </fieldset>
+                        </div>
+                        <div className="col-3">
+                            <fieldset className="border" style={{ padding: '10px', height: '100%' }}>
+                                <legend className="w-auto" style={{ fontSize: 'large' }}>Type:</legend>
+                                <MultiCheckBoxSelect
+                                    Label=""
+                                    Options={types.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))}
+                                    OnChange={(_evt, options) => {
                                         let newTypes = _.cloneDeep(types);
                                         $.each(options, (_, option) => {
                                             newTypes.find(type => type.ID == option.Value).Selected = !option.Selected
                                         });
                                         setTypes(newTypes)
                                         setFilt(oldFilt => ({ ...oldFilt, TypeFilter: newTypes.filter(item => item.Selected) }));
-                                    }} />
-                                </div>
-                                <div className="col-6">
-                                    <DateRangePicker<{StartTime: string, EndTime: string}>
-                                        FromField="StartTime"
-                                        ToField="EndTime"
-                                        Label="Date Range"
-                                        Type="date"
-                                        Valid={() => filt.TimeFilter.StartTime != null && filt.TimeFilter.EndTime != null &&
-                                            moment.utc(filt.TimeFilter.StartTime, OpenXDA.Consts.DateTimeFormat) <= moment.utc(filt.TimeFilter.EndTime, OpenXDA.Consts.DateTimeFormat)}
-                                        Feedback="Date range is required, and start may not be after end."
-                                        Record={filt.TimeFilter}
-                                        Format={OpenXDA.Consts.DateTimeFormat}
-                                        Setter={(newTimeFilt) => setFilt(oldFilt => ({ ...oldFilt, TimeFilter: newTimeFilt }))}
-                                    />
-                                </div>
-                                <div className="col-2">
-                                    <div className="row">
-                                        <button className={"btn btn-info"} onClick={() => {
-                                            if (selectedWidget.Type === "EventTable")
-                                                setSelectedWidget(widget => ({ ...widget, ID: 2, Type: "MagDurChart", Name: "MagDurChart" }));
-                                            else 
-                                                setSelectedWidget(widget => ({ ...widget, ID: 1, Type: "EventTable", Name: "EventTable" }));
-                                        }}>{`Show ${(selectedWidget.Type === "EventTable" ? "MagDur Chart" : "Event List")}`}</button>
-                                    </div>
-                                </div>
-                            </div>
+                                    }}
+                                />
+                            </fieldset>
+                        </div>
+                        <div className="col-6">
+                            <TimeFilter
+                                filter={{ start: filt.TimeFilter.StartTime, end: filt.TimeFilter.EndTime }}
+                                setFilter={(start, end) => setFilt(oldFilt => ({ ...oldFilt, TimeFilter: { StartTime: start, EndTime: end } }))}
+                                showQuickSelect={true}
+                                dateTimeSetting="startEnd"
+                                timeZone="UTC"
+                                format="date"
+                                showHelpMessage={false}
+                            />
                         </div>
                     </div>
                 </div>
             </div>
             <div className="row" style={{ flex: 1, margin: '5px 5px 5px 5px', overflow: 'hidden' }}>
-                <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
-                    <CollectionWidgetRouter
-                        Widget={selectedWidget}
-                        Callback={setSelectedEvent}
-                        EventID={selectedEvent}
-                        EventFilter={filt}
-                        HomePath={homePath}
-                        WidgetAuthorization={
-                            {
-                                Notes: {
-                                    Create: false,
-                                    Update: false,
-                                    Delete: false
-                                },
-                                EventInfo: {
-                                    Create: false,
-                                    Update: false,
-                                    Delete: false
-                                }
-                            }
-                        }
-                    />
-                </div>
-                <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
-                    <div className="card h-100" style={{overflowY: 'auto', overflowX: 'hidden'} }>
-                        {/*<div className="card-header">Event Preview</div>*/}
-                        <div className="card-body" style={{ padding: 0 }}>
-                            <EventSearchPreview ID={selectedEvent} Height={window.innerHeight - 226} Width={window.innerWidth / 2} />
+                <div className="col-6 h-100 d-flex flex-column" style={{ padding: '0px 2px 0px 0px' }}>
+                    <div className="row m-0 flex-shrink-0">
+                        <div className="col d-flex justify-content-end">
+                            <ToggleSwitch<{ UseMagDur: boolean }>
+                                Record={{ UseMagDur: selectedWidget.Type === "MagDurChart" }}
+                                Field="UseMagDur"
+                                Label={selectedWidget.Type === "MagDurChart" ? "List" : "Mag/Dur"}
+                                Setter={(record) => setSelectedWidget(widget => ({
+                                    ...widget,
+                                    ID: record.UseMagDur ? 2 : 1,
+                                    Type: record.UseMagDur ? "MagDurChart" : "EventTable",
+                                    Name: record.UseMagDur ? "MagDurChart" : "EventTable"
+                                }))}
+                            />
                         </div>
                     </div>
+                    <div style={{ flex: 1, minHeight: 0 }}>
+                        <CollectionWidgetRouter
+                            Widget={selectedWidget}
+                            Callback={setSelectedEvent}
+                            EventID={selectedEvent}
+                            EventFilter={filt}
+                            HomePath={homePath}
+                            WidgetAuthorization={
+                                {
+                                    Notes: {
+                                        Create: false,
+                                        Update: false,
+                                        Delete: false
+                                    },
+                                    EventInfo: {
+                                        Create: false,
+                                        Update: false,
+                                        Delete: false
+                                    }
+                                }
+                            }
+                        />
+                    </div>
+                </div>
+                <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px', overflowY: 'auto', overflowX: 'hidden' }}>
+                    <EventSearchPreview ID={selectedEvent} Height={window.innerHeight - 226} Width={window.innerWidth / 2} />
                 </div>
             </div>
         </div>

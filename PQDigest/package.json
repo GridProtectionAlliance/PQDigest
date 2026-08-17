@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > ./wwwroot/tsx/version.ts",
     "watch": "webpack --watch --color --mode=development",
-    "build": " npm prune && webpack --mode=development",
+    "builddev": "npm prune && npm i && webpack --mode=development",
+    "build": "npm run prebuild && npm prune && npm ci && webpack --mode=production",
     "update": "npx npm-check-updates",
     "lint": "npm ci"
   },
@@ -30,11 +32,12 @@
   },
   "dependencies": {
     "@gpa-gemstone/application-typings": "0.0.99",
+    "@gpa-gemstone/gpa-symbols": "0.0.65",
     "@gpa-gemstone/helper-functions": "0.0.61",
     "@gpa-gemstone/react-forms": "1.1.127",
-    "@gpa-gemstone/react-graph": "1.0.114",
+    "@gpa-gemstone/react-graph": "1.0.115",
     "@gpa-gemstone/react-table": "1.2.119",
-    "@gpa-gemstone/common-pages": "0.0.187",
+    "@gpa-gemstone/common-pages": "0.0.189",
     "@influxdata/influxdb-client": "^1.13.0",
     "@reduxjs/toolkit": "1.8.3",
     "@types/ace": "0.0.42",

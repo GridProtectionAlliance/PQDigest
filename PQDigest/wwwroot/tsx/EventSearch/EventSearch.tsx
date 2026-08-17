@@ -93,30 +93,36 @@ const EventSearch = () => {
     }, []);
 
     return (
-        <div style={{ height: "100%", width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="h-100 w-100 d-flex flex-column">
             <div className="row" style={{ margin: 5 }}>
                 <div className="col" style={{ padding: 0 }}>
                     <div className="row">
                         <div className="col-3">
-                            <MultiCheckBoxSelect Label="Meters" Options={meters.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
-                                let newMeters = _.cloneDeep(meters);
-                                $.each(options, (_, option) => {
-                                    newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
-                                });
-                                setMeters(newMeters);
-                                setFilt(oldFilt => ({ ...oldFilt, MeterFilter: newMeters.filter(item => item.Selected) }));
-                            }} />
+                            <fieldset className="border" style={{ padding: '10px', height: '100%' }}>
+                                <legend className="w-auto" style={{ fontSize: 'large' }}>Meters:</legend>
+                                <MultiCheckBoxSelect Label="" Options={meters.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                                    let newMeters = _.cloneDeep(meters);
+                                    $.each(options, (_, option) => {
+                                        newMeters.find(meter => meter.ID == option.Value).Selected = !option.Selected
+                                    });
+                                    setMeters(newMeters);
+                                    setFilt(oldFilt => ({ ...oldFilt, MeterFilter: newMeters.filter(item => item.Selected) }));
+                                }} />
+                            </fieldset>
                         </div>
                         <div className="col-3">
-                            <MultiCheckBoxSelect Label="Type" Options={types.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
-                                let newTypes = _.cloneDeep(types);
-                                $.each(options, (_, option) => {
-                                    newTypes.find(type => type.ID == option.Value).Selected = !option.Selected
-                                });
-                                setTypes(newTypes)
-                                setFilt(oldFilt => ({ ...oldFilt, TypeFilter: newTypes.filter(item => item.Selected) }));
-                            }}
-                            />
+                            <fieldset className="border" style={{ padding: '10px', height: '100%' }}>
+                                <legend className="w-auto" style={{ fontSize: 'large' }}>Type:</legend>
+                                <MultiCheckBoxSelect Label="" Options={types.map(t => ({ Label: t.Name, Value: t.ID, Selected: t.Selected }))} OnChange={(_evt, options) => {
+                                    let newTypes = _.cloneDeep(types);
+                                    $.each(options, (_, option) => {
+                                        newTypes.find(type => type.ID == option.Value).Selected = !option.Selected
+                                    });
+                                    setTypes(newTypes)
+                                    setFilt(oldFilt => ({ ...oldFilt, TypeFilter: newTypes.filter(item => item.Selected) }));
+                                }}
+                                />
+                            </fieldset>
                         </div>
                         <div className="col-6">
                             <TimeFilter

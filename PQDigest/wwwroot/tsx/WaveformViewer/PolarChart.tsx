@@ -22,7 +22,7 @@
 //******************************************************************************************************
 import React from 'react';
 import { bisect, max } from 'd3';
-import { IDataIV } from './WaveformViewer';
+import type { IDataIV } from './WaveformViewer';
 
 interface IProps {
     Width: number, 

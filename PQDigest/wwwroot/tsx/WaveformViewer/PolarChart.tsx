@@ -28,8 +28,8 @@ interface IProps {
     Width: number, 
     Height: number, 
     Time: number, 
-    VoltageData: IDataIV[], //this needs to be typed
-    CurrentData: IDataIV[] //this needs to be typed
+    VoltageData: IDataIV[], 
+    CurrentData: IDataIV[] 
 }
 
 const PolarChart = (props: IProps) => {

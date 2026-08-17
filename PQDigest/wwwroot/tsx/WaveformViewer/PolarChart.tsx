@@ -125,8 +125,7 @@ const PolarChart = (props: IProps) => {
             </>
         );
     }
-    catch(e) {
-        console.log('phasorChart error', e)
+    catch() {
         return null;
     }
 }

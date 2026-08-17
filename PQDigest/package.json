@@ -37,7 +37,7 @@
     "@gpa-gemstone/react-forms": "1.1.127",
     "@gpa-gemstone/react-graph": "1.0.115",
     "@gpa-gemstone/react-table": "1.2.119",
-    "@gpa-gemstone/common-pages": "0.0.188",
+    "@gpa-gemstone/common-pages": "0.0.189",
     "@influxdata/influxdb-client": "^1.13.0",
     "@reduxjs/toolkit": "1.8.3",
     "@types/ace": "0.0.42",

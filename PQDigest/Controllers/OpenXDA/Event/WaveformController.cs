@@ -70,14 +70,13 @@ namespace PQDigest.Controllers
 
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);
-                DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventID, meter); ;
+                DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventID, meter);
 
                 foreach (var series in dataGroup.DataSeries)
                 {
                     List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
                     if (series.SeriesInfo.Channel.MeasurementType.Name == type && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                         returnData.Add(( type == "Voltage" ? "V" : "I") + series.SeriesInfo.Channel.Phase.Name, data);
-
                 }
 
                 VICycleDataGroup viCycleDataGroup = dataGroupHelper.QueryVICycleDataGroup(eventID, meter); ;

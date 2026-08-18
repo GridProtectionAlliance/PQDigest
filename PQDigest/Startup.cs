@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Startup.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -74,54 +74,26 @@ namespace PQDigest
                 }
             );
 
-            //services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
-            //    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read" })
-            //    //.AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
-            //    .AddInMemoryTokenCaches();
+            dynamic authenticationSection = Settings.Instance["Authentication"];
 
-            /*services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme,(options) => {
-                    Configuration.Bind("OpenIDConnect", options);
+            if (authenticationSection.AuthenticationMode == "None")
+            {
+                services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
+                    .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, (options) => { options.DefaultUserId = "Test"; });
+            }
+            else
+            {
+                string[] graphScopes = (Configuration.GetValue<string>("GraphApi:Scopes") ?? "User.Read")
+                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
 
+                services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+                    .EnableTokenAcquisitionToCallDownstreamApi(graphScopes)
+                    .AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
+                    .AddInMemoryTokenCaches();
 
-                })
-               .AddMicrosoftIdentityWebApp(options =>
-               {
-                   Configuration.Bind("AzureAd", options);
-                   // do something
-                   options.Events.OnTokenValidated = async context =>
-                   {
-                       var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
-
-                       HttpClient client = new HttpClient();
-                       var token = await tokenAcquisition.GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(","), user: context.Principal);
-                       client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                       //var authProvider = new DelegateAuthenticationProvider(async (request) =>
-                       //{
-                       //    var token = await tokenAcquisition
-                       //        .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
-                       //    request.Headers.Authorization =
-                       //        new AuthenticationHeaderValue("Bearer", token);
-                       //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                       //});
-
-                       //var graphClient = new GraphServiceClient(authProvider);
-
-                       //var user = await graphClient.Me.Request().GetAsync();
-                       //var extensions = await graphClient.Me.Extensions.Request().GetAsync();
-                       string json = await client.GetStringAsync(Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me");
-                       AddUserGraphInfo(context.Principal, json);
-                   };
-               })
-              .EnableTokenAcquisitionToCallDownstreamApi(options =>
-                {
-                    Configuration.Bind("AzureAd", options);
-                }, Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
-             ) */
-            services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
-                .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, (options) => { options.DefaultUserId = "Test";  });
-
+                services.AddHttpContextAccessor();
+                services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, GraphClaimsTransformation>();
+            }
 
             services.AddMvc(options =>
             {

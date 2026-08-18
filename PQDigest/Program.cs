@@ -37,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
+using Microsoft.Extensions.Logging.EventLog;
 using PQDigest.Models;
 
 namespace PQDigest
@@ -99,7 +100,14 @@ namespace PQDigest
             {
                 DiagnosticsLogger.DefineSettings(settings);
                 AdoDataConnection.DefineSettings(settings);
+                AddSecuritySettings(settings);
             }
+        }
+
+        private static void AddSecuritySettings(Settings settings, string settingsCategory = "Authentication")
+        {
+            dynamic val = settings[settingsCategory];
+            val.AuthenticationMode = ("None", "Authentication mode for the application. Options: None, Azure");
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

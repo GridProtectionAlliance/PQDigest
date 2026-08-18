@@ -50,7 +50,7 @@ export const ErrorIcon = () => (
             <div style={{ width: '5em', margin: 'auto' }}>
                 <ReactIcons.CircledX Size={'5rem'} Color={'red'} />
             </div>
-            <p style={{ textAlign: 'center' }}>PQDigest encountered an error when loading the chart data.</p>
+            <p style={{ textAlign: 'center' }}>PQ Digest encountered an error when loading the chart data.</p>
         </div>
     </div>
 );

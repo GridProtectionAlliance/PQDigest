@@ -125,7 +125,7 @@ const PolarChart = (props: IProps) => {
             </>
         );
     }
-    catch() {
+    catch {
         return null;
     }
 }

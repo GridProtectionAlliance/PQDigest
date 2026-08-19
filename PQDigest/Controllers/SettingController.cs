@@ -61,6 +61,22 @@ namespace PQDigest.Controllers
             }
         }
 
+        [HttpGet, Route("CustomerInfo")]
+        public IActionResult GetCustomerInfo()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
+            {
+                Customer customer = HttpContext.User.GetCustomer(connection);
+                string customerKey = HttpContext.User.GetCustomer();
+                string webRoot = m_environment.WebRootPath;
+
+                if (customer is null)
+                    return BadRequest($"Unable to find company with CustomerKey: {customerKey}. Contact your System Adminstator to resolve this.");
+
+                return Ok(customer);
+            }
+        }
+
         private string ConvertImageToBase64(string filePath)
         {
             byte[] imageBytes = System.IO.File.ReadAllBytes(filePath);

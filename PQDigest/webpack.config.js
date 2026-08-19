@@ -57,6 +57,9 @@ module.exports = env => {
             new webpack.ProvidePlugin({
                 $: "jquery",
                 "window.jQuery": "jquery",
+            }),
+            new webpack.optimize.LimitChunkCountPlugin({
+                maxChunks: 1
             })
         ]
     }

@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
-import { Application as ApplicationTypes } from '@gpa-gemstone/application-typings';
+import { Application as ApplicationTypes, OpenXDA } from '@gpa-gemstone/application-typings';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { Application, Page } from '@gpa-gemstone/react-interactive';
+import { Alert, Application, Page } from '@gpa-gemstone/react-interactive';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import EventSearch from './EventSearch/EventSearch';
@@ -38,6 +38,8 @@ import { LIB_VERSION } from './version';
 
 const PQDigest: React.FunctionComponent = () => {
     const [logo, setLogo] = React.useState<string | null>(null);
+    const [customer, setCustomer] = React.useState<OpenXDA.Types.Customer | null>(null);
+    const [customerError, setCustomerError] = React.useState<string | null>(null);
     const [backendVersion, setBackendVersion] = React.useState<string>('0.0.0');
     const [getBackendVersionStatus, setGetBackendVersionStatus] = React.useState<ApplicationTypes.Types.Status>('uninitiated');
 
@@ -53,7 +55,29 @@ const PQDigest: React.FunctionComponent = () => {
 
         handle.done(l => setLogo("data:image/png;base64, " + l));
 
-        return () => { if (handle?.abort != null) handle.abort(); }
+        return () => {
+            if (handle?.abort != null)
+                handle.abort();
+        }
+    }, []);
+
+    React.useEffect(() => {
+        const handle = $.ajax({
+            type: 'GET',
+            url: `${homePath}api/Setting/CustomerInfo`,
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            cache: false,
+            async: true
+        });
+
+        handle.done(data => setCustomer(data));
+        handle.fail(response => setCustomerError(response.responseText));
+
+        return () => {
+            if (handle.abort != null)
+                handle.abort();
+        }
     }, []);
 
     React.useEffect(() => {
@@ -67,7 +91,8 @@ const PQDigest: React.FunctionComponent = () => {
         handle.fail(() => setGetBackendVersionStatus('error'));
 
         return () => {
-            if (handle.abort != undefined) handle.abort();
+            if (handle.abort != null)
+                handle.abort();
         }
     }, []);
 
@@ -86,22 +111,42 @@ const PQDigest: React.FunctionComponent = () => {
         </div>
     ), [backendVersion, getBackendVersionStatus]);
 
+    if (customerError != null)
+        return (
+            <Alert Class='alert-danger' Style={{
+                alignItems: 'center',
+                bottom: 0,
+                display: 'flex',
+                fontWeight: 'bold',
+                justifyContent: 'center',
+                left: 0,
+                margin: 0,
+                position: 'fixed',
+                right: 0,
+                textAlign: 'center',
+                top: 0
+            }}>
+                {customerError}
+            </Alert>
+        );
+
     return (
         <Application
             HomePath={homePath}
             DefaultPath={"Home"}
             Logo={`${homePath}Image/PQDigestLogo.png`}
             OnSignOut={() => { window.location.href = `${homePath}MicrosoftIdentity/Account/SignOut`; }}
-            SidebarUI={<>
+            SidebarUI={
                 <div style={{ width: '100%', textAlign: 'center' }}>
                     {logo != null ?
                         <img style={{ maxHeight: 150, maxWidth: "100%" }} src={logo} /> :
                         <></>
                     }
+                    {customer != null ? <p className="text-center">{customer.Name}</p> : <></>}
                     {versionUI}
                     <span>&copy; 2026 - PQ Digest</span>
                 </div>
-            </>}
+            }
             AllowCollapsed={true}
         >
             <Page Name={'Home'} Label={'Home'} Icon={<img style={{ maxHeight: 36 }} src={`${homePath}Image/home.png`} />}>
@@ -122,7 +167,8 @@ const PQDigest: React.FunctionComponent = () => {
             <Page Name={'WaveformViewer'}>
                 <WaveformViewer />
             </Page>
-        </Application>);
+        </Application>
+    );
 }
 
 const getBackendVersion = () => {
@@ -135,16 +181,16 @@ const getBackendVersion = () => {
         async: true
     });
 }
-    /*
-        {isAuthenticated?
-            <li className="nav-item">
-                <a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignOut`} onClick={() => { isAuthenticated = false }}>Sign out</a>
-            </li>
-            :
-            <ul className="nav-item">
-                <li><a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignIn`}>Sign in</a></li>
-            </ul>
-        }
-    */
+/*
+    {isAuthenticated?
+        <li className="nav-item">
+            <a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignOut`} onClick={() => { isAuthenticated = false }}>Sign out</a>
+        </li>
+        :
+        <ul className="nav-item">
+            <li><a style={{ marginTop: 4 }} className="nav-link" href={`${homePath}MicrosoftIdentity/Account/SignIn`}>Sign in</a></li>
+        </ul>
+    }
+*/
 
 ReactDOM.render(<Provider store={store}><PQDigest /></Provider>, document.getElementById('window'));

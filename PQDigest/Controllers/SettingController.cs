@@ -71,7 +71,7 @@ namespace PQDigest.Controllers
                 string webRoot = m_environment.WebRootPath;
 
                 if (customer is null)
-                    return BadRequest($"Unable to find company with CustomerKey: {customerKey}. Contact your System Adminstator to resolve this.");
+                    return BadRequest($"Unable to find company with CustomerKey: {customerKey}. Contact your System Administrator to resolve this.");
 
                 return Ok(customer);
             }

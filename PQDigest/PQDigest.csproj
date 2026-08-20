@@ -11,7 +11,9 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <DefineConstants>$(DefineConstants);IS_GEMSTONE</DefineConstants>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="package.json" />

@@ -51,7 +51,7 @@ namespace PQDigest.Security
         /// </summary>
         /// <param name="connection">AdoDataConnection to look in.</param>
         /// <returns>A <see cref="Customer"/> object.</returns>
-        public static Customer GetCustomer(this ClaimsPrincipal principal, AdoDataConnection connection)
+        public static Customer? GetCustomer(this ClaimsPrincipal principal, AdoDataConnection connection)
         {
             string key = principal.GetCustomer();
             return new TableOperations<Customer>(connection).QueryRecordWhere("CustomerKey = {0}", key);

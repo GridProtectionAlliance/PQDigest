@@ -36,10 +36,15 @@ import { Provider } from 'react-redux';
 import store from './Store';
 import { LIB_VERSION } from './version';
 
+interface CustomerInfoResponse {
+    Customer: OpenXDA.Types.Customer;
+    Error: string[];
+}
+
 const PQDigest: React.FunctionComponent = () => {
     const [logo, setLogo] = React.useState<string | null>(null);
     const [customer, setCustomer] = React.useState<OpenXDA.Types.Customer | null>(null);
-    const [customerError, setCustomerError] = React.useState<string | null>(null);
+    const [customerErrors, setCustomerErrors] = React.useState<string[]>([]);
     const [backendVersion, setBackendVersion] = React.useState<string>('0.0.0');
     const [getBackendVersionStatus, setGetBackendVersionStatus] = React.useState<ApplicationTypes.Types.Status>('uninitiated');
 
@@ -71,8 +76,10 @@ const PQDigest: React.FunctionComponent = () => {
             async: true
         });
 
-        handle.done(data => setCustomer(data));
-        handle.fail(response => setCustomerError(response.responseText));
+        handle.done((data: CustomerInfoResponse) => {
+            setCustomer(data.Customer);
+            setCustomerErrors(data.Error);
+        });
 
         return () => {
             if (handle.abort != null)
@@ -111,7 +118,7 @@ const PQDigest: React.FunctionComponent = () => {
         </div>
     ), [backendVersion, getBackendVersionStatus]);
 
-    if (customerError != null)
+    if (customerErrors.length > 0)
         return (
             <Alert Class='alert-danger' Style={{
                 alignItems: 'center',
@@ -126,7 +133,7 @@ const PQDigest: React.FunctionComponent = () => {
                 textAlign: 'center',
                 top: 0
             }}>
-                {customerError}
+                {customerErrors.join(' ')}
             </Alert>
         );
 

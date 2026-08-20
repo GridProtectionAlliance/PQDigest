@@ -47,7 +47,7 @@ namespace PQDigest.Controllers
 
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-                Customer customer = HttpContext.User.GetCustomer(connection);
+                Customer? customer = HttpContext.User.GetCustomer(connection);
                 string webRoot = m_environment.WebRootPath;
 
                 if (customer is null)
@@ -66,14 +66,21 @@ namespace PQDigest.Controllers
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
-                Customer customer = HttpContext.User.GetCustomer(connection);
+                Customer? customer = HttpContext.User.GetCustomer(connection);
                 string customerKey = HttpContext.User.GetCustomer();
-                string webRoot = m_environment.WebRootPath;
+                string[] errors = Array.Empty<string>();
 
                 if (customer is null)
-                    return BadRequest($"Unable to find company with CustomerKey: {customerKey}. Contact your System Administrator to resolve this.");
+                {
+                    customer = new Customer
+                    {
+                        CustomerKey = customerKey
+                    };
 
-                return Ok(customer);
+                    errors = new[] { $"Unable to find company with CustomerKey: {customerKey}. Contact your System Administrator to resolve this." };
+                }
+
+                return Ok(new { Customer = customer, Error = errors });
             }
         }
 

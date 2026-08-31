@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using Gemstone.Configuration;
 using Gemstone.Data;
 using Gemstone.Web;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -41,6 +42,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using openXDA.APIAuthentication;
@@ -71,38 +73,76 @@ namespace PQDigest
                 {
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-                }
-            );
+                });
+
+            var mvcBuilder = services
+                .AddMvc(options =>
+                {
+                    var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+                    options.Filters.Add(new AuthorizeFilter(policy));
+                });
 
             dynamic authenticationSection = Settings.Instance["Authentication"];
 
             if (authenticationSection.AuthenticationMode == "None")
             {
-                services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
-                    .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, (options) => { options.DefaultUserId = "Test"; });
+                services
+                    .AddAuthentication(TestAuthHandler.AuthenticationScheme)
+                    .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(
+                        TestAuthHandler.AuthenticationScheme,
+                        (options) =>
+                        {
+                            options.DefaultUserId = "Test";
+                        }
+                    );
+            }
+            else if (authenticationSection.AuthenticationMode == "Oidc")
+            {
+                services
+                    .AddAuthentication(options =>
+                    {
+                        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                    })
+                    .AddCookie()
+                    .AddOpenIdConnect(options =>
+                    {
+                        options.Authority = "<authority>";
+                        options.ClientId = "<client_id>";
+                        options.ClientSecret = "<client_secret>";
+
+                        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        options.ResponseType = OpenIdConnectResponseType.Code;
+                        options.SaveTokens = true;
+                        options.GetClaimsFromUserInfoEndpoint = false;
+                    });
             }
             else
             {
-                string[] graphScopes = (Configuration.GetValue<string>("GraphApi:Scopes") ?? "User.Read")
-                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
+                string[] graphScopes = (
+                    Configuration.GetValue<string>("GraphApi:Scopes") ?? "User.Read"
+                ).Split(
+                    ',',
+                    System.StringSplitOptions.RemoveEmptyEntries
+                        | System.StringSplitOptions.TrimEntries
+                );
 
-                services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+                services
+                    .AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
                     .EnableTokenAcquisitionToCallDownstreamApi(graphScopes)
                     .AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
                     .AddInMemoryTokenCaches();
 
                 services.AddHttpContextAccessor();
-                services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, GraphClaimsTransformation>();
+                services.AddTransient<
+                    Microsoft.AspNetCore.Authentication.IClaimsTransformation,
+                    GraphClaimsTransformation
+                >();
+
+                mvcBuilder.AddMicrosoftIdentityUI();
             }
-
-            services.AddMvc(options =>
-            {
-                var policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-                options.Filters.Add(new AuthorizeFilter(policy));
-            }).AddMicrosoftIdentityUI();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

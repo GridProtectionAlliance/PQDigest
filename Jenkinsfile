@@ -203,17 +203,19 @@ pipeline {
             }
             steps {
                 script {
-                    env.pqDigestDockerTag = env.CHANGE_BRANCH == "${env.devBranch}" ? "${env.pqDigestVersion}a" : env.pqDigestVersion
-                    println("Building PQDigest Docker image tag: pqdigest:${env.pqDigestDockerTag}")
+                    //env.pqDigestDockerTag = env.CHANGE_BRANCH == "${env.devBranch}" ? "${env.pqDigestVersion}a" : env.pqDigestVersion
+                    //println("Building PQDigest Docker image tag: pqdigest:${env.pqDigestDockerTag}")
+                    println("Skipping docker stage intentionally")
                 }
 
-                powershell """
+                /*powershell """
                     dotnet publish '.\\PQDigest\\PQDigest.csproj' `
                         --configuration Release `
                         '-p:PublishProfile=Docker Release Profile PQDigest'
                 """
 
                 powershell "docker build --build-arg CONFIGURATION=Release -f .\\PQDigest.dockerfile -t pqdigest:${env.pqDigestDockerTag} ."
+                */
             }
         }
 

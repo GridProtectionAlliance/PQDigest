@@ -22,10 +22,10 @@
 //******************************************************************************************************
 
 import React from 'react';
-import { OpenXDA } from '../global';
 import MagDurChart from '../MagDurChart';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 
-const EventSearchMagDur = (props: {Points: OpenXDA.EventSearch[]}) => {
+const EventSearchMagDur = (props: {Points: OpenXDA.Types.EventSearch[]}) => {
     return <MagDurChart Height={innerHeight / 2} Width={500} Points={props.Points} OnSelect={(evt, point) => { }}/>
 }
 

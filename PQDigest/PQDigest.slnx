@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Data/">
+    <File Path="Data/PQDigest.sql" />
+  </Folder>
+  <Folder Name="/Libraries/">
+    <Project Path="../Libraries/FaultAlgorithms/FaultAlgorithms.csproj" />
+    <Project Path="../Libraries/FaultData/FaultData.csproj" />
+    <Project Path="../Libraries/openXDA.Model/openXDA.Model.csproj" />
+  </Folder>
+  <Project Path="PQDigest.csproj" />
+</Solution>

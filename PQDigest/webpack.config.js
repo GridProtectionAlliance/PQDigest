@@ -6,10 +6,10 @@ module.exports = env => {
     if (process.env.NODE_ENV == undefined) process.env.NODE_ENV = 'development';
     return {
         mode: process.env.NODE_ENV,
-        context: path.resolve(__dirname, 'wwwroot'),
+        context: path.resolve(__dirname),
         cache: true,
         entry: {
-            PQDigest: "./tsx/PQDigest.tsx"
+            PQDigest: "./wwwroot/tsx/PQDigest.tsx"
         },
         output: {
             path: path.resolve(__dirname, 'wwwroot', 'js'),
@@ -23,6 +23,7 @@ module.exports = env => {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".css"],
             alias: {
+                leaflet_css: __dirname + "/node_modules/leaflet/dist/leaflet.css"
             }
         },
         module: {
@@ -30,21 +31,15 @@ module.exports = env => {
                 // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
                 {
                     test: /\.tsx?$/,
-                    use: [{ loader: 'ts-loader' }]
+                    include: [
+                        path.resolve(__dirname, "wwwroot"),
+                        path.resolve(__dirname, "EventWidgets")
+                    ],
+                    use: [{ loader: "ts-loader" }]
                 },
                 {
                     test: /\.css$/,
                     use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
-                },
-                {
-                    test: /\.js$/,
-                    enforce: "pre",
-                    use: [{ loader: 'source-map-loader' }]
-                },
-                {
-                    test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                    loader: 'url-loader',
-                    options: { limit: 100000 }
                 },
                 {
                     //loader is the default asset loader in webpack 5
@@ -62,6 +57,9 @@ module.exports = env => {
             new webpack.ProvidePlugin({
                 $: "jquery",
                 "window.jQuery": "jquery",
+            }),
+            new webpack.optimize.LimitChunkCountPlugin({
+                maxChunks: 1
             })
         ]
     }

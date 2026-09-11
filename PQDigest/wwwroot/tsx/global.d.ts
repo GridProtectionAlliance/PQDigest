@@ -50,17 +50,21 @@ export namespace PQDigest {
     type Analtyic = 'Power' | 'Frequency' | 'RapidVoltageChange' | 'SpecifiedHarmonic' | 'SymmetricalComponents' | 'THD' | 'Unbalance' 
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
     interface D3Extent { X: { Min: number, Max: number }, Y: { Min: number, Max: number } }
+
+    interface IWidget {
+        ID: number,
+        Name: string,
+        Type: string,
+        Setting: string
+    }
+
+    interface IHomeScreenWidget extends IWidget {
+        TimeFrame: number
+    }
 }
 
 export namespace OpenXDA {
-
-    type EventTypeName = 'Sag' | 'Swell' | 'Transient' | 'Fault' | 'Interruption'
-    interface EventType { ID: number, Name: EventTypeName, Description: string, Selected?: boolean }
     interface Meter { ID: number, AssetKey: string, Alias: string, Make: string, Model: string, Name: string, ShortName: string, TimeZone: string, LocationID: number, Description: string, Selected?: boolean }
-    interface Location { ID: number, LocationKey: string, Name: string, Alias: string, ShortName: string, Latitude: number, Longitude: number, Description: string }
-
-    interface EventSearch { ID: number, StartTime: string, Phase: string, MeterID: number, MeterName: string, EventType: string, PerUnitMagnitude: number, DurationSeconds: number }
-
     interface Disturbance { ID: number, EventID: number, PhaseID: number, Magnitude: number, PerUnitMagnitude: number, DurationSeconds: number }
 
     namespace Event {

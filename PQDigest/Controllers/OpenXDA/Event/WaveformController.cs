@@ -36,6 +36,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
 
 namespace PQDigest.Controllers
 {
@@ -52,28 +53,30 @@ namespace PQDigest.Controllers
 			m_memoryCache = memoryCache;
 		}
 
-		[HttpGet, Route("{eventID:int}/{type}/{pixels:int}")]
+		[HttpGet, Route("{eventID:int}/{type}")]
         public ActionResult Get(int eventID, string type, int pixels)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
                 DateTime epoch = new DateTime(1970, 1, 1);
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
                 if (evt == null) return BadRequest("Must provide a valid EventID");
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
+                meter.ConnectionFactory = () => new AdoDataConnection(Settings.Default);
 
                 Dictionary<string, IEnumerable<double[]>> returnData = new Dictionary<string, IEnumerable<double[]>>();
                 DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);
-                DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventID, meter); ;
+                DataGroup dataGroup = dataGroupHelper.QueryDataGroup(eventID, meter);
 
                 foreach (var series in dataGroup.DataSeries)
                 {
                     List<double[]> data = series.DataPoints.Select(dp => new double[2] { (dp.Time - epoch).TotalMilliseconds, dp.Value }).ToList();
                     if (series.SeriesInfo.Channel.MeasurementType.Name == type && series.SeriesInfo.Channel.MeasurementCharacteristic.Name == "Instantaneous")
                         returnData.Add(( type == "Voltage" ? "V" : "I") + series.SeriesInfo.Channel.Phase.Name, data);
-
                 }
 
                 VICycleDataGroup viCycleDataGroup = dataGroupHelper.QueryVICycleDataGroup(eventID, meter); ;

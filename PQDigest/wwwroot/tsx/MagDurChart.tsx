@@ -25,7 +25,7 @@ import React from 'react';
 import { axisBottom, scaleLinear, scaleLog, format as d3Format, axisLeft, line, zoom as d3Zoom, D3ZoomEvent } from 'd3';
 import { select, selectAll } from 'd3-selection';
 import _ from 'lodash';
-import { OpenXDA } from './global';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 interface iCurve {
     ID: number,
@@ -42,7 +42,7 @@ interface iCurve {
 }
 
 
-const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.EventSearch[], OnSelect: (evt: any, point: OpenXDA.EventSearch) => void }) => {
+const MagDurChart = (props: { Width: number, Height: number, Points: OpenXDA.Types.EventSearch[], OnSelect: (evt: any, point: OpenXDA.Types.EventSearch) => void }) => {
 
     const margin = { top: 15, right: 20, bottom: 60, left: 40 };
     const svgWidth = props.Width - margin.left - margin.right;

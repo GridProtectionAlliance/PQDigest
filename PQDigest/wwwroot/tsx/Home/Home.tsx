@@ -22,121 +22,79 @@
 //******************************************************************************************************
 
 import React from 'react';
-import EventCountsByMonth from '../Home/EventCountsByMonth';
-import EventCountTable from '../Home/EventCountTable';
-import MagDurChart from '../Home/MagDurChart';
 import { PQDigest } from '../global';
 import moment from 'moment';
+import CollectionWidgetRouter from '../../../EventWidgets/TSX/CollectionWidgetWrapper';
+import { OpenXDA, Application } from '@gpa-gemstone/application-typings';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { LayoutGrid, Alert, LoadingIcon } from '@gpa-gemstone/react-interactive';
+
+
+const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IHomeScreenWidget>(`${homePath}api/PQDigest/HomePageWidget`);
 
 const Home = () => {
-    const [mailTo, setMailTo] = React.useState<string>('');
-    const [numberMeters, setNumberMeters] = React.useState<number>(0);
-    const [eventCount, setEventCount] = React.useState<number>(0);
+    const [widgets, setWidgets] = React.useState<PQDigest.IHomeScreenWidget[]>([]);
+    const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
 
     React.useEffect(() => {
-        let handle = GetMailto();
-        handle.done((data: PQDigest.Setting) => {
-            setMailTo(`mailto:${data.Value}`);
-        });
+        setStatus("loading");
 
-        let handle2 = GetMeterCount();
-        handle2.done((data: number) => {
-            setNumberMeters(data);
-        });
+        const handle = WidgetController.GetAll("ID", true);
+        handle.then(obj => {
+            setWidgets(obj);
+            setStatus("idle");
+        }, () => setStatus("error"));
 
-        let handle3 = GetEventCount();
-        handle3.done((data: number) => {
-            setEventCount(data);
-        });
-
-        return function () {
-            if (handle.abort != undefined) handle.abort();
-            if (handle2.abort != undefined) handle2.abort();
-            if (handle3.abort != undefined) handle3.abort();
-        }
+        return () => { if (handle?.abort == null) handle.abort(); }
     }, []);
 
+    const collectionRouters = React.useMemo(() =>
+        widgets.map((w, i) => <CollectionWidgetRouter
+            Widget={w}
+            EventFilter={{
+                TimeFilter: {
+                    StartTime: moment.utc().subtract(w.TimeFrame, 'days').format(OpenXDA.Consts.DateTimeFormat),
+                    EndTime: moment.utc().format(OpenXDA.Consts.DateTimeFormat),
+                }
+            }}
+            HomePath={homePath}
+            key={w.ID}
+            WidgetAuthorization={
+                {
+                    Notes: {
+                        Create: false,
+                        Update: false,
+                        Delete: false
+                    },
+                    EventInfo: {
+                        Create: false,
+                        Update: false,
+                        Delete: false
+                    }
+                }
+            }
+        />
+        )
+        , [widgets]);
+
     return (
-        <div className="row h-100" style={{ margin: '5px 5px 5px 5px '}}>
-            <div className="col-6 h-100" style={{ padding: '0px 2px 0px 0px' }}>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Welcome, { userName}
-                    </div>
-                    <div className="card-body" style={{ height: (window.innerHeight - 41) / 2 - 52 }}>
-                        <br />
-                        <p>So far this month there have been {eventCount} events recorded from your {numberMeters} power quality meters.</p>
-                        <br />
-                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(365, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=100`}>List of last 100 events from all meters over last 365 days</a></p>
-                        <p><a href={`${homePath}EventSearch?startDate=${moment().subtract(30, 'days').format("YYYY-MM-DD")}&endDate=${moment().format("YYYY-MM-DD")}&returnLimit=1000`}>List of all meter activity over last 30 days</a></p>
-                        <p>Any questions? Please contact: <a href={mailTo}>The PQ Team</a></p>
-                    </div>
-                </div>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Magnitude Duration - Last 30 Days
-                    </div>
-                    <div className="card-body" style={{ padding: 0 }}>
-                        <MagDurChart Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 70} />
-                    </div>
-                </div>
-
-            </div>
-            <div className="col-6 h-100" style={{ padding: '0px 0px 0px 3px' }}>
-                <div className="card h-50">
-                    <div className="card-header">
-                        Historical Event Counts 
-                  </div>
-                    <div className="card-body" style={{ padding: 0 }}>
-                        <EventCountsByMonth Width={(window.innerWidth - 195) / 2 - 20} Height={(window.innerHeight - 41) / 2 - 53}  />
-                    </div>
-                </div>
-
-                <div className="card h-50">
-                    <div className="card-header">
-                        Meter Activity - Last 30 Days
-                  </div>
-                    <div className="card-body" style={{ padding: 0, flexDirection: 'column', display: 'flex', overflowY: 'hidden'}}>
-                        <EventCountTable />
-                    </div>
-                </div>
-
+        <div className="row h-100" style={{ overflow: "hidden" }}>
+            <div className="col-12 p-0 h-100">
+                <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
+                {status === 'error' ?
+                    <div className="row" style={{ padding: "5px 0 0 0" }}>
+                        <Alert Class='alert-danger'>Error retrieving widget information.</Alert>
+                    </div> :
+                    <></>
+                }
+                {status === 'idle' ?
+                    <LayoutGrid RowsPerPage={2} ColMax={2}>
+                        {collectionRouters}
+                    </LayoutGrid>
+                    : null}
             </div>
         </div>
     )
-}
-
-function GetMailto(): JQuery.jqXHR<PQDigest.Setting> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/Setting/Email.Mailto`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
-}
-
-function GetMeterCount(): JQuery.jqXHR<number> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/OpenXDA/Meter/Count`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
-}
-
-function GetEventCount(): JQuery.jqXHR<number> {
-    return $.ajax({
-        type: "GET",
-        url: `${homePath}api/OpenXDA/Event/Count`,
-        contentType: "application/json; charset=utf-8",
-        dataType: 'json',
-        cache: true,
-        async: true
-    });
 }
 
 export default Home;

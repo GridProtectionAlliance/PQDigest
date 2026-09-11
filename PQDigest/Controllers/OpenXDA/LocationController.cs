@@ -22,62 +22,12 @@
 //******************************************************************************************************
 
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Gemstone.Configuration;
-using Gemstone.Data;
-using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Http;
+using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
-using Newtonsoft.Json;
 using PQDigest.Models;
 
 namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/[controller]")]
-    [ApiController]
-    public class LocationController : ControllerBase
-    {
-        private readonly IConfiguration m_configuration;
-        private readonly ILogger<LocationController> m_logger;
-        public LocationController(IConfiguration configuration, ILogger<LocationController> logger)
-        {
-            m_configuration = configuration;
-            m_logger = logger;
-        }
-
-        public IActionResult Get() {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-                {
-                    string orgId = (User.Identity as ClaimsIdentity).Claims.FirstOrDefault(c => c.Type == "org_id")?.Value;
-                    DataTable meters = connection.RetrieveData(@"SELECT MeterID FROM CompanyMeter WHERE CompanyID = (SELECT ID FROM Company WHERE CompanyID = {0})", orgId);
-                    if (meters.Rows.Count == 0) return Ok(new DataTable());
-
-                    return Ok(connection.RetrieveData(@"
-                        SELECT 
-                            * 
-                        FROM 
-                            Location 
-                        WHERE 
-                            ID IN  (SELECT LocationID FROM Meter WHERE ID IN (" + string.Join(",", meters.Select().Select(row => row["MeterID"])) + "))").Select().OrderBy(x=> x["Name"]).CopyToDataTable());
-                }
-
-            }
-            catch (Exception ex) {
-                
-                m_logger.LogError(ex.Message);
-                return StatusCode(500, ex);
-            }
-        }
-    }
+    [Route("api/OpenXDA/Location")]
+    public class LocationController : ReadOnlyModelController<LocationView> { }
 }

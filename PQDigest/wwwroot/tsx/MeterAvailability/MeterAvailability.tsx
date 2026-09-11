@@ -21,47 +21,29 @@
 //
 //******************************************************************************************************
 
-import React from 'react';
-import { InfluxDB } from '@influxdata/influxdb-client';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
-import { Table, Column } from '@gpa-gemstone/react-table';
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { Column, Table } from '@gpa-gemstone/react-table';
+import { InfluxDB } from '@influxdata/influxdb-client';
+import _ from 'lodash';
 import moment from 'moment';
 import 'moment-timezone';
-import _ from 'lodash';
+import React from 'react';
 
 interface Channel extends OpenXDA.Types.Channel { Tag: string, Data?: [], MeterID: number }
 interface Meter extends OpenXDA.Types.Meter { FirstTime: string, LastTime: string }
+
+const MeterController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Meter>(`${homePath}api/OpenXDA/Meter`);
+const ChannelController = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.Channel>(`${homePath}api/OpenXDA/TrendChannel`);
 
 const MeterAvailability = (props: {}) => {
     const [sortField, setSortField] = React.useState<keyof Meter>('Name');
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [data, setData] = React.useState<Meter[]>([]);
 
-    function GetMeters(): JQuery.jqXHR<Meter[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
-    function GetChannels(): JQuery.jqXHR<Channel[]> {
-        return $.ajax({
-            type: "GET",
-            url: `${homePath}api/OpenXDA/Meter/Channels`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
-
     async function QueryInflux() {
-        let meters = await GetMeters();
-        let channels = await GetChannels();
+        const meters = await MeterController.GetAll("Name", true) as Meter[];
+        const channels = await ChannelController.GetAll("Name", true) as Channel[];
 
         const client = new InfluxDB({ url: host, token: token });
         const queryApi = client.getQueryApi(org);

@@ -22,19 +22,88 @@
 //******************************************************************************************************
 
 import React from 'react';
-import EventSearchOpenSEE from './OpenSEE/EventSearchOpenSEE';
-import EventSearchTrenDAP from './TrenDAP/EventSearchTrenDAP';
-import EventSearchPQI from './PQI/EventSearchPQI';
-import { OpenXDA } from '../global';
+import WidgetRouter from '../../../EventWidgets/TSX/WidgetWrapper';
+import { Alert, LoadingIcon } from '@gpa-gemstone/react-interactive'
+import { ReadOnlyControllerFunctions_Gemstone } from '@gpa-gemstone/common-pages';
+import { PQDigest } from '../global';
+import { Application, OpenXDA } from '@gpa-gemstone/application-typings';
 
-const EventSearchPreview = (props: { Event: OpenXDA.EventSearch, Width: number, Height: number }) => {
-    if (props.Event == undefined) return <span>No Event Selected ... </span>;
+const WidgetController = new ReadOnlyControllerFunctions_Gemstone<PQDigest.IWidget>(`${homePath}api/PQDigest/EventWidgets`);
+
+const EventSearchPreview = (props: { ID: number, Width: number, Height: number }) => {
+
+    const [widgets, setWidgets] = React.useState<PQDigest.IWidget[]>([]);
+    const [status, setStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    const [eventTypes, setEventTypes] = React.useState<OpenXDA.Types.EventType[]>([]);
+    const [eventTypesStatus, setEventTypesStatus] = React.useState<Application.Types.Status>('uninitiated');
+
+    React.useEffect(() => {
+        setEventTypesStatus('loading');
+        const handle = new ReadOnlyControllerFunctions_Gemstone<OpenXDA.Types.EventType>(`${homePath}api/OpenXDA/EventTypes`).GetAll('Name', true);
+        handle.done((d) => {
+            setEventTypes(d);
+            setEventTypesStatus('idle');
+        });
+        handle.fail(() => setEventTypesStatus('error'));
+
+        return () => { if (handle?.abort != null) handle.abort(); }
+    }, [])
+
+    React.useEffect(() => {
+        setStatus("loading");
+
+        const handle = WidgetController.GetAll("ID", true);
+        handle.then(obj => {
+            setWidgets(obj);
+            setStatus("idle");
+        }, () => setStatus("error"));
+
+        return () => { if (handle?.abort == null) handle.abort(); }
+    }, []);
+
+    if (props.ID < 0)
+        return <Alert Class='alert-info'
+            Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
+            ShowX={false}>
+            No Event Selected. Please select an event on the left.
+        </Alert>
+
+    if (status === 'error')
+        return <Alert Class='alert-danger'
+            Style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, fontSize: '1.5em' }}
+            ShowX={false}>
+            Error retrieving widget information.
+        </Alert>
 
     return (
         <>
-            <EventSearchOpenSEE Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />
-            <EventSearchTrenDAP Event={props.Event} Width={props.Width} Height={props.Height / 3 - 1} />            
-            <EventSearchPQI EventID={props.Event.ID} Width={props.Width} Height={props.Height/3 - 1} />
+            <LoadingIcon Show={status === 'loading' || status === 'uninitiated'} Size={150} />
+            {widgets.map(w =>
+                <WidgetRouter
+                    Widget={w}
+                    EventID={props.ID}
+                    Height={props.Height / 3 - 1}
+                    DisturbanceID={0}
+                    FaultID={0}
+                    HomePath={homePath}
+                    WidgetAuthorization={
+                        {
+                            Notes: {
+                                Create: false,
+                                Update: false,
+                                Delete: false
+                            },
+                            EventInfo: {
+                                Create: false,
+                                Update: false,
+                                Delete: false
+                            }
+                        }
+                    }
+                    EventTypes={eventTypes}
+                />
+            )}
         </>
     );
 }

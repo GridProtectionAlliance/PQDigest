@@ -23,10 +23,7 @@
 //       Updated to fit in new Asset based model structure.
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using Gemstone.ComponentModel.DataAnnotations;
 using Gemstone.Data;
 using Gemstone.Data.Model;

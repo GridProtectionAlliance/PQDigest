@@ -9,49 +9,89 @@
     <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzers>false</RunAnalyzers>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <AssemblyTitle>PQDigest</AssemblyTitle>
+    <Description></Description>
+    <Company>GridProtectionAlliance</Company>
+    <Product>PQDigest</Product>
+    <Copyright>Copyright © 2026</Copyright>
+    <Configurations>Debug;Development;Release</Configurations>
     <DefineConstants>$(DefineConstants);IS_GEMSTONE</DefineConstants>
+    <VersionFile>$(MSBuildProjectDirectory)\..\Scripts\PQDigest.version</VersionFile>
+    <Version>$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-
   <ItemGroup>
-    <None Include="package.json" />
+    <None Include="package.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <Content Update="wwwroot\js\PQDigest.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <TypeScriptCompile Include="wwwroot\tsx\**">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </TypeScriptCompile>
     <None Include="tsconfig.json" />
-    <Content Remove="Data/PQDigest.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="EventWidgets\Configuration\**" />
     <Compile Remove="EventWidgets\Controller\**" />
+    <Content Remove="EventWidgets\Configuration\**" />
     <Content Remove="EventWidgets\Controller\**" />
     <Content Remove="wwwroot\tsx\**" />
+    <EmbeddedResource Remove="EventWidgets\Configuration\**" />
     <EmbeddedResource Remove="EventWidgets\Controller\**" />
+    <None Remove="EventWidgets\Configuration\**" />
     <None Remove="EventWidgets\Controller\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.180" />
-    <PackageReference Include="Gemstone.Data" Version="1.0.180" />
-    <PackageReference Include="Gemstone.Numeric" Version="1.0.180" />
-    <PackageReference Include="Gemstone.PQDIF" Version="1.0.180" />
-    <PackageReference Include="Gemstone.Web" Version="1.0.180" />
+    <!-- Development: build against local Gemstone source; otherwise: NuGet packages -->
+    <ProjectReference Include="..\..\Gemstone\common\src\Gemstone\Gemstone.Common.csproj" Condition="'$(Configuration)'=='Development'">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <PackageReference Include="Gemstone.Common" Version="$(GemstoneVersion)" Condition="'$(Configuration)'!='Development'" />
+    <ProjectReference Include="..\..\Gemstone\data\src\Gemstone.Data\Gemstone.Data.csproj" Condition="'$(Configuration)'=='Development'">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <PackageReference Include="Gemstone.Data" Version="$(GemstoneVersion)" Condition="'$(Configuration)'!='Development'" />
+    <ProjectReference Include="..\..\Gemstone\numeric\src\Gemstone.Numeric\Gemstone.Numeric.csproj" Condition="'$(Configuration)'=='Development'">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <PackageReference Include="Gemstone.Numeric" Version="$(GemstoneVersion)" Condition="'$(Configuration)'!='Development'" />
+    <ProjectReference Include="..\..\Gemstone\pqdif\src\Gemstone.PQDIF\Gemstone.PQDIF.csproj" Condition="'$(Configuration)'=='Development'">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <PackageReference Include="Gemstone.PQDIF" Version="$(GemstoneVersion)" Condition="'$(Configuration)'!='Development'" />
+    <ProjectReference Include="..\..\Gemstone\web\src\Gemstone.Web\Gemstone.Web.csproj" Condition="'$(Configuration)'=='Development'">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <PackageReference Include="Gemstone.Web" Version="$(GemstoneVersion)" Condition="'$(Configuration)'!='Development'" />
+
     <PackageReference Include="HIDS" Version="1.2.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <!--PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.7" /-->
     <!--PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.5" /-->
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.32" />
-    <PackageReference Include="Microsoft.Graph" Version="5.92.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="3.14.1" />
-    <PackageReference Include="Microsoft.Identity.Web.UI" Version="3.14.1" />
-    <PackageReference Include="System.Security.Permissions" Version="9.0.9" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="Views\Shared\" />
+    <PackageReference Include="Microsoft.Graph" Version="5.96.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Identity.Web.GraphServiceClient" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="4.0.1" />
+    <PackageReference Include="System.Security.Permissions" Version="9.0.10" />
   </ItemGroup>
 
 

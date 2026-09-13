@@ -55,14 +55,6 @@ namespace PQDigest.Controllers
 
         public IActionResult Index()
         {
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-            {
-                ViewData["org"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.OrganizationID'");
-                ViewData["host"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.Host'");
-                ViewData["token"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.TokenID'");
-                ViewData["bucket"] = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'HIDS.PointBucket'");
-            }
-
             return View();
         }
 

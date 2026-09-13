@@ -43,7 +43,7 @@ const BrowseEvents = (props: { EventID: number }) => {
     function GetEventID(n: boolean, a: boolean ): JQuery.jqXHR<object[]> {
         return $.ajax({
             type: "GET",
-            url: `${homePath}api/OpenXDA/Event/${n ? 'Next': 'Previous'}Event/${a? 'AllMeters':'Meter'}/${props.EventID}`,
+            url: `${homePath}api/OpenXDA/Event/${n ? 'Next': 'Previous'}/${a? 'All':'One'}/${props.EventID}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

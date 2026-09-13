@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Program.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -37,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
+using Microsoft.Extensions.Logging.EventLog;
 using PQDigest.Models;
 
 namespace PQDigest
@@ -58,7 +59,8 @@ namespace PQDigest
                 Settings settings = new()
                 {
                     INIFile = ConfigurationOperation.ReadWrite,
-                    SQLite = ConfigurationOperation.Disabled
+                    SQLite = ConfigurationOperation.Disabled,
+                    EnvironmentalVariables = ConfigurationOperation.ReadOnly
                 };
 
                 DefineSettings(settings);
@@ -98,7 +100,14 @@ namespace PQDigest
             {
                 DiagnosticsLogger.DefineSettings(settings);
                 AdoDataConnection.DefineSettings(settings);
+                AddSecuritySettings(settings);
             }
+        }
+
+        private static void AddSecuritySettings(Settings settings, string settingsCategory = "Authentication")
+        {
+            dynamic val = settings[settingsCategory];
+            val.AuthenticationMode = ("None", "Authentication mode for the application. Options: None, Azure");
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

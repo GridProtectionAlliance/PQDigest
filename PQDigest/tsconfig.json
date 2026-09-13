@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": { "*": [ "types/*" ] },
     "downlevelIteration": true,
     "jsx": "react",
     "lib": [ "dom", "es5", "scripthost", "es2015", "es6" ],
@@ -15,7 +14,7 @@
     "moduleResolution": "Node",
     "skipLibCheck": true
   },
-  "include": [ "wwwroot/tsx", "wwwroot/ts"],
+  "include": [ "wwwroot/tsx", "wwwroot/ts", "EventWidgets/**/*" ],
   "exclude": [
     "node_modules"
   ]

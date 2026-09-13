@@ -21,37 +21,12 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Gemstone.Configuration;
-using Gemstone.Data;
-using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Http;
+using Gemstone.Web.APIController;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using PQDigest.Models;
+using openXDA.Model;
 
 namespace PQDigest.Controllers
 {
-    [Route("api/OpenXDA/[controller]")]
-    [ApiController]
-    public class EventTypeController : ControllerBase
-    {
-        private readonly IConfiguration m_configuration;
-
-        public EventTypeController(IConfiguration configuration)
-        {
-            m_configuration = configuration;
-        }
-
-        public ActionResult Get()
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
-            {
-                return Ok(connection.RetrieveData("SELECT * FROM EventType WHERE Name IN ('Sag', 'Swell', 'Transient', 'Interruption', 'Fault')"));
-            }
-        }
-    }
+    [Route("api/OpenXDA/EventType")]
+    public class EventTypeController : ReadOnlyModelController<EventType> { }
 }

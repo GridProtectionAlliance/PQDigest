@@ -37,6 +37,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using openXDA.Model;
 using PQDigest.Models;
+using PQDigest.Security;
 
 namespace PQDigest.Controllers
 {
@@ -54,10 +55,13 @@ namespace PQDigest.Controllers
         }
 
         [HttpGet, Route("{eventID:int}")]
-        public FileStreamResult Get(int eventID)
+        public ActionResult Get(int eventID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Settings.Default))
             {
+                if (!HttpContext.User.IsCustomerAuthorized(eventID, connection))
+                    return Unauthorized();
+
                 DateTime epoch = new DateTime(1970, 1, 1);
 
                 Event evt = new TableOperations<Event>(connection).QueryRecordWhere("ID = {0}", eventID);
@@ -65,7 +69,7 @@ namespace PQDigest.Controllers
 
                 if (evt == null) throw new Exception("Needs valid EventID");
                 Meter meter = new TableOperations<Meter>(connection).QueryRecordWhere("ID = {0}", evt.MeterID);
-                meter.ConnectionFactory = () => new AdoDataConnection(m_configuration["OpenXDA:ConnectionString"], m_configuration["OpenXDA:DataProviderString"]);
+                meter.ConnectionFactory = () => new AdoDataConnection(Settings.Default);
 
                 Dictionary<string, List<string>> returnData = new Dictionary<string, List<string>>();
                 DataGroupHelper dataGroupHelper = new DataGroupHelper(m_configuration, m_memoryCache);

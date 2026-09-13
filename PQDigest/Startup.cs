@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Startup.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -43,6 +43,9 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using openXDA.APIAuthentication;
+using PQDigest.Controllers;
+using PQDigest.Security;
 
 namespace PQDigest
 {
@@ -60,6 +63,8 @@ namespace PQDigest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IAPICredentialRetriever, XDAAPICredentialRetriever>();
+
             IMvcBuilder builder = services.AddControllersWithViews( options => {
                 options.InputFormatters.Insert(0, new RawRequestBodyFormatter());
             }).AddNewtonsoftJson(options =>
@@ -69,46 +74,26 @@ namespace PQDigest
                 }
             );
 
-            //services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
-            //    .EnableTokenAcquisitionToCallDownstreamApi(initialScopes: new string[] { "user.read" })
-            //    //.AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
-            //    .AddInMemoryTokenCaches();
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-               .AddMicrosoftIdentityWebApp(options =>
-               {
-                   Configuration.Bind("AzureAd", options);
-                   // do something
-                   options.Events.OnTokenValidated = async context =>
-                   {
-                       var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+            dynamic authenticationSection = Settings.Instance["Authentication"];
 
-                       HttpClient client = new HttpClient();
-                       var token = await tokenAcquisition.GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(","), user: context.Principal);
-                       client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (authenticationSection.AuthenticationMode == "None")
+            {
+                services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
+                    .AddScheme<TestAuthHandlerOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, (options) => { options.DefaultUserId = "Test"; });
+            }
+            else
+            {
+                string[] graphScopes = (Configuration.GetValue<string>("GraphApi:Scopes") ?? "User.Read")
+                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
 
-                       //var authProvider = new DelegateAuthenticationProvider(async (request) =>
-                       //{
-                       //    var token = await tokenAcquisition
-                       //        .GetAccessTokenForUserAsync(Configuration.GetSection("GraphAPI")["Scopes"].Split(",") , user: context.Principal);
-                       //    request.Headers.Authorization =
-                       //        new AuthenticationHeaderValue("Bearer", token);
-                       //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                       //});
+                services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+                    .EnableTokenAcquisitionToCallDownstreamApi(graphScopes)
+                    .AddMicrosoftGraph(Configuration.GetSection("GraphApi"))
+                    .AddInMemoryTokenCaches();
 
-                       //var graphClient = new GraphServiceClient(authProvider);
-
-                       //var user = await graphClient.Me.Request().GetAsync();
-                       //var extensions = await graphClient.Me.Extensions.Request().GetAsync();
-                       string json = await client.GetStringAsync(Configuration.GetSection("GraphAPI")["BaseUrl"] + "/me");
-                       AddUserGraphInfo(context.Principal, json);
-                   };
-               })
-              .EnableTokenAcquisitionToCallDownstreamApi(options =>
-                {
-                    Configuration.Bind("AzureAd", options);
-                }, Configuration.GetSection("GraphAPI")["Scopes"].Split(",")
-             )
-            .AddInMemoryTokenCaches();
+                services.AddHttpContextAccessor();
+                services.AddTransient<Microsoft.AspNetCore.Authentication.IClaimsTransformation, GraphClaimsTransformation>();
+            }
 
             services.AddMvc(options =>
             {
@@ -117,6 +102,7 @@ namespace PQDigest
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddMicrosoftIdentityUI();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -158,14 +144,6 @@ namespace PQDigest
 
                 endpoints.MapControllers();
             });
-        }
-
-        public static void AddUserGraphInfo(ClaimsPrincipal claimsPrincipal, string json)
-        {
-            var identity = claimsPrincipal.Identity as ClaimsIdentity;
-            var graph = JObject.Parse(json);
-            string name = graph.Properties().Select(p => p.Name).FirstOrDefault(n => n.ToLower().Contains("tvaorgid")) ?? "";
-            identity.AddClaim(new Claim("org_id", Regex.Replace(graph[name]?.Value<string>() ?? "d9999", "[A-Za-z]", "0000")));
         }
     }
 }

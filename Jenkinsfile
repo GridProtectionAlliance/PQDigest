@@ -203,19 +203,34 @@ pipeline {
             }
             steps {
                 script {
-                    //env.pqDigestDockerTag = env.CHANGE_BRANCH == "${env.devBranch}" ? "${env.pqDigestVersion}a" : env.pqDigestVersion
-                    //println("Building PQDigest Docker image tag: pqdigest:${env.pqDigestDockerTag}")
-                    println("Skipping docker stage intentionally")
+                    env.pqDigestDockerTag = env.CHANGE_BRANCH == "${env.devBranch}" ? "${env.pqDigestVersion}a" : env.pqDigestVersion
+                    println("Building PQDigest Docker image tag: pqdigest:${env.pqDigestDockerTag}")
                 }
 
-                /*powershell """
+                powershell """
                     dotnet publish '.\\PQDigest\\PQDigest.csproj' `
                         --configuration Release `
                         '-p:PublishProfile=Docker Release Profile PQDigest'
                 """
 
-                powershell "docker build --build-arg CONFIGURATION=Release -f .\\PQDigest.dockerfile -t pqdigest:${env.pqDigestDockerTag} ."
-                */
+                withCredentials([
+                    string(credentialsId: 'wsl-docker-user', variable: 'WSL_DOCKER_USER')
+                ]) {
+                    powershell '''
+                        $key = 'C:\\ProgramData\\Jenkins\\.ssh\\wsl_docker'
+                        $wslPath = '/mnt/' + $env:WORKSPACE.Substring(0, 1).ToLowerInvariant() + $env:WORKSPACE.Substring(2).Replace('\\', '/')
+
+                        ssh -i $key `
+                            -o BatchMode=yes `
+                            -p 2222 `
+                            "$env:WSL_DOCKER_USER@localhost" `
+                            "cd '$wslPath' && docker info --format '{{.OSType}}' && docker build --build-arg CONFIGURATION=Release -f ./PQDigest.dockerfile -t 'pqdigest:$env:pqDigestDockerTag' ."
+
+                        if ($LASTEXITCODE -ne 0) {
+                            exit $LASTEXITCODE
+                        }
+                    '''
+                }
             }
         }
 

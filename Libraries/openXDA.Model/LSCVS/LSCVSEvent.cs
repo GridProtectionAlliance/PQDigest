@@ -35,9 +35,6 @@ namespace LSCVS.Model
     /// <remarks>
     /// This will need to be extended with anything coming from the OpenXDA.
     /// </remarks>
-    [PatchRoles("Administrator, API Account")]
-    [PostRoles("Administrator, API Account")]
-    [DeleteRoles("Administrator, API Account")]
     public class LSCVSEvent
     {
         [PrimaryKey(true)]

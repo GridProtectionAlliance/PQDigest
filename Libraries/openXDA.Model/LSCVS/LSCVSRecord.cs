@@ -33,7 +33,6 @@ namespace LSCVS.Model
     /// <remarks>
     /// This will need to be extended with anything coming from the OpenXDA into <see cref="LSCVSEvent"/>.
     /// </remarks>
-    [PatchRoles("Administrator, Transmission SME")]
     public class LSCVSRecord
     {
         [PrimaryKey(true)]

@@ -23,7 +23,7 @@
 
 using Gemstone.Data.Model;
 
-namespace SEBrowser.Model
+namespace PQBrowser.Model
 {
     /// <summary>
     /// Defines the categories of widgets used in SEBrowser

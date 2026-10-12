@@ -40,6 +40,9 @@ namespace SystemCenter.Model
         public string AssetType { get; set; }
         public int Meters { get; set; }
         public int Locations { get; set; }
+        public string Description { get; set; }
+        public string Customers { get; set; }
+        public string AssetGroups { get; set; }
 
         // The frontend prefixes any user-defined Additional Field filter with "AdditionalField.", so this matches that prefix, strips
         // it back to the real field name, and resolves the value through the AdditionalFieldSearch view.
@@ -87,6 +90,36 @@ namespace SystemCenter.Model
 
             return new RecordRestriction(
                 $"ID IN (SELECT AssetLocation.AssetID FROM Location JOIN AssetLocation ON AssetLocation.LocationID = Location.ID WHERE {restriction.FilterExpression})",
+                restriction.Parameters);
+        }
+
+        [SearchExtension("^AssetGroup$")]
+        public static RecordRestriction GetAssetGroupRestriction(IRecordFilter filter)
+        {
+            using AdoDataConnection connection = new(Settings.Default);
+            TableOperations<DetailedAsset> tableOps = new(connection);
+            if (RecordFilter<DetailedAsset>.WildCardOperators.Contains(filter.Operator, StringComparer.OrdinalIgnoreCase) && filter.SearchParameter is string stringVal)
+                filter.SearchParameter = stringVal.Replace("*", tableOps.WildcardChar);
+
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("AssetGroup.Name", filter);
+
+            return new RecordRestriction(
+                $"ID IN (SELECT AssetAssetGroup.AssetID FROM AssetGroup JOIN AssetAssetGroup ON AssetAssetGroup.AssetGroupID = AssetGroup.ID WHERE {restriction.FilterExpression})",
+                restriction.Parameters);
+        }
+
+        [SearchExtension("^Customer$")]
+        public static RecordRestriction GetCustomerRestriction(IRecordFilter filter)
+        {
+            using AdoDataConnection connection = new(Settings.Default);
+            TableOperations<DetailedAsset> tableOps = new(connection);
+            if (RecordFilter<DetailedAsset>.WildCardOperators.Contains(filter.Operator, StringComparer.OrdinalIgnoreCase) && filter.SearchParameter is string stringVal)
+                filter.SearchParameter = stringVal.Replace("*", tableOps.WildcardChar);
+
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("Customer.Name", filter);
+
+            return new RecordRestriction(
+                $"ID IN (SELECT CustomerAsset.AssetID FROM Customer JOIN CustomerAsset ON CustomerAsset.CustomerID = Customer.ID WHERE {restriction.FilterExpression})",
                 restriction.Parameters);
         }
     }

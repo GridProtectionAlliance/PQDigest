@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  TrendChannel.cs - Gbtc
+//  WidgetCategory.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,33 +16,37 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/31/2025 - G. Santos
+//  08/10/2020 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using Gemstone.Data.Model;
 
-namespace SEBrowser.Model
+namespace PQBrowser.Model
 {
-    public class TrendChannel
+    /// <summary>
+    /// Defines the categories of widgets used in SEBrowser
+    /// </summary>
+    /// <remarks>
+    /// Will need to use in SEbrowser ans OpenSEE too.
+    /// </remarks>
+    [TableName("SEBrowser.WidgetCategory"), UseEscapedName]
+    [PostRoles("Administrator")]
+    [DeleteRoles("Administrator")]
+    [PatchRoles("Administrator")]
+    public class WidgetCategory
     {
+        #region [ Properties ]
+
         [PrimaryKey(true)]
-        public string ID { get; set; }
-        public int ChannelID { get; set; }
-        [DefaultSortOrder]
+        public int ID { get; set; }
+
         public string Name { get; set; }
-        public string Description { get; set; }
-        public int AssetID { get; set; }
-        public string AssetKey { get; set; }
-        public string AssetName { get; set; }
-        public int MeterID { get; set; }
-        public string MeterKey { get; set; }
-        public string MeterName { get; set; }
-        public string MeterShortName { get; set; }
-        public string Phase { get; set; }
-        public string ChannelGroup { get; set; }
-        public string ChannelGroupType { get; set; }
-        public string Unit { get; set; }
+
+        [DefaultSortOrder(true)]
+        public int OrderBy { get; set; }
+
+        #endregion
     }
 }

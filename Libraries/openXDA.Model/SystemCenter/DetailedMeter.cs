@@ -46,6 +46,12 @@ namespace SystemCenter.Model
 
         public string Model { get; set; }
 
+        public string Description { get; set; }
+
+        public string Customers { get; set; }
+
+        public string AssetGroups { get; set; }
+
         // The frontend prefixes any user-defined Additional Field filter with "AdditionalField.", so this matches that prefix, strips
         // it back to the real field name, and resolves the value through the AdditionalFieldSearch view.
         [SearchExtension(@"^AdditionalField\.")]
@@ -63,6 +69,36 @@ namespace SystemCenter.Model
             return new RecordRestriction(
                 $"ID IN (SELECT ParentTableID FROM AdditionalFieldSearch WHERE ParentTable = 'Meter' AND FieldName = {{0}} AND {valueRestriction.FilterExpression})",
                 new object[] { fieldName }.Concat(valueRestriction.Parameters).ToArray());
+        }
+
+        [SearchExtension("^AssetGroup$")]
+        public static RecordRestriction GetAssetGroupRestriction(IRecordFilter filter)
+        {
+            using AdoDataConnection connection = new(Settings.Default);
+            TableOperations<DetailedMeter> tableOps = new(connection);
+            if (RecordFilter<DetailedMeter>.WildCardOperators.Contains(filter.Operator, StringComparer.OrdinalIgnoreCase) && filter.SearchParameter is string stringVal)
+                filter.SearchParameter = stringVal.Replace("*", tableOps.WildcardChar);
+
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("AssetGroup.Name", filter);
+
+            return new RecordRestriction(
+                $"ID IN (SELECT MeterAssetGroup.MeterID FROM AssetGroup JOIN MeterAssetGroup ON MeterAssetGroup.AssetGroupID = AssetGroup.ID WHERE {restriction.FilterExpression})",
+                restriction.Parameters);
+        }
+
+        [SearchExtension("^Customer$")]
+        public static RecordRestriction GetCustomerRestriction(IRecordFilter filter)
+        {
+            using AdoDataConnection connection = new(Settings.Default);
+            TableOperations<DetailedMeter> tableOps = new(connection);
+            if (RecordFilter<DetailedMeter>.WildCardOperators.Contains(filter.Operator, StringComparer.OrdinalIgnoreCase) && filter.SearchParameter is string stringVal)
+                filter.SearchParameter = stringVal.Replace("*", tableOps.WildcardChar);
+
+            RecordRestriction restriction = SearchRestrictionHelper.GetSearchRestriction("Customer.Name", filter);
+
+            return new RecordRestriction(
+                $"ID IN (SELECT CustomerMeter.MeterID FROM Customer JOIN CustomerMeter ON CustomerMeter.CustomerID = Customer.ID WHERE {restriction.FilterExpression})",
+                restriction.Parameters);
         }
     }
 }

@@ -56,6 +56,8 @@ namespace PQBrowser.Model
     {
         [ParentKey(typeof (WidgetCategory))]
         public int CategoryID { get; set; }
+
+        public int SortOrder { get; set; }
     }
 
 }

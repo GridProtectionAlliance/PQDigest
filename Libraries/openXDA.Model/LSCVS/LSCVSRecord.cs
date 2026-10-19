@@ -55,6 +55,8 @@ namespace LSCVS.Model
         public bool SARFI80 { get; set; }
         public bool SelfCaused { get; set; }
         public bool ErroneouslyTriggered { get; set; }
+        public bool Excluded { get; set; }
+        public string ExclusionCause { get; set; }
         public double InstantenousImpact { get; set; }
         public DateTime PreEvent { get; set; }
         public DateTime PostEvent { get; set; }
@@ -94,6 +96,8 @@ namespace LSCVS.Model
                 SARFI80 = SARFI80,
                 SelfCaused = SelfCaused,
                 ErroneouslyTriggered = ErroneouslyTriggered,
+                Excluded = Excluded,
+                ExclusionCause = ExclusionCause,
                 InstantenousImpact = InstantenousImpact,
                 PreEvent = PreEvent,
                 PostEvent = PostEvent,

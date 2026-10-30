@@ -186,6 +186,17 @@ pipeline {
                 dir('PQDigest') {
                     bat(script: 'npm run build')
                 }
+            }
+        }
+
+        stage('Build .NET') {
+            // Publish compiles the project on every other path, so only PRs into development need this.
+            when {
+                expression {
+                    return env.BRANCH_NAME.startsWith("PR") && env.CHANGE_TARGET == "${env.devBranch}"
+                }
+            }
+            steps {
                 bat(script: 'dotnet build PQDigest/PQDigest.csproj --configuration Release')
             }
         }
